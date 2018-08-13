@@ -1,6 +1,7 @@
 MIT License
 
-Copyright (c) 2018 mmb L
+Copyright (c) 2018 mmb L (Python port https://github.com/mammothb/symspellpy)
+Copyright (c) 2018 Wolf Garbe (Original C# implementation https://github.com/wolfgarbe/SymSpell)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
