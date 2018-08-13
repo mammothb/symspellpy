@@ -9,16 +9,16 @@ from symspellpy.symspellpy import SymSpell, Verbosity
 class TestSymSpellPy(unittest.TestCase):
     def runTest(self):
         print('\nRunning %s' % self.__class__.__name__)
-        self.test_words_with_shared_prefix_should_retain_counts()
-        self.test_add_additional_counts_should_not_add_word_again()
-        self.test_add_additional_counts_should_increase_count()
-        self.test_add_additional_counts_should_not_overflow()
-        self.test_verbosity_should_control_lookup_results()
-        self.test_lookup_should_return_most_frequent()
-        self.test_lookup_should_find_exact_match()
-        self.test_lookup_should_not_return_non_word_delete()
-        self.test_lookup_should_not_return_low_count_word()
-        self.test_lookup_should_not_return_low_count_word_that_are_also_delete_word()
+        # self.test_words_with_shared_prefix_should_retain_counts()
+        # self.test_add_additional_counts_should_not_add_word_again()
+        # self.test_add_additional_counts_should_increase_count()
+        # self.test_add_additional_counts_should_not_overflow()
+        # self.test_verbosity_should_control_lookup_results()
+        # self.test_lookup_should_return_most_frequent()
+        # self.test_lookup_should_find_exact_match()
+        # self.test_lookup_should_not_return_non_word_delete()
+        # self.test_lookup_should_not_return_low_count_word()
+        # self.test_lookup_should_not_return_low_count_word_that_are_also_delete_word()
         self.test_lookup_should_replicate_noisy_results()
 
     def test_words_with_shared_prefix_should_retain_counts(self):
@@ -150,17 +150,12 @@ class TestSymSpellPy(unittest.TestCase):
         cwd = path.realpath(path.dirname(__file__))
         dictionary_path = path.realpath(path.join(
             cwd, pardir, "symspellpy", "frequency_dictionary_en_82_765.txt"))
-        # dictionary_path = path.realpath(path.join(
-        #     cwd, pardir, "symspellpy", "small_dict.txt"))
         query_path = path.join(cwd, "fortests", "noisy_query_en_1000.txt")
 
         edit_distance_max = 2
         prefix_length = 7
         verbosity = Verbosity.CLOSEST
         sym_spell = SymSpell(83000, edit_distance_max, prefix_length)
-        # sym_spell.create_dictionary_entry("contracting", 20)
-        # sym_spell.create_dictionary_entry("distracting", 15)
-        # sym_spell.create_dictionary_entry("detracting", 5)
         sym_spell.load_dictionary(dictionary_path, 0, 1)
 
         test_list = []
