@@ -1,5 +1,7 @@
 from collections import defaultdict
 from enum import Enum
+import functools
+from multiprocessing import Pool
 from os import path
 import sys
 
@@ -60,7 +62,7 @@ class SymSpell(object):
         self._distance_algorithm = DistanceAlgorithm.DAMERUAUOSA
         self._max_length = 0
 
-    def create_dictionary_entry(self, key, count, staging=None):
+    def create_dictionary_entry(self, key, count):
         """Create/Update an entry in the dictionary.
         For every word there are deletes with an edit distance of
         1..max_edit_distance created and added to the dictionary. Every delete
@@ -72,8 +74,6 @@ class SymSpell(object):
         Keyword arguments:
         key -- The word to add to dictionary.
         count -- The frequency count for word.
-        staging -- Optional staging object to speed up adding many entries by
-                staging them to a temporary structure. (default None)
 
         Return:
         True if the word was added as a new correctly spelled word, or
@@ -129,20 +129,12 @@ class SymSpell(object):
 
         # create deletes
         edits = self.edits_prefix(key)
-        # if not staging suggestions, put directly into main data structure
-        if staging is not None:
-            pass
-        else:
-            for delete in edits:
-                delete_hash = self.get_str_hash(delete)
-                suggestions = list()
-                if delete_hash in self._deletes:
-                    suggestions = self._deletes[delete_hash]
-                    suggestions.append(key)
-                    self._deletes[delete_hash] = suggestions
-                else:
-                    suggestions = [key]
-                    self._deletes[delete_hash] = suggestions
+        for delete in edits:
+            delete_hash = self.get_str_hash(delete)
+            if delete_hash in self._deletes:
+                self._deletes[delete_hash].append(key)
+            else:
+                self._deletes[delete_hash] = [key]
         return True
 
     def load_dictionary(self, corpus, term_index, count_index):
@@ -159,9 +151,8 @@ class SymSpell(object):
         """
         if not path.exists(corpus):
             return False
-        # staging = SuggestionStage(16384)
         with open(corpus, "r") as infile:
-            for line in infile.readlines():
+            for line in infile:
                 line_parts = line.rstrip().split(" ")
                 if len(line_parts) >= 2:
                     key = line_parts[term_index]
@@ -438,6 +429,14 @@ class SymSpell(object):
         return hash_s
 
     @property
+    def deletes(self):
+        return self._deletes
+
+    @property
+    def words(self):
+        return self._words
+
+    @property
     def word_count(self):
         return len(self._words)
 
@@ -496,34 +495,3 @@ class SuggestItem(object):
     @count.setter
     def count(self, count):
         self._count = count
-
-# class SuggestionStage(object):
-#     class Node(object):
-#         def __init__(self):
-#             self._suggestion = ""
-#             self._next = -1
-
-#         @property
-#         def suggestion(self):
-#             return self._suggestion
-
-#         @property
-#         def next(self):
-#             return self._next
-
-#     class Entry(object):
-#         def __init__(self):
-#             self._count = -1
-#             self._first = -1
-
-#         @property
-#         def count(self):
-#             return self._count
-
-#         @property
-#         def first(self):
-#             return self._first
-
-#     def __init__(self, initial_capacity):
-#         self._deletes = defaultdict()
-#         self._nodes = ChunkArray(2 * initial_capacity)

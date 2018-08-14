@@ -1,3 +1,6 @@
+from itertools import islice
+from random import shuffle
+
 def null_distance_results(string1, string2, max_distance):
     """Determines the proper return value of an edit distance function when
     one or both strings are null.
@@ -40,3 +43,14 @@ def try_parse_int64(string):
     except ValueError:
         return None
     return None if ret < -2 ** 64 or ret >= 2 ** 64 else ret
+
+def chunks(data, n):
+    """chunks(ABCDE, 2) => AB CD E"""
+    shuffle(data)
+    iterable = iter(data)
+    for __ in range(n):
+        yield [k for k in islice(iterable, len(data) // n + 1)]
+    # while True:
+    #     # store one line in memory,
+    #     # chain it to an iterator on the rest of the chunk
+    #     yield chain([next(iterable)], islice(iterable, n - 1))
