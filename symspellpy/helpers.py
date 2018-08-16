@@ -1,5 +1,4 @@
-from itertools import islice
-from random import shuffle
+import re
 
 def null_distance_results(string1, string2, max_distance):
     """Determines the proper return value of an edit distance function when
@@ -44,13 +43,11 @@ def try_parse_int64(string):
         return None
     return None if ret < -2 ** 64 or ret >= 2 ** 64 else ret
 
-def chunks(data, n):
-    """chunks(ABCDE, 2) => AB CD E"""
-    shuffle(data)
-    iterable = iter(data)
-    for __ in range(n):
-        yield [k for k in islice(iterable, len(data) // n + 1)]
-    # while True:
-    #     # store one line in memory,
-    #     # chain it to an iterator on the rest of the chunk
-    #     yield chain([next(iterable)], islice(iterable, n - 1))
+def parse_words(phrase):
+    """create a non-unique wordlist from sample text
+    language independent (e.g. works with Chinese characters)
+    """
+    # \W non-words, use negated set to ignore non-words and "_" (underscore)
+    # Compatible with non-latin characters, does not split words at
+    # apostrophes
+    return re.findall(r"([^\W_]+['’]*[^\W_]*)", phrase.lower())

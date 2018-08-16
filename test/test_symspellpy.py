@@ -20,6 +20,7 @@ class TestSymSpellPy(unittest.TestCase):
         self.test_lookup_should_not_return_low_count_word()
         self.test_lookup_should_not_return_low_count_word_that_are_also_delete_word()
         self.test_lookup_should_replicate_noisy_results()
+        self.test_lookup_compound()
 
     def test_words_with_shared_prefix_should_retain_counts(self):
         print('  - %s' % inspect.stack()[0][3])
@@ -169,6 +170,52 @@ class TestSymSpellPy(unittest.TestCase):
             result_sum += len(sym_spell.lookup(phrase, verbosity,
                                                edit_distance_max))
         self.assertEqual(4945, result_sum)
+
+    def test_lookup_compound(self):
+        print('  - %s' % inspect.stack()[0][3])
+        cwd = path.realpath(path.dirname(__file__))
+        dictionary_path = path.realpath(path.join(
+            cwd, pardir, "symspellpy", "frequency_dictionary_en_82_765.txt"))
+        query_path = path.join(cwd, "fortests", "noisy_query_en_1000.txt")
+
+        edit_distance_max = 2
+        prefix_length = 7
+        sym_spell = SymSpell(83000, edit_distance_max, prefix_length)
+        sym_spell.load_dictionary(dictionary_path, 0, 1)
+
+        typo = ("whereis th elove hehad dated forImuch of thepast who "
+                "couqdn'tread in sixthgrade and ins pired him")
+        correction = ("where is the love he had dated for much of the past "
+                      "who couldn't read in sixth grade and inspired him")
+        results = sym_spell.lookup_compound(typo, edit_distance_max)
+        self.assertEqual(1, len(results))
+        self.assertEqual(correction, results[0].term)
+
+        typo = ("in te dhird qarter oflast jear he hadlearned ofca "
+                "sekretplan y iran")
+        # Although the correction is "wrong", it matches the output of the
+        # original SymSpell program
+        correction = ("in the third quarter of last year he had learned of a "
+                      "secret plan a iran")
+        results = sym_spell.lookup_compound(typo, edit_distance_max)
+        self.assertEqual(1, len(results))
+        self.assertEqual(correction, results[0].term)
+
+        typo = ("the bigjest playrs in te strogsommer film slatew ith plety "
+                "of funn")
+        correction = ("the biggest players in the strong summer film slate "
+                      "with plenty of fun")
+        results = sym_spell.lookup_compound(typo, edit_distance_max)
+        self.assertEqual(1, len(results))
+        self.assertEqual(correction, results[0].term)
+
+        typo = ("Can yu readthis messa ge despite thehorible sppelingmsitakes")
+        correction = ("can you read this message despite the horrible "
+                      "spelling mistakes")
+        results = sym_spell.lookup_compound(typo, edit_distance_max)
+        self.assertEqual(1, len(results))
+        self.assertEqual(correction, results[0].term)
+
 
 if __name__ == "__main__":
     runner = unittest.TextTestRunner()

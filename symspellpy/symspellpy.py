@@ -3,6 +3,7 @@ from enum import Enum
 import functools
 from multiprocessing import Pool
 from os import path
+import re
 import sys
 
 from symspellpy.editdistance import DistanceAlgorithm, EditDistance
@@ -372,6 +373,132 @@ class SymSpell(object):
         if len(suggestions) > 1:
             suggestions.sort()
         return suggestions
+
+    def lookup_compound(self, phrase, max_edit_distance):
+        """lookup_compound supports compound aware automatic spelling
+        correction of multi-word input strings with three cases:
+        1. mistakenly inserted space into a correct word led to two incorrect
+           terms
+        2. mistakenly omitted space between two correct words led to one
+           incorrect combined term
+        3. multiple independent input terms with/without spelling errors
+
+        Find suggested spellings for a multi-word input string (supports word
+        splitting/merging).
+
+        Keyword arguments:
+        phrase -- The string being spell checked.
+        max_edit_distance -- The maximum edit distance between input and
+            suggested words.
+
+        Return:
+        A List of SuggestItem object representing suggested correct spellings
+        for the input string.
+        """
+        # Parse input string into single terms
+        term_list_1 = helpers.parse_words(phrase)
+        suggestions = list()
+        suggestion_parts = list()
+        distance_comparer = EditDistance(self._distance_algorithm)
+
+        # translate every item to its best suggestion, otherwise it remains
+        # unchanged
+        is_last_combi = False
+        for i, __ in enumerate(term_list_1):
+            suggestions = self.lookup(term_list_1[i], Verbosity.TOP,
+                                      max_edit_distance)
+            # combi check, always before split
+            if i > 0 and not is_last_combi:
+                suggestions_combi = self.lookup(
+                    term_list_1[i - 1] + term_list_1[i], Verbosity.TOP,
+                    max_edit_distance)
+                if suggestions_combi:
+                    best_1 = suggestion_parts[-1]
+                    if suggestions:
+                        best_2 = suggestions[0]
+                    else:
+                        best_2 = SuggestItem(term_list_1[i],
+                                             max_edit_distance + 1, 0)
+                    distance_1 = distance_comparer.compare(
+                        term_list_1[i - 1] + " " + term_list_1[i],
+                        best_1.term + " " + best_2.term, max_edit_distance)
+                    if (distance_1 >= 0
+                            and suggestions_combi[0].distance + 1 < distance_1):
+                        suggestions_combi[0].distance += 1
+                        suggestion_parts[-1] = suggestions_combi[0]
+                        is_last_combi = True
+                        continue
+            is_last_combi = False
+
+            # alway split terms without suggestion / never split terms with
+            # suggestion ed=0 / never split single char terms
+            if (suggestions and (suggestions[0].distance == 0
+                                 or len(term_list_1[i]) == 1)):
+                # choose best suggestion
+                suggestion_parts.append(suggestions[0])
+            else:
+                # if no perfect suggestion, split word into pairs
+                suggestions_split = list()
+                # add original term
+                if suggestions:
+                    suggestions_split.append(suggestions[0])
+                if len(term_list_1[i]) > 1:
+                    for j in range(1, len(term_list_1[i])):
+                        part_1 = term_list_1[i][: j]
+                        part_2 = term_list_1[i][j :]
+                        suggestions_1 = self.lookup(part_1, Verbosity.TOP,
+                                                    max_edit_distance)
+                        if suggestions_1:
+                            # if split correction1 == einzelwort correction
+                            if (suggestions
+                                    and suggestions[0].term == suggestions_1[0].term):
+                                break
+                            suggestions_2 = self.lookup(part_2, Verbosity.TOP,
+                                                        max_edit_distance)
+                            if suggestions_2:
+                                # if split correction1 == einzelwort correction
+                                if (suggestions
+                                        and suggestions[0].term == suggestions_2[0].term):
+                                    break
+                                # select best suggestion for split pair
+                                tmp_term = (suggestions_1[0].term + " " +
+                                            suggestions_2[0].term)
+                                tmp_distance = distance_comparer.compare(
+                                    term_list_1[i], tmp_term,
+                                    max_edit_distance)
+                                if tmp_distance < 0:
+                                    tmp_distance = max_edit_distance + 1
+                                tmp_count = min(suggestions_1[0].count,
+                                                suggestions_2[0].count)
+                                suggestion_split = SuggestItem(
+                                    tmp_term, tmp_distance, tmp_count)
+                                suggestions_split.append(suggestion_split)
+                                # early termination of split
+                                if suggestion_split.distance == 1:
+                                    break
+
+                    if suggestions_split:
+                        # select best suggestion for split pair
+                        suggestions_split.sort()
+                        suggestion_parts.append(suggestions_split[0])
+                    else:
+                        si = SuggestItem(term_list_1[i],
+                                         max_edit_distance + 1, 0)
+                        suggestion_parts.append(si)
+                else:
+                    si = SuggestItem(term_list_1[i], max_edit_distance + 1, 0)
+                    suggestion_parts.append(si)
+        joined_term = ""
+        joined_count = sys.maxsize
+        for si in suggestion_parts:
+            joined_term += si.term + " "
+            joined_count = min(joined_count, si.count)
+        suggestion = SuggestItem(joined_term.rstrip(), joined_count,
+                                 distance_comparer.compare(phrase, joined_term,
+                                                           2 ** 31 - 1))
+        suggestions_line = list()
+        suggestions_line.append(suggestion)
+        return suggestions_line
 
     def delete_in_suggestion_prefix(self, delete, delete_len, suggestion,
                                     suggestion_len):
