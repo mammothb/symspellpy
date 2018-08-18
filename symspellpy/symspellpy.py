@@ -1,9 +1,6 @@
 from collections import defaultdict
 from enum import Enum
-import functools
-from multiprocessing import Pool
 from os import path
-import re
 import sys
 
 from symspellpy.editdistance import DistanceAlgorithm, EditDistance
@@ -160,6 +157,7 @@ class SymSpell(object):
                     count = helpers.try_parse_int64(line_parts[count_index])
                     if count is not None:
                         self.create_dictionary_entry(key, count)
+        return True
 
     def lookup(self, phrase, verbosity, max_edit_distance=None,
                include_unknown=False):
@@ -493,9 +491,10 @@ class SymSpell(object):
         for si in suggestion_parts:
             joined_term += si.term + " "
             joined_count = min(joined_count, si.count)
-        suggestion = SuggestItem(joined_term.rstrip(), joined_count,
-                                 distance_comparer.compare(phrase, joined_term,
-                                                           2 ** 31 - 1))
+        suggestion = SuggestItem(joined_term.rstrip(),
+                                 distance_comparer.compare(
+                                     phrase, joined_term, 2 ** 31 - 1),
+                                 joined_count)
         suggestions_line = list()
         suggestions_line.append(suggestion)
         return suggestions_line
@@ -597,7 +596,7 @@ class SuggestItem(object):
             return self._distance < other.distance
 
     def __str__(self):
-        return "{}, {}, {}".format(self._term, self._count, self._distance)
+        return "{}, {}, {}".format(self._term, self._distance, self._count)
 
     @property
     def term(self):

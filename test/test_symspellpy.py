@@ -176,7 +176,6 @@ class TestSymSpellPy(unittest.TestCase):
         cwd = path.realpath(path.dirname(__file__))
         dictionary_path = path.realpath(path.join(
             cwd, pardir, "symspellpy", "frequency_dictionary_en_82_765.txt"))
-        query_path = path.join(cwd, "fortests", "noisy_query_en_1000.txt")
 
         edit_distance_max = 2
         prefix_length = 7
@@ -191,12 +190,9 @@ class TestSymSpellPy(unittest.TestCase):
         self.assertEqual(1, len(results))
         self.assertEqual(correction, results[0].term)
 
-        typo = ("in te dhird qarter oflast jear he hadlearned ofca "
-                "sekretplan y iran")
-        # Although the correction is "wrong", it matches the output of the
-        # original SymSpell program
+        typo = "in te dhird qarter oflast jear he hadlearned ofca sekretplan"
         correction = ("in the third quarter of last year he had learned of a "
-                      "secret plan a iran")
+                      "secret plan")
         results = sym_spell.lookup_compound(typo, edit_distance_max)
         self.assertEqual(1, len(results))
         self.assertEqual(correction, results[0].term)
