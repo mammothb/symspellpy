@@ -1,6 +1,7 @@
 from collections import defaultdict
 from enum import Enum
 from os import path
+import re
 import sys
 
 from symspellpy.editdistance import DistanceAlgorithm, EditDistance
@@ -372,7 +373,8 @@ class SymSpell(object):
             suggestions.sort()
         return suggestions
 
-    def lookup_compound(self, phrase, max_edit_distance):
+    def lookup_compound(self, phrase, max_edit_distance,
+                        ignore_non_words=False):
         """lookup_compound supports compound aware automatic spelling
         correction of multi-word input strings with three cases:
         1. mistakenly inserted space into a correct word led to two incorrect
@@ -395,6 +397,10 @@ class SymSpell(object):
         """
         # Parse input string into single terms
         term_list_1 = helpers.parse_words(phrase)
+        # Second list of single terms with preserved cases so we can ignore
+        # acronyms (all cap words)
+        if ignore_non_words:
+            term_list_2 = helpers.parse_words(phrase, True)
         suggestions = list()
         suggestion_parts = list()
         distance_comparer = EditDistance(self._distance_algorithm)
@@ -403,6 +409,14 @@ class SymSpell(object):
         # unchanged
         is_last_combi = False
         for i, __ in enumerate(term_list_1):
+            if ignore_non_words:
+                if helpers.try_parse_int64(term_list_1[i]) is not None:
+                    suggestion_parts.append(SuggestItem(term_list_1[i], 0, 0))
+                    continue
+                # if re.match(r"\b[A-Z]{2,}\b", term_list_2[i]):
+                if helpers.is_acronym(term_list_2[i]):
+                    suggestion_parts.append(SuggestItem(term_list_2[i], 0, 0))
+                    continue
             suggestions = self.lookup(term_list_1[i], Verbosity.TOP,
                                       max_edit_distance)
             # combi check, always before split

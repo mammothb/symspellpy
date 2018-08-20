@@ -43,11 +43,24 @@ def try_parse_int64(string):
         return None
     return None if ret < -2 ** 64 or ret >= 2 ** 64 else ret
 
-def parse_words(phrase):
+def parse_words(phrase, preserve_case=False):
     """create a non-unique wordlist from sample text
     language independent (e.g. works with Chinese characters)
     """
     # \W non-words, use negated set to ignore non-words and "_" (underscore)
     # Compatible with non-latin characters, does not split words at
     # apostrophes
-    return re.findall(r"([^\W_]+['’]*[^\W_]*)", phrase.lower())
+    if preserve_case:
+        return re.findall(r"([^\W_]+['’]*[^\W_]*)", phrase)
+    else:
+        return re.findall(r"([^\W_]+['’]*[^\W_]*)", phrase.lower())
+
+def is_acronym(word):
+    """Checks is the word is all caps (acronym)
+
+    Return:
+    True if the word is all caps, e.g., ABCDE
+    False if the word contains lower case letters, e.g., abcde, ABCde, abcDE,
+        abCDe
+    """
+    return re.match(r"\b[A-Z]{2,}\b", word) is not None

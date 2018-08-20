@@ -21,6 +21,7 @@ class TestSymSpellPy(unittest.TestCase):
         self.test_lookup_should_not_return_low_count_word_that_are_also_delete_word()
         self.test_lookup_should_replicate_noisy_results()
         self.test_lookup_compound()
+        self.test_lookup_compound_ignore_non_words()
 
     def test_words_with_shared_prefix_should_retain_counts(self):
         print('  - %s' % inspect.stack()[0][3])
@@ -212,6 +213,47 @@ class TestSymSpellPy(unittest.TestCase):
         self.assertEqual(1, len(results))
         self.assertEqual(correction, results[0].term)
 
+    def test_lookup_compound_ignore_non_words(self):
+        print('  - %s' % inspect.stack()[0][3])
+        cwd = path.realpath(path.dirname(__file__))
+        dictionary_path = path.realpath(path.join(
+            cwd, pardir, "symspellpy", "frequency_dictionary_en_82_765.txt"))
+
+        edit_distance_max = 2
+        prefix_length = 7
+        sym_spell = SymSpell(83000, edit_distance_max, prefix_length)
+        sym_spell.load_dictionary(dictionary_path, 0, 1)
+
+        typo = ("whereis th elove 123 hehad dated forImuch of THEPAST who "
+                "couqdn'tread in SIXTHgrade and ins pired him")
+        correction = ("where is the love 123 he had dated for much of THEPAST "
+                      "who couldn't read in sixth grade and inspired him")
+        results = sym_spell.lookup_compound(typo, edit_distance_max, True)
+        self.assertEqual(1, len(results))
+        self.assertEqual(correction, results[0].term)
+
+        typo = "in te DHIRD 1 qarter oflast jear he hadlearned ofca sekretplan"
+        correction = ("in the DHIRD 1 quarter of last year he had learned "
+                      "of a secret plan")
+        results = sym_spell.lookup_compound(typo, edit_distance_max, True)
+        self.assertEqual(1, len(results))
+        self.assertEqual(correction, results[0].term)
+
+        typo = ("the bigjest playrs in te stroGSOmmer film slatew ith PLETY "
+                "of 12 funn")
+        correction = ("the biggest players in the strong summer film slate "
+                      "with PLETY of 12 fun")
+        results = sym_spell.lookup_compound(typo, edit_distance_max, True)
+        self.assertEqual(1, len(results))
+        self.assertEqual(correction, results[0].term)
+
+        typo = ("Can yu readtHIS messa ge despite thehorible 1234 "
+                "sppelingmsitakes")
+        correction = ("can you read this message despite the horrible 1234 "
+                      "spelling mistakes")
+        results = sym_spell.lookup_compound(typo, edit_distance_max, True)
+        self.assertEqual(1, len(results))
+        self.assertEqual(correction, results[0].term)
 
 if __name__ == "__main__":
     runner = unittest.TextTestRunner()
