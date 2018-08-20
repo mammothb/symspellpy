@@ -431,9 +431,12 @@ class SymSpell(object):
                     else:
                         best_2 = SuggestItem(term_list_1[i],
                                              max_edit_distance + 1, 0)
+                    # make sure we're comparing with the lowercase form of the 
+                    # previous word
                     distance_1 = distance_comparer.compare(
                         term_list_1[i - 1] + " " + term_list_1[i],
-                        best_1.term + " " + best_2.term, max_edit_distance)
+                        best_1.term.lower() + " " + best_2.term,
+                        max_edit_distance)
                     if (distance_1 >= 0
                             and suggestions_combi[0].distance + 1 < distance_1):
                         suggestions_combi[0].distance += 1
