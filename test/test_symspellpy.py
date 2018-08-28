@@ -255,6 +255,14 @@ class TestSymSpellPy(unittest.TestCase):
         self.assertEqual(1, len(results))
         self.assertEqual(correction, results[0].term)
 
+        typo = ("Can yu readtHIS messa ge despite thehorible AB1234 "
+                "sppelingmsitakes")
+        correction = ("can you read this message despite the horrible AB1234 "
+                      "spelling mistakes")
+        results = sym_spell.lookup_compound(typo, edit_distance_max, True)
+        self.assertEqual(1, len(results))
+        self.assertEqual(correction, results[0].term)
+
         typo = "PI on leave, arrange Co-I to do screening"
         correction = "PI on leave arrange co i to do screening"
         results = sym_spell.lookup_compound(typo, edit_distance_max, True)

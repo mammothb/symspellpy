@@ -56,11 +56,11 @@ def parse_words(phrase, preserve_case=False):
         return re.findall(r"([^\W_]+['’]*[^\W_]*)", phrase.lower())
 
 def is_acronym(word):
-    """Checks is the word is all caps (acronym)
+    """Checks is the word is all caps (acronym) and/or contain numbers
 
     Return:
-    True if the word is all caps, e.g., ABCDE
+    True if the word is all caps and/or contain numbers, e.g., ABCDE, AB12C
     False if the word contains lower case letters, e.g., abcde, ABCde, abcDE,
-        abCDe
+        abCDe, abc12, ab12c
     """
-    return re.match(r"\b[A-Z]{2,}\b", word) is not None
+    return re.match(r"\b[A-Z0-9]{2,}\b", word) is not None
