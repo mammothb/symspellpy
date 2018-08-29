@@ -15,6 +15,7 @@ packages  = [
 [tool.poetry.dependencies]
 # See this https://poetry.eustace.io/docs/versions/ for version constraints examples (^ vs ~)
 python = "^3.6"
+numpy = "^1.7.1"
 
 
 [tool.poetry.dev-dependencies]
