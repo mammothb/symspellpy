@@ -1,0 +1,20 @@
+repos:
+  - repo: local
+    hooks:
+      - id: flake8
+        name: Lint Python with Flake8
+        entry: make lint
+        language: system
+        types: [python]
+      - id: circleci-config
+        name: Validate CircleCI Config
+        entry: bash circleci-validate.sh
+        language: system
+        files: '.circleci/config.yml'
+        pass_filenames: false
+      - id: lockfile-updated
+        name: Update pyproject.lock if needed
+        entry: poetry lock
+        language: system
+        files: 'pyproject.toml'
+        pass_filenames: false
