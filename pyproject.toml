@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "eai-spellchecker"
+version = "1.0.0"
+description = "Speel Checker Library"
+authors = ["Beagle Pie Team <beagle.pie@elementai.com>"]
+readme = "README.md"
+homepage = "https://github.com/ElementAI/eai-spellchecker/"
+repository = "https://github.com/ElementAI/eai-spellchecker/"
+keywords = ["check", "spell"]
+
+packages  = [
+    {include = "spellchecker"}
+]
+
+[tool.poetry.dependencies]
+# See this https://poetry.eustace.io/docs/versions/ for version constraints examples (^ vs ~)
+python = "^3.6"
+numpy = "^1.7.1"
+
+
+[tool.poetry.dev-dependencies]
+pytest = "^3.7"
+pytest-cov = "^2.5"
+flake8 = "^3.5"
+flake8-import-order = "^0.18.0"

@@ -2,7 +2,8 @@ from enum import Enum
 
 import numpy as np
 
-import symspellpy.helpers as helpers
+import spellchecker.helpers as helpers
+
 
 class DistanceAlgorithm(Enum):
     """Supported edit distance algorithms"""
@@ -10,6 +11,7 @@ class DistanceAlgorithm(Enum):
     LEVENSHTEIN = 0
     # Damerau optimal string alignment algorithm
     DAMERUAUOSA = 1
+
 
 class EditDistance(object):
     def __init__(self, algorithm):
@@ -33,6 +35,7 @@ class EditDistance(object):
         """
         return self._distance_comparer.distance(string_1, string_2, max_distance)
 
+
 class AbstractDistanceComparer(object):
     def distance(self, string_1, string_2, max_distance):
         """Return a measure of the distance between two strings.
@@ -48,6 +51,7 @@ class AbstractDistanceComparer(object):
         magnitude increases as difference between the strings increases.
         """
         raise NotImplementedError("Should have implemented this")
+
 
 class DamerauOsa(AbstractDistanceComparer):
     def __init__(self):

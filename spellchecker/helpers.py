@@ -1,5 +1,6 @@
 import re
 
+
 def null_distance_results(string1, string2, max_distance):
     """Determines the proper return value of an edit distance function when
     one or both strings are null.
@@ -10,6 +11,7 @@ def null_distance_results(string1, string2, max_distance):
         else:
             return len(string2) if len(string2) <= max_distance else -1
     return len(string1) if len(string1) <= max_distance else -1
+
 
 def prefix_suffix_prep(string1, string2):
     """Calculates starting position and lengths of two strings such that
@@ -33,8 +35,10 @@ def prefix_suffix_prep(string1, string2):
         len2 -= start
     return len1, len2, start
 
+
 def to_similarity(distance, length):
     return -1 if distance < 0 else 1.0 - distance / length
+
 
 def try_parse_int64(string):
     try:
@@ -42,6 +46,7 @@ def try_parse_int64(string):
     except ValueError:
         return None
     return None if ret < -2 ** 64 or ret >= 2 ** 64 else ret
+
 
 def parse_words(phrase, preserve_case=False):
     """create a non-unique wordlist from sample text
@@ -54,6 +59,7 @@ def parse_words(phrase, preserve_case=False):
         return re.findall(r"([^\W_]+['’]*[^\W_]*)", phrase)
     else:
         return re.findall(r"([^\W_]+['’]*[^\W_]*)", phrase.lower())
+
 
 def is_acronym(word):
     """Checks is the word is all caps (acronym) and/or contain numbers

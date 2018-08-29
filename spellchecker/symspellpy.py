@@ -1,11 +1,11 @@
+import sys
 from collections import defaultdict
 from enum import Enum
 from os import path
-import re
-import sys
 
-from symspellpy.editdistance import DistanceAlgorithm, EditDistance
-import symspellpy.helpers as helpers
+import spellchecker.helpers as helpers
+from spellchecker.editdistance import DistanceAlgorithm, EditDistance
+
 
 class Verbosity(Enum):
     """Controls the closeness/quantity of returned spelling suggestions."""
@@ -18,6 +18,7 @@ class Verbosity(Enum):
     # All suggestions within maxEditDistance, suggestions ordered by edit
     # distance, then by term frequency (slower, no early termination).
     ALL = 2
+
 
 class SymSpell(object):
     def __init__(self, initial_capacity=16, max_dictionary_edit_distance=2,
@@ -184,11 +185,13 @@ class SymSpell(object):
             raise ValueError("Distance too large")
         suggestions = list()
         phrase_len = len(phrase)
+
         def early_exit():
             if include_unknown and not suggestions:
                 suggestions.append(SuggestItem(phrase, max_edit_distance + 1,
                                                0))
             return suggestions
+
         # early exit - word is too big to possibly match any words
         if phrase_len - max_edit_distance > self._max_length:
             return early_exit()
@@ -313,11 +316,15 @@ class SymSpell(object):
                         # pylint: disable=C0301,R0916
                         if (self._prefix_length - max_edit_distance == candidate_len
                                 and (min_distance > 1
-                                     and phrase[phrase_len + 1 - min_distance :] != suggestion[suggestion_len + 1 - min_distance :])
+                                     and phrase[phrase_len + 1 - min_distance:] !=
+                                     suggestion[suggestion_len + 1 - min_distance:])
                                 or (min_distance > 0
-                                    and phrase[phrase_len - min_distance] != suggestion[suggestion_len - min_distance]
-                                    and (phrase[phrase_len - min_distance - 1] != suggestion[suggestion_len - min_distance]
-                                         or phrase[phrase_len - min_distance] != suggestion[suggestion_len - min_distance - 1]))):
+                                    and phrase[phrase_len - min_distance] !=
+                                    suggestion[suggestion_len - min_distance]
+                                    and (phrase[phrase_len - min_distance - 1] !=
+                                         suggestion[suggestion_len - min_distance]
+                                         or phrase[phrase_len - min_distance] !=
+                                         suggestion[suggestion_len - min_distance - 1]))):
                             continue
                         else:
                             # delete_in_suggestion_prefix is somewhat expensive,
@@ -365,7 +372,7 @@ class SymSpell(object):
                         and len_diff >= max_edit_distance_2):
                     continue
                 for i in range(candidate_len):
-                    delete = candidate[: i] + candidate[i + 1 :]
+                    delete = candidate[: i] + candidate[i + 1:]
                     if delete not in considered_deletes:
                         considered_deletes.add(delete)
                         candidates.append(delete)
@@ -431,7 +438,7 @@ class SymSpell(object):
                     else:
                         best_2 = SuggestItem(term_list_1[i],
                                              max_edit_distance + 1, 0)
-                    # make sure we're comparing with the lowercase form of the 
+                    # make sure we're comparing with the lowercase form of the
                     # previous word
                     distance_1 = distance_comparer.compare(
                         term_list_1[i - 1] + " " + term_list_1[i],
@@ -460,7 +467,7 @@ class SymSpell(object):
                 if len(term_list_1[i]) > 1:
                     for j in range(1, len(term_list_1[i])):
                         part_1 = term_list_1[i][: j]
-                        part_2 = term_list_1[i][j :]
+                        part_2 = term_list_1[i][j:]
                         suggestions_1 = self.lookup(part_1, Verbosity.TOP,
                                                     max_edit_distance)
                         if suggestions_1:
@@ -542,7 +549,7 @@ class SymSpell(object):
         edit_distance += 1
         if len(word) > 1:
             for i in range(len(word)):
-                delete = word[: i] + word[i + 1 :]
+                delete = word[:i] + word[i + 1:]
                 if delete not in delete_words:
                     delete_words.add(delete)
                     # recursion, if maximum edit distance not yet reached
@@ -582,6 +589,7 @@ class SymSpell(object):
     @property
     def word_count(self):
         return len(self._words)
+
 
 class SuggestItem(object):
     """Spelling suggestion returned from Lookup."""

@@ -1,10 +1,11 @@
 import inspect
-from os import pardir, path
 import sys
 import unittest
+from os import pardir, path
 
-sys.path.append(path.realpath(path.join(__file__, *(path.pardir,) * 2)))
-from symspellpy.symspellpy import SymSpell, Verbosity
+
+from spellchecker.symspellpy import SymSpell, Verbosity
+
 
 class TestSymSpellPy(unittest.TestCase):
     def runTest(self):
@@ -268,6 +269,7 @@ class TestSymSpellPy(unittest.TestCase):
         results = sym_spell.lookup_compound(typo, edit_distance_max, True)
         self.assertEqual(1, len(results))
         self.assertEqual(correction, results[0].term)
+
 
 if __name__ == "__main__":
     runner = unittest.TextTestRunner()
