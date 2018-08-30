@@ -1,7 +1,6 @@
 [run]
 branch = true
-source =
-    symspellpy
+source = symspellpy
 
 [report]
 exclude_lines =
