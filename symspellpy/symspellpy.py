@@ -1,7 +1,6 @@
 from collections import defaultdict
 from enum import Enum
 from os import path
-import re
 import sys
 
 from symspellpy.editdistance import DistanceAlgorithm, EditDistance

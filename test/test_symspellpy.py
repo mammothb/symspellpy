@@ -3,8 +3,7 @@ from os import pardir, path
 import sys
 import unittest
 
-sys.path.append(path.realpath(path.join(__file__, *(path.pardir,) * 2)))
-from symspellpy.symspellpy import SymSpell, Verbosity
+from symspellpy import SymSpell, Verbosity
 
 class TestSymSpellPy(unittest.TestCase):
     def runTest(self):
