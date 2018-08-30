@@ -4,7 +4,7 @@ python:
 install:
   - pip install -r requirements.txt
 script:
-  - pytest test
-  - pytest --cov=./symspellpy
+  - python -m pytest test
+  - python -m pytest --cov=./symspellpy
 after_success:
   - codecov
