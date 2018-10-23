@@ -21,6 +21,7 @@ class TestSymSpellPy(unittest.TestCase):
         self.test_lookup_should_replicate_noisy_results()
         self.test_lookup_compound()
         self.test_lookup_compound_ignore_non_words()
+        self.test_load_dictionary_encoding()
 
     def test_words_with_shared_prefix_should_retain_counts(self):
         print('  - %s' % inspect.stack()[0][3])
@@ -267,6 +268,21 @@ class TestSymSpellPy(unittest.TestCase):
         results = sym_spell.lookup_compound(typo, edit_distance_max, True)
         self.assertEqual(1, len(results))
         self.assertEqual(correction, results[0].term)
+
+    def test_load_dictionary_encoding(self):
+        print('  - %s' % inspect.stack()[0][3])
+        cwd = path.realpath(path.dirname(__file__))
+        dictionary_path = path.realpath(path.join(
+            cwd, "fortests", "non_en_dict.txt"))
+
+        edit_distance_max = 2
+        prefix_length = 7
+        sym_spell = SymSpell(83000, edit_distance_max, prefix_length)
+        sym_spell.load_dictionary(dictionary_path, 0, 1, encoding="utf-8")
+
+        result = sym_spell.lookup("АБ", Verbosity.TOP, 2)
+        self.assertEqual(1, len(result))
+        self.assertEqual("АБИ", result[0].term)
 
 if __name__ == "__main__":
     runner = unittest.TextTestRunner()

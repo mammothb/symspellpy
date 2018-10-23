@@ -132,7 +132,7 @@ class SymSpell(object):
             self._deletes[delete_hash].append(key)
         return True
 
-    def load_dictionary(self, corpus, term_index, count_index):
+    def load_dictionary(self, corpus, term_index, count_index, encoding=None):
         """Load multiple dictionary entries from a file of word/frequency
         count pairs. Merges with any dictionary data already loaded.
 
@@ -140,13 +140,14 @@ class SymSpell(object):
         corpus -- The path+filename of the file.
         term_index -- The column position of the word.
         count_index -- The column position of the frequency count.
+        encoding -- Text encoding of the dictionary file
 
         Return:
         True if file loaded, or False if file not found.
         """
         if not path.exists(corpus):
             return False
-        with open(corpus, "r") as infile:
+        with open(corpus, "r", encoding=encoding) as infile:
             for line in infile:
                 line_parts = line.rstrip().split(" ")
                 if len(line_parts) >= 2:
