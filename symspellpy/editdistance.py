@@ -132,7 +132,7 @@ class DamerauOsa(AbstractDistanceComparer):
         from: https://github.com/softwx/SoftWx.Match
         """
         char_1_costs = np.asarray([j + 1 if j < max_distance
-                                  else max_distance + 1 for j in range(len_2)])
+                                   else max_distance + 1 for j in range(len_2)])
         len_diff = len_2 - len_1
         j_start_offset = max_distance - len_diff
         j_start = 0

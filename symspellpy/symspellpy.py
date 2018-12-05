@@ -2,7 +2,7 @@ from collections import defaultdict, namedtuple
 from enum import Enum
 from itertools import cycle
 import math
-from os import path
+import os.path
 import sys
 
 from symspellpy.editdistance import DistanceAlgorithm, EditDistance
@@ -128,9 +128,9 @@ class SymSpell(object):
             self._max_length = len(key)
 
         # create deletes
-        edits = self.edits_prefix(key)
+        edits = self._edits_prefix(key)
         for delete in edits:
-            delete_hash = self.get_str_hash(delete)
+            delete_hash = self._get_str_hash(delete)
             self._deletes[delete_hash].append(key)
         return True
 
@@ -147,7 +147,7 @@ class SymSpell(object):
         Return:
         True if file loaded, or False if file not found.
         """
-        if not path.exists(corpus):
+        if not os.path.exists(corpus):
             return False
         with open(corpus, "r", encoding=encoding) as infile:
             for line in infile:
@@ -240,8 +240,8 @@ class SymSpell(object):
                     continue
                 break
 
-            if self.get_str_hash(candidate) in self._deletes:
-                dict_suggestions = self._deletes[self.get_str_hash(candidate)]
+            if self._get_str_hash(candidate) in self._deletes:
+                dict_suggestions = self._deletes[self._get_str_hash(candidate)]
                 for suggestion in dict_suggestions:
                     if suggestion == phrase:
                         continue
@@ -322,7 +322,7 @@ class SymSpell(object):
                             # delete_in_suggestion_prefix is somewhat expensive,
                             # and only pays off when verbosity is TOP or CLOSEST
                             if ((verbosity != Verbosity.ALL
-                                 and not self.delete_in_suggestion_prefix(
+                                 and not self._delete_in_suggestion_prefix(
                                      candidate, candidate_len, suggestion,
                                      suggestion_len))
                                     or suggestion in considered_suggestions):
@@ -635,8 +635,8 @@ class SymSpell(object):
             idx = next(circular_index)
         return compositions[idx]
 
-    def delete_in_suggestion_prefix(self, delete, delete_len, suggestion,
-                                    suggestion_len):
+    def _delete_in_suggestion_prefix(self, delete, delete_len, suggestion,
+                                     suggestion_len):
         """check whether all delete chars are present in the suggestion
         prefix in correct order, otherwise this is just a hash collision
         """
@@ -653,7 +653,7 @@ class SymSpell(object):
                 return False
         return True
 
-    def edits(self, word, edit_distance, delete_words):
+    def _edits(self, word, edit_distance, delete_words):
         """inexpensive and language independent: only deletes,
         no transposes + replaces + inserts replaces and inserts are expensive
         and language dependent
@@ -666,19 +666,19 @@ class SymSpell(object):
                     delete_words.add(delete)
                     # recursion, if maximum edit distance not yet reached
                     if edit_distance < self._max_dictionary_edit_distance:
-                        self.edits(delete, edit_distance, delete_words)
+                        self._edits(delete, edit_distance, delete_words)
         return delete_words
 
-    def edits_prefix(self, key):
+    def _edits_prefix(self, key):
         hash_set = set()
         if len(key) <= self._max_dictionary_edit_distance:
             hash_set.add("")
         if len(key) > self._max_dictionary_edit_distance:
             key = key[: self._prefix_length]
         hash_set.add(key)
-        return self.edits(key, 0, hash_set)
+        return self._edits(key, 0, hash_set)
 
-    def get_str_hash(self, s):
+    def _get_str_hash(self, s):
         s_len = len(s)
         mask_len = min(s_len, 3)
 
