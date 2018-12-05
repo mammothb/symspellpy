@@ -1,6 +1,10 @@
 CHANGELOG <br>
 ==============
 
+## 6.3.3 (2018-12-05)
+---------------------
+- Added `word_segmentation()` feature
+
 ## 6.3.2 (2018-10-23)
 ---------------------
 - Added `encoding` option to `load_dictionary()`

@@ -1,6 +1,8 @@
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 from enum import Enum
-from os import path
+from itertools import cycle
+import math
+import os.path
 import sys
 
 from symspellpy.editdistance import DistanceAlgorithm, EditDistance
@@ -126,9 +128,9 @@ class SymSpell(object):
             self._max_length = len(key)
 
         # create deletes
-        edits = self.edits_prefix(key)
+        edits = self._edits_prefix(key)
         for delete in edits:
-            delete_hash = self.get_str_hash(delete)
+            delete_hash = self._get_str_hash(delete)
             self._deletes[delete_hash].append(key)
         return True
 
@@ -145,7 +147,7 @@ class SymSpell(object):
         Return:
         True if file loaded, or False if file not found.
         """
-        if not path.exists(corpus):
+        if not os.path.exists(corpus):
             return False
         with open(corpus, "r", encoding=encoding) as infile:
             for line in infile:
@@ -238,8 +240,8 @@ class SymSpell(object):
                     continue
                 break
 
-            if self.get_str_hash(candidate) in self._deletes:
-                dict_suggestions = self._deletes[self.get_str_hash(candidate)]
+            if self._get_str_hash(candidate) in self._deletes:
+                dict_suggestions = self._deletes[self._get_str_hash(candidate)]
                 for suggestion in dict_suggestions:
                     if suggestion == phrase:
                         continue
@@ -320,7 +322,7 @@ class SymSpell(object):
                             # delete_in_suggestion_prefix is somewhat expensive,
                             # and only pays off when verbosity is TOP or CLOSEST
                             if ((verbosity != Verbosity.ALL
-                                 and not self.delete_in_suggestion_prefix(
+                                 and not self._delete_in_suggestion_prefix(
                                      candidate, candidate_len, suggestion,
                                      suggestion_len))
                                     or suggestion in considered_suggestions):
@@ -428,7 +430,7 @@ class SymSpell(object):
                     else:
                         best_2 = SuggestItem(term_list_1[i],
                                              max_edit_distance + 1, 0)
-                    # make sure we're comparing with the lowercase form of the 
+                    # make sure we're comparing with the lowercase form of the
                     # previous word
                     distance_1 = distance_comparer.compare(
                         term_list_1[i - 1] + " " + term_list_1[i],
@@ -513,8 +515,128 @@ class SymSpell(object):
         suggestions_line.append(suggestion)
         return suggestions_line
 
-    def delete_in_suggestion_prefix(self, delete, delete_len, suggestion,
-                                    suggestion_len):
+    def word_segmentation(self, phrase, max_edit_distance=None,
+                          max_segmentation_word_length=None):
+        """word_egmentation divides a string into words by inserting missing
+        spaces at the appropriate positions misspelled words are corrected
+        and do not affect segmentation existing spaces are allowed and
+        considered for optimum segmentation
+
+        word_segmentation uses a novel approach *without* recursion.
+        https://medium.com/@wolfgarbe/fast-word-segmentation-for-noisy-text-2c2c41f9e8da
+        While each string of length n can be segmented in 2^n−1 possible
+        compositions https://en.wikipedia.org/wiki/Composition_(combinatorics)
+        word_segmentation has a linear runtime O(n) to find the optimum
+        composition
+
+        Find suggested spellings for a multi-word input string (supports word
+        splitting/merging).
+
+        Keyword arguments:
+        phrase -- The string being spell checked.
+        max_segmentation_word_length -- The maximum word length that should
+            be considered.
+        max_edit_distance -- The maximum edit distance between input and
+            corrected words (0=no correction/segmentation only).
+
+        Return:
+        The word segmented string, the word segmented and spelling corrected
+        string, the Edit distance sum between input string and corrected
+        string, the Sum of word occurence probabilities in log scale (a
+        measure of how common and probable the corrected segmentation is).
+        """
+        # number of all words in the corpus used to generate the frequency
+        # dictionary. This is used to calculate the word occurrence
+        # probability p from word counts c : p=c/N. N equals the sum of all
+        # counts c in the dictionary only if the dictionary is complete, but
+        # not if the dictionary is truncated or filtered
+        N = 1024908267229
+        if max_edit_distance is None:
+            max_edit_distance = self._max_dictionary_edit_distance
+        if max_segmentation_word_length is None:
+            max_segmentation_word_length = self._max_length
+        array_size = min(max_segmentation_word_length, len(phrase))
+        compositions = [Composition()] * array_size
+        circular_index = cycle(range(array_size))
+        idx = -1
+
+        # outer loop (column): all possible part start positions
+        for j in range(len(phrase)):
+            # inner loop (row): all possible part lengths (from start
+            # position): part can't be bigger than longest word in dictionary
+            # (other than long unknown word)
+            imax = min(len(phrase) - j, max_segmentation_word_length)
+            for i in range(1, imax + 1):
+                # get top spelling correction/ed for part
+                part = phrase[j : j + i]
+                separator_len = 0
+                top_ed = 0
+                top_log_prob = 0.0
+                top_result = ""
+
+                if part[0].isspace():
+                    # remove space for levensthein calculation
+                    part = part[1 :]
+                else:
+                    # add ed+1: space did not exist, had to be inserted
+                    separator_len = 1
+
+                # remove space from part1, add number of removed spaces to top_ed
+                top_ed += len(part)
+                # remove space.
+                # add number of removed spaces to ed
+                part = part.replace(" ", "")
+                top_ed -= len(part)
+
+                results = self.lookup(part, Verbosity.TOP, max_edit_distance)
+                if results:
+                    top_result = results[0].term
+                    top_ed += results[0].distance
+                    # Naive Bayes Rule. We assume the word probabilities of
+                    # two words to be independent. Therefore the resulting
+                    # probability of the word combination is the product of
+                    # the two word probabilities
+                    # Instead of computing the product of probabilities we
+                    # are computing the sum of the logarithm of probabilities
+                    # because the probabilities of words are about 10^-10,
+                    # the product of many such small numbers could exceed
+                    # (underflow) the floating number range and become zero
+                    # log(ab)=log(a)+log(b)
+                    top_log_prob = math.log10(float(results[0].count) /
+                                              float(N))
+                else:
+                    top_result = part
+                    # default, if word not found. otherwise long input text
+                    # would win as long unknown word (with ed=edmax+1),
+                    # although there there should many spaces inserted
+                    top_ed += len(part)
+                    top_log_prob = math.log10(10.0 / N /
+                                              math.pow(10.0, len(part)))
+
+                dest = (i + idx) % array_size
+                # set values in first loop
+                if j == 0:
+                    compositions[dest] = Composition(part, top_result, top_ed,
+                                                     top_log_prob)
+                # pylint: disable=C0301,R0916
+                elif (i == max_segmentation_word_length
+                      # replace values if better probabilityLogSum, if same
+                      # edit distance OR one space difference
+                      or ((compositions[idx].distance_sum + top_ed == compositions[dest].distance_sum
+                           or compositions[idx].distance_sum + separator_len + top_ed == compositions[dest].distance_sum)
+                          and compositions[dest].log_prob_sum < compositions[idx].log_prob_sum + top_log_prob)
+                      # replace values if smaller edit distance
+                      or compositions[idx].distance_sum + separator_len + top_ed < compositions[dest].distance_sum):
+                    compositions[dest] = Composition(
+                        compositions[idx].segmented_string + " " + part,
+                        compositions[idx].corrected_string + " " + top_result,
+                        compositions[idx].distance_sum + separator_len + top_ed,
+                        compositions[idx].log_prob_sum + top_log_prob)
+            idx = next(circular_index)
+        return compositions[idx]
+
+    def _delete_in_suggestion_prefix(self, delete, delete_len, suggestion,
+                                     suggestion_len):
         """check whether all delete chars are present in the suggestion
         prefix in correct order, otherwise this is just a hash collision
         """
@@ -531,7 +653,7 @@ class SymSpell(object):
                 return False
         return True
 
-    def edits(self, word, edit_distance, delete_words):
+    def _edits(self, word, edit_distance, delete_words):
         """inexpensive and language independent: only deletes,
         no transposes + replaces + inserts replaces and inserts are expensive
         and language dependent
@@ -544,19 +666,19 @@ class SymSpell(object):
                     delete_words.add(delete)
                     # recursion, if maximum edit distance not yet reached
                     if edit_distance < self._max_dictionary_edit_distance:
-                        self.edits(delete, edit_distance, delete_words)
+                        self._edits(delete, edit_distance, delete_words)
         return delete_words
 
-    def edits_prefix(self, key):
+    def _edits_prefix(self, key):
         hash_set = set()
         if len(key) <= self._max_dictionary_edit_distance:
             hash_set.add("")
         if len(key) > self._max_dictionary_edit_distance:
             key = key[: self._prefix_length]
         hash_set.add(key)
-        return self.edits(key, 0, hash_set)
+        return self._edits(key, 0, hash_set)
 
-    def get_str_hash(self, s):
+    def _get_str_hash(self, s):
         s_len = len(s)
         mask_len = min(s_len, 3)
 
@@ -635,3 +757,7 @@ class SuggestItem(object):
     @count.setter
     def count(self, count):
         self._count = count
+
+Composition = namedtuple("Composition", ["segmented_string", "corrected_string",
+                                         "distance_sum", "log_prob_sum"])
+Composition.__new__.__defaults__ = (None,) * len(Composition._fields)

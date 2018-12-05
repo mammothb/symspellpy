@@ -22,6 +22,7 @@ class TestSymSpellPy(unittest.TestCase):
         self.test_lookup_compound()
         self.test_lookup_compound_ignore_non_words()
         self.test_load_dictionary_encoding()
+        self.test_word_segmentation()
 
     def test_words_with_shared_prefix_should_retain_counts(self):
         print('  - %s' % inspect.stack()[0][3])
@@ -283,6 +284,35 @@ class TestSymSpellPy(unittest.TestCase):
         result = sym_spell.lookup("АБ", Verbosity.TOP, 2)
         self.assertEqual(1, len(result))
         self.assertEqual("АБИ", result[0].term)
+
+    def test_word_segmentation(self):
+        print('  - %s' % inspect.stack()[0][3])
+        cwd = path.realpath(path.dirname(__file__))
+        dictionary_path = path.realpath(path.join(
+            cwd, pardir, "symspellpy", "frequency_dictionary_en_82_765.txt"))
+
+        edit_distance_max = 0
+        prefix_length = 7
+        sym_spell = SymSpell(83000, edit_distance_max, prefix_length)
+        sym_spell.load_dictionary(dictionary_path, 0, 1)
+
+        typo = "thequickbrownfoxjumpsoverthelazydog"
+        correction = "the quick brown fox jumps over the lazy dog"
+        result = sym_spell.word_segmentation(typo)
+        self.assertEqual(correction, result.corrected_string)
+
+        typo = "itwasabrightcolddayinaprilandtheclockswerestrikingthirteen"
+        correction = ("it was a bright cold day in april and the clocks "
+                      "were striking thirteen")
+        result = sym_spell.word_segmentation(typo)
+        self.assertEqual(correction, result[1])
+
+        typo = ("itwasthebestoftimesitwastheworstoftimesitwastheageofwisdom"
+                "itwastheageoffoolishness")
+        correction = ("it was the best of times it was the worst of times "
+                      "it was the age of wisdom it was the age of foolishness")
+        result = sym_spell.word_segmentation(typo)
+        self.assertEqual(correction, result[1])
 
 if __name__ == "__main__":
     runner = unittest.TextTestRunner()
