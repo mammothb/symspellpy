@@ -3,6 +3,7 @@ from enum import Enum
 from itertools import cycle
 import math
 import os.path
+import re
 import sys
 
 from symspellpy.editdistance import DistanceAlgorithm, EditDistance
@@ -160,7 +161,7 @@ class SymSpell(object):
         return True
 
     def lookup(self, phrase, verbosity, max_edit_distance=None,
-               include_unknown=False):
+               include_unknown=False, ignore_token=None):
         """Find suggested spellings for a given phrase word.
 
         Keyword arguments:
@@ -196,6 +197,14 @@ class SymSpell(object):
         suggestion_count = 0
         if phrase in self._words:
             suggestion_count = self._words[phrase]
+            suggestions.append(SuggestItem(phrase, 0, suggestion_count))
+            # early exit - return exact match, unless caller wants all matches
+            if verbosity != Verbosity.ALL:
+                return early_exit()
+
+        if (ignore_token is not None
+                and re.match(ignore_token, phrase) is not None):
+            suggestion_count = 1
             suggestions.append(SuggestItem(phrase, 0, suggestion_count))
             # early exit - return exact match, unless caller wants all matches
             if verbosity != Verbosity.ALL:
@@ -516,7 +525,8 @@ class SymSpell(object):
         return suggestions_line
 
     def word_segmentation(self, phrase, max_edit_distance=None,
-                          max_segmentation_word_length=None):
+                          max_segmentation_word_length=None,
+                          ignore_token=None):
         """word_egmentation divides a string into words by inserting missing
         spaces at the appropriate positions misspelled words are corrected
         and do not affect segmentation existing spaces are allowed and
@@ -581,14 +591,16 @@ class SymSpell(object):
                     # add ed+1: space did not exist, had to be inserted
                     separator_len = 1
 
-                # remove space from part1, add number of removed spaces to top_ed
+                # remove space from part1, add number of removed spaces to
+                # top_ed
                 top_ed += len(part)
                 # remove space.
                 # add number of removed spaces to ed
                 part = part.replace(" ", "")
                 top_ed -= len(part)
 
-                results = self.lookup(part, Verbosity.TOP, max_edit_distance)
+                results = self.lookup(part, Verbosity.TOP, max_edit_distance,
+                                      ignore_token=ignore_token)
                 if results:
                     top_result = results[0].term
                     top_ed += results[0].distance

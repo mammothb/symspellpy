@@ -23,6 +23,7 @@ class TestSymSpellPy(unittest.TestCase):
         self.test_lookup_compound_ignore_non_words()
         self.test_load_dictionary_encoding()
         self.test_word_segmentation()
+        self.test_word_segmentation_ignore_token()
 
     def test_words_with_shared_prefix_should_retain_counts(self):
         print('  - %s' % inspect.stack()[0][3])
@@ -313,6 +314,21 @@ class TestSymSpellPy(unittest.TestCase):
                       "it was the age of wisdom it was the age of foolishness")
         result = sym_spell.word_segmentation(typo)
         self.assertEqual(correction, result[1])
+
+    def test_word_segmentation_ignore_token(self):
+        print('  - %s' % inspect.stack()[0][3])
+        cwd = path.realpath(path.dirname(__file__))
+        dictionary_path = path.realpath(path.join(
+            cwd, pardir, "symspellpy", "frequency_dictionary_en_82_765.txt"))
+
+        edit_distance_max = 2
+        prefix_length = 7
+        sym_spell = SymSpell(83000, edit_distance_max, prefix_length)
+        sym_spell.load_dictionary(dictionary_path, 0, 1)
+
+        typo = "24th december"
+        result = sym_spell.word_segmentation(typo, ignore_token=r"\d{2}\w*\b")
+        self.assertEqual(typo, result.corrected_string)
 
 if __name__ == "__main__":
     runner = unittest.TextTestRunner()
