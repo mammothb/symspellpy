@@ -497,16 +497,16 @@ class SymSpell(object):
                         # select best suggestion for split pair
                         suggestions_split.sort()
                         suggestion_parts.append(suggestions_split[0])
-                        self._replaced_words[term_list_1[i]] = suggestions_split[0]
+                        self._replaced_words[term_list_1[i]] = suggestions_split[0]._term
                     else:
                         si = SuggestItem(term_list_1[i],
                                          max_edit_distance + 1, 0)
                         suggestion_parts.append(si)
-                        self._replaced_words[term_list_1[i]] = si
+                        self._replaced_words[term_list_1[i]] = si._term
                 else:
                     si = SuggestItem(term_list_1[i], max_edit_distance + 1, 0)
                     suggestion_parts.append(si)
-                    self._replaced_words[term_list_1[i]] = si
+                    self._replaced_words[term_list_1[i]] = si._term
         joined_term = ""
         joined_count = sys.maxsize
         for si in suggestion_parts:
