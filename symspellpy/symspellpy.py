@@ -696,8 +696,16 @@ class SymSpell(object):
         return hash_s
 
     @property
+    def below_threshold_words(self):
+        return self._below_threshold_words
+
+    @property
     def deletes(self):
         return self._deletes
+
+    @property
+    def replaced_words(self):
+        return self._replaced_words
 
     @property
     def words(self):
