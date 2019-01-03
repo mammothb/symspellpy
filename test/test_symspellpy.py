@@ -20,6 +20,7 @@ class TestSymSpellPy(unittest.TestCase):
         self.test_lookup_should_not_return_low_count_word_that_are_also_delete_word()
         self.test_lookup_should_replicate_noisy_results()
         self.test_lookup_compound()
+        self.test_lookup_compound_replaced_words()
         self.test_lookup_compound_ignore_non_words()
         self.test_load_dictionary_encoding()
         self.test_word_segmentation()
@@ -214,6 +215,74 @@ class TestSymSpellPy(unittest.TestCase):
         results = sym_spell.lookup_compound(typo, edit_distance_max)
         self.assertEqual(1, len(results))
         self.assertEqual(correction, results[0].term)
+
+    def test_lookup_compound_replaced_words(self):
+        print('  - %s' % inspect.stack()[0][3])
+        cwd = path.realpath(path.dirname(__file__))
+        dictionary_path = path.realpath(path.join(
+            cwd, pardir, "symspellpy", "frequency_dictionary_en_82_765.txt"))
+
+        edit_distance_max = 2
+        prefix_length = 7
+        sym_spell = SymSpell(83000, edit_distance_max, prefix_length)
+        sym_spell.load_dictionary(dictionary_path, 0, 1)
+
+        typo = ("whereis th elove hehad dated forImuch of thepast who "
+                "couqdn'tread in sixthgrade and ins pired him")
+        correction = ("where is the love he had dated for much of the past "
+                      "who couldn't read in sixth grade and inspired him")
+        replacement_1 = {
+            "whereis": "where is",
+            "th": "the",
+            "elove": "love",
+            "hehad": "he had",
+            "forimuch": "for much",
+            "thepast": "the past",
+            "couqdn'tread": "couldn't read",
+            "sixthgrade": "sixth grade",
+            "ins": "in"}
+        results = sym_spell.lookup_compound(typo, edit_distance_max)
+        self.assertEqual(len(replacement_1), len(sym_spell._replaced_words))
+        for k, v in replacement_1.items():
+            self.assertEqual(v, sym_spell._replaced_words[k].term)
+
+        typo = "in te dhird qarter oflast jear he hadlearned ofca sekretplan"
+        correction = ("in the third quarter of last year he had learned of a "
+                      "secret plan")
+        replacement_2 = {
+            "te": "the",
+            "dhird": "third",
+            "qarter": "quarter",
+            "oflast": "of last",
+            "jear": "year",
+            "hadlearned": "had learned",
+            "ofca": "of a",
+            "sekretplan": "secret plan"}
+        results = sym_spell.lookup_compound(typo, edit_distance_max)
+        self.assertEqual(len(replacement_1) + len(replacement_2),
+                         len(sym_spell._replaced_words))
+        for k, v in replacement_2.items():
+            self.assertEqual(v, sym_spell._replaced_words[k].term)
+
+        typo = ("the bigjest playrs in te strogsommer film slatew ith plety "
+                "of funn")
+        correction = ("the biggest players in the strong summer film slate "
+                      "with plenty of fun")
+        replacement_3 = {
+            "bigjest": "biggest",
+            "playrs": "players",
+            "strogsommer": "strong summer",
+            "slatew": "slate",
+            "ith": "with",
+            "plety": "plenty",
+            "funn": "fun"}
+        results = sym_spell.lookup_compound(typo, edit_distance_max)
+        self.assertEqual(len(replacement_1) + len(replacement_2) +
+                         len(replacement_3), len(sym_spell._replaced_words))
+        self.assertEqual(1, len(results))
+        self.assertEqual(correction, results[0].term)
+        for k, v in replacement_3.items():
+            self.assertEqual(v, sym_spell._replaced_words[k].term)
 
     def test_lookup_compound_ignore_non_words(self):
         print('  - %s' % inspect.stack()[0][3])
