@@ -62,6 +62,8 @@ class SymSpell(object):
         self._compact_mask = (0xFFFFFFFF >> (3 + min(compact_level, 16))) << 2
         self._distance_algorithm = DistanceAlgorithm.DAMERUAUOSA
         self._max_length = 0
+        self._replaced_words = dict()
+
 
     def create_dictionary_entry(self, key, count):
         """Create/Update an entry in the dictionary.
@@ -504,13 +506,16 @@ class SymSpell(object):
                         # select best suggestion for split pair
                         suggestions_split.sort()
                         suggestion_parts.append(suggestions_split[0])
+                        self._replaced_words[term_list_1[i]] = suggestions_split[0]
                     else:
                         si = SuggestItem(term_list_1[i],
                                          max_edit_distance + 1, 0)
                         suggestion_parts.append(si)
+                        self._replaced_words[term_list_1[i]] = si
                 else:
                     si = SuggestItem(term_list_1[i], max_edit_distance + 1, 0)
                     suggestion_parts.append(si)
+                    self._replaced_words[term_list_1[i]] = si
         joined_term = ""
         joined_count = sys.maxsize
         for si in suggestion_parts:
@@ -703,8 +708,16 @@ class SymSpell(object):
         return hash_s
 
     @property
+    def below_threshold_words(self):
+        return self._below_threshold_words
+
+    @property
     def deletes(self):
         return self._deletes
+
+    @property
+    def replaced_words(self):
+        return self._replaced_words
 
     @property
     def words(self):
