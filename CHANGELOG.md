@@ -1,6 +1,11 @@
 CHANGELOG <br>
 ==============
 
+## 6.3.4 (2019-01-04)
+---------------------
+- Added `<self._replaced_words = dict()>` to track number of misspelled words
+- Added `ignore_token` to `word_segmentation()` to ignore words with regular expression
+
 ## 6.3.3 (2018-12-05)
 ---------------------
 - Added `word_segmentation()` feature
