@@ -521,7 +521,8 @@ class SymSpell(object):
         for si in suggestion_parts:
             joined_term += si.term + " "
             joined_count = min(joined_count, si.count)
-        suggestion = SuggestItem(joined_term.rstrip(),
+        joined_term = joined_term.rstrip()
+        suggestion = SuggestItem(joined_term,
                                  distance_comparer.compare(
                                      phrase, joined_term, 2 ** 31 - 1),
                                  joined_count)
