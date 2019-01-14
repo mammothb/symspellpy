@@ -1,6 +1,10 @@
 CHANGELOG <br>
 ==============
 
+## 6.3.5 (2019-01-14)
+---------------------
+- Fixed `lookup_compound()` to return the correct `distance`
+
 ## 6.3.4 (2019-01-04)
 ---------------------
 - Added `<self._replaced_words = dict()>` to track number of misspelled words
