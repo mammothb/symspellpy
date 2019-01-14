@@ -342,6 +342,8 @@ class TestSymSpellPy(unittest.TestCase):
         results = sym_spell.lookup_compound(typo, edit_distance_max)
         self.assertEqual(1, len(results))
         self.assertEqual(correction, results[0].term)
+        self.assertEqual(9, results[0].distance)
+        self.assertEqual(300000, results[0].count)
 
         typo = "in te dhird qarter oflast jear he hadlearned ofca sekretplan"
         correction = ("in the third quarter of last year he had learned of a "
@@ -349,6 +351,8 @@ class TestSymSpellPy(unittest.TestCase):
         results = sym_spell.lookup_compound(typo, edit_distance_max)
         self.assertEqual(1, len(results))
         self.assertEqual(correction, results[0].term)
+        self.assertEqual(9, results[0].distance)
+        self.assertEqual(23121323, results[0].count)
 
         typo = ("the bigjest playrs in te strogsommer film slatew ith plety "
                 "of funn")
@@ -357,6 +361,8 @@ class TestSymSpellPy(unittest.TestCase):
         results = sym_spell.lookup_compound(typo, edit_distance_max)
         self.assertEqual(1, len(results))
         self.assertEqual(correction, results[0].term)
+        self.assertEqual(9, results[0].distance)
+        self.assertEqual(3813904, results[0].count)
 
         typo = ("Can yu readthis messa ge despite thehorible sppelingmsitakes")
         correction = ("can you read this message despite the horrible "
@@ -364,6 +370,8 @@ class TestSymSpellPy(unittest.TestCase):
         results = sym_spell.lookup_compound(typo, edit_distance_max)
         self.assertEqual(1, len(results))
         self.assertEqual(correction, results[0].term)
+        self.assertEqual(10, results[0].distance)
+        self.assertEqual(6218089, results[0].count)
 
     def test_lookup_compound_only_combi(self):
         print('  - %s' % inspect.stack()[0][3])
