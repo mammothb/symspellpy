@@ -21,6 +21,18 @@ project_dir
   \-project.py
 ```
 
+### Adding new terms
+  - Use `load_dictionary(corpus=<path/to/dictionary.txt>, <term_index>, <count_index>)`. `dictionary.txt` should contain:
+  ```
+<term> <count>
+<term> <count>
+...
+<term> <count>
+```
+with `term_index` indicating the column number of terms and `count_index` indicating the column number of counts/frequency.
+  - Append `<term> <count>` to the provided `frequency_dictionary_en_82_765.txt`
+  - Use the method `create_dictionary_entry(key=<term>, count=<count>)`
+
 ### Sample usage (`lookup` and `lookup_compound`)
 Using ``project.py`` (code is more verbose than required to allow explanation of method arguments)
 ```python
