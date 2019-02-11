@@ -547,7 +547,7 @@ class TestSymSpellPy(unittest.TestCase):
         edit_distance_max = 2
         prefix_length = 7
         sym_spell = SymSpell(83000, edit_distance_max, prefix_length)
-        sym_spell.create_dictionary(corpus_path)
+        sym_spell.create_dictionary(corpus_path, encoding="utf-8")
 
         num_lines = 0
         with open(big_words_path, "r") as infile:
