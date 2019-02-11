@@ -43,9 +43,10 @@ with open(os.path.join(cwd, "symspellpy", "__version__.py"), "r",
           encoding="utf-8") as infile:
     exec(infile.read(), about)
 
-with open("README.md", "r", encoding="utf-8") as infile:
+with open(os.path.join(cwd, "README.md"), "r", encoding="utf-8") as infile:
     readme = infile.read()
-with open("CHANGELOG.md", "r", encoding="utf-8") as infile:
+with open(os.path.join(cwd, "CHANGELOG.md"), "r",
+          encoding="utf-8") as infile:
     changelog = infile.read()
 
 setup(

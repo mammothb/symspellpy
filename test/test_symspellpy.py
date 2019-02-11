@@ -1,3 +1,4 @@
+import os.path
 import sys
 import unittest
 
@@ -10,6 +11,7 @@ from symspellpy.symspellpy import SuggestItem
 class TestSymSpellPy(unittest.TestCase):
     dictionary_path = pkg_resources.resource_filename(
         "symspellpy", "frequency_dictionary_en_82_765.txt")
+    fortests_path = os.path.join(os.path.dirname(__file__), "fortests")
 
     def test_negative_initial_capacity(self):
         with pytest.raises(ValueError) as excinfo:
@@ -234,8 +236,7 @@ class TestSymSpellPy(unittest.TestCase):
             "invalid/dictionary/path.txt", 0, 1))
 
     def test_load_dictionary_bad_dictionary(self):
-        dictionary_path = pkg_resources.resource_filename(
-            "symspellpy", "../test/fortests/bad_dict.txt")
+        dictionary_path = os.path.join(self.fortests_path, "bad_dict.txt")
         edit_distance_max = 2
         prefix_length = 7
         sym_spell = SymSpell(83000, edit_distance_max, prefix_length)
@@ -246,8 +247,8 @@ class TestSymSpellPy(unittest.TestCase):
         self.assertEqual(12, sym_spell.words["sdfg"])
 
     def test_lookup_should_replicate_noisy_results(self):
-        query_path = pkg_resources.resource_filename(
-            "symspellpy", "../test/fortests/noisy_query_en_1000.txt")
+        query_path = os.path.join(self.fortests_path,
+                                  "noisy_query_en_1000.txt")
 
         edit_distance_max = 2
         prefix_length = 7
@@ -443,8 +444,7 @@ class TestSymSpellPy(unittest.TestCase):
         self.assertEqual(correction, results[0].term)
 
     def test_load_dictionary_encoding(self):
-        dictionary_path = pkg_resources.resource_filename(
-            "symspellpy", "../test/fortests/non_en_dict.txt")
+        dictionary_path = os.path.join(self.fortests_path, "non_en_dict.txt")
 
         edit_distance_max = 2
         prefix_length = 7
@@ -539,10 +539,8 @@ class TestSymSpellPy(unittest.TestCase):
             "invalid/dictionary/path.txt"))
 
     def test_create_dictionary(self):
-        corpus_path = pkg_resources.resource_filename(
-            "symspellpy", "../test/fortests/big_modified.txt")
-        big_words_path = pkg_resources.resource_filename(
-            "symspellpy", "../test/fortests/big_words.txt")
+        corpus_path = os.path.join(self.fortests_path, "big_modified.txt")
+        big_words_path = os.path.join(self.fortests_path, "big_words.txt")
 
         edit_distance_max = 2
         prefix_length = 7
@@ -551,7 +549,8 @@ class TestSymSpellPy(unittest.TestCase):
 
         num_lines = 0
         with open(big_words_path, "r") as infile:
-            for line, kvp in zip(infile, sym_spell.words.items()):
-                self.assertEqual(line.rstrip(), "{} {}".format(*kvp))
+            for line in infile:
+                key, count = line.rstrip().split(" ")
+                self.assertEqual(int(count), sym_spell.words[key])
                 num_lines += 1
         self.assertEqual(num_lines, sym_spell.word_count)
