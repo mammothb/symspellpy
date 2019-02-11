@@ -137,9 +137,11 @@ class SymSpell(object):
             self._deletes[delete_hash].append(key)
         return True
 
-    def load_dictionary(self, corpus, term_index, count_index, encoding=None):
-        """Load multiple dictionary entries from a file of word/frequency
-        count pairs. Merges with any dictionary data already loaded.
+    def load_dictionary(self, corpus, term_index, count_index,
+                        encoding=None):
+        """Load multiple dictionary entries from a file of
+        word/frequency count pairs. Merges with any dictionary data
+        already loaded.
 
         Keyword arguments:
         corpus -- The path+filename of the file.
@@ -160,6 +162,24 @@ class SymSpell(object):
                     count = helpers.try_parse_int64(line_parts[count_index])
                     if count is not None:
                         self.create_dictionary_entry(key, count)
+        return True
+
+    def create_dictionary(self, corpus, encoding=None):
+        """Load multiple dictionary words from a file containing plain
+        text. Merges with any dictionary data already loaded.
+
+        Keyword arguments:
+        corpus -- The path+filename of the file.
+
+        Return
+        True if file loaded, or False if file not found.
+        """
+        if not os.path.exists(corpus):
+            return False
+        with open(corpus, "r", encoding=encoding) as infile:
+            for line in infile:
+                for key in self._parse_words(line):
+                    self.create_dictionary_entry(key, 1)
         return True
 
     def lookup(self, phrase, verbosity, max_edit_distance=None,
@@ -670,6 +690,23 @@ class SymSpell(object):
             if j == suggestion_len:
                 return False
         return True
+
+    def _parse_words(self, text):
+        """create a non-unique wordlist from sample text
+        language independent (e.g. works with Chinese characters)
+        """
+        # // \w Alphanumeric characters (including non-latin
+        # characters, umlaut characters and digits) plus "_". [^\W_] is
+        # the equivalent of \w excluding "_".
+        # Compatible with non-latin characters, does not split words at
+        # apostrophes.
+        # Uses capturing groups to combine a negated set with a
+        # character set
+        matches = re.findall(r"(([^\W_]|['’])+)", text.lower())
+        # The above regex returns ("ghi'jkl", "l") for "ghi'jkl", so we
+        # extract the first element
+        matches = [match[0] for match in matches]
+        return matches
 
     def _edits(self, word, edit_distance, delete_words):
         """inexpensive and language independent: only deletes,

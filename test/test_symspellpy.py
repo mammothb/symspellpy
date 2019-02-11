@@ -42,6 +42,8 @@ class TestSymSpellPy(unittest.TestCase):
         self.test_word_segmentation()
         self.test_word_segmentation_ignore_token()
         self.test_word_segmentation_with_arguments()
+        # self.test_create_dictionary_invalid_path()
+        # self.test_create_dictionary()
 
     def test_negative_initial_capacity(self):
         print('  - %s' % inspect.stack()[0][3])
@@ -630,6 +632,34 @@ class TestSymSpellPy(unittest.TestCase):
         self.assertEqual(78, si_1.count)
 
         self.assertEqual("qwer, 12, 78", str(si_1))
+
+    def test_create_dictionary_invalid_path(self):
+        print('  - %s' % inspect.stack()[0][3])
+        edit_distance_max = 2
+        prefix_length = 7
+        sym_spell = SymSpell(83000, edit_distance_max, prefix_length)
+        self.assertEqual(False, sym_spell.create_dictionary(
+            "invalid/dictionary/path.txt"))
+
+    def test_load_dictionary(self):
+        print('  - %s' % inspect.stack()[0][3])
+        cwd = os.path.realpath(os.path.dirname(__file__))
+        corpus_path = os.path.realpath(os.path.join(
+            cwd, "fortests", "big_modified.txt"))
+        big_words_path = os.path.realpath(os.path.join(
+            cwd, "fortests", "big_words.txt"))
+
+        edit_distance_max = 2
+        prefix_length = 7
+        sym_spell = SymSpell(83000, edit_distance_max, prefix_length)
+        sym_spell.create_dictionary(corpus_path)
+
+        num_lines = 0
+        with open(big_words_path, "r") as infile:
+            for line, kvp in zip(infile, sym_spell.words.items()):
+                self.assertEqual(line.rstrip(), "{} {}".format(*kvp))
+                num_lines += 1
+        self.assertEqual(num_lines, sym_spell.word_count)
 
 if __name__ == "__main__":
     runner = unittest.TextTestRunner()
