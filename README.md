@@ -10,11 +10,12 @@ Please note that the port has not been optimized for speed.
 
 Usage
 ========
-### Installing the  ``symspellpy`` module
+### Installing the  `symspellpy` module
 ```pip install -U symspellpy```
 
 ### Copying the frequency dictionary to your project
-Copy ``frequency_dictionary_en_82_765.txt`` (found in the inner ``symspellpy`` directory) to your project directory so you end up with the following layout:
+Copy `frequency_dictionary_en_82_765.txt` (found in the inner `symspellpy`
+directory) to your project directory so you end up with the following layout:
 ```
 project_dir
   +-frequency_dictionary_en_82_765.txt
@@ -22,7 +23,7 @@ project_dir
 ```
 
 ### Adding new terms
-  - Use `load_dictionary(corpus=<path/to/dictionary.txt>, <term_index>, <count_index>)`. `dictionary.txt` should contain:
+  - Use `load_dictionary(corpus=<path/to/dictionary.txt>, <term_index>,<count_index>)`. `dictionary.txt` should contain:
   ```
 <term> <count>
 <term> <count>
@@ -32,6 +33,48 @@ project_dir
 with `term_index` indicating the column number of terms and `count_index` indicating the column number of counts/frequency.
   - Append `<term> <count>` to the provided `frequency_dictionary_en_82_765.txt`
   - Use the method `create_dictionary_entry(key=<term>, count=<count>)`
+
+### Sample usage (`create_dictionary`)
+```python
+import os
+
+from symspellpy.symspellpy import SymSpell  # import the module
+
+def main():
+    # create object
+    initial_capacity = 83000
+    # maximum edit distance per dictionary precalculation
+    max_edit_distance_dictionary = 2
+    prefix_length = 7
+    sym_spell = SymSpell(initial_capacity, max_edit_distance_dictionary,
+                         prefix_length)
+    
+    # create dictionary using corpus.txt
+    if not sym_spell.create_dictionary(<path/to/corpus.txt>):
+        print("Corpus file not found")
+        return
+
+    for key, count in sym_spell.words.items():
+        print("{} {}".format(key, count))
+
+if __name__ == "__main__":
+    main()
+```
+`corpus.txt` should contain:
+```
+abc abc-def abc_def abc'def abc qwe qwe1 1qwe q1we 1234 1234
+```
+Expected output:
+```
+abc 4
+def 2
+abc'def 1
+qwe 1
+qwe1 1
+1qwe 1
+q1we 1
+1234 2
+```
 
 ### Sample usage (`lookup` and `lookup_compound`)
 Using ``project.py`` (code is more verbose than required to allow explanation of method arguments)
@@ -87,11 +130,12 @@ if __name__ == "__main__":
     main()
 ```
 ##### Expected output:
-``members, 226656153, 1``<br><br>
-``where is the love he had dated for much of the past who couldn't read in six grade and inspired him, 300000, 10``
+`members, 226656153, 1`<br><br>
+`where is the love he had dated for much of the past who couldn't read in six grade and inspired him, 300000, 10`
 
 ### Sample usage (`word_segmentation`)
-Using ``project.py`` (code is more verbose than required to allow explanation of method arguments)
+Using `project.py` (code is more verbose than required to allow explanation of
+method arguments)
 ```python
 import os
 
@@ -134,4 +178,4 @@ if __name__ == "__main__":
     main()
 ```
 ##### Expected output:
-``the quick brown fox jumps over the lazy dog 8 -34.491167981910635``
+`the quick brown fox jumps over the lazy dog 8 -34.491167981910635`

@@ -1,6 +1,10 @@
 CHANGELOG <br>
 ==============
 
+## 6.3.6 (2019-02-11)
+---------------------
+- Added `create_dictionary()` feature
+
 ## 6.3.5 (2019-01-14)
 ---------------------
 - Fixed `lookup_compound()` to return the correct `distance`
