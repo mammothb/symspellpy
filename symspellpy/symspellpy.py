@@ -138,7 +138,7 @@ class SymSpell(object):
         return True
 
     def load_dictionary(self, corpus, term_index, count_index,
-                        encoding=None):
+                        encoding='utf-8'):
         """Load multiple dictionary entries from a file of
         word/frequency count pairs. Merges with any dictionary data
         already loaded.
@@ -164,7 +164,7 @@ class SymSpell(object):
                         self.create_dictionary_entry(key, count)
         return True
 
-    def create_dictionary(self, corpus, encoding=None):
+    def create_dictionary(self, corpus, encoding='utf-8'):
         """Load multiple dictionary words from a file containing plain
         text. Merges with any dictionary data already loaded.
 
