@@ -401,6 +401,7 @@ class SymSpell(object):
                         candidates.append(delete)
         if len(suggestions) > 1:
             suggestions.sort()
+        early_exit()
         return suggestions
 
     def lookup_compound(self, phrase, max_edit_distance,
