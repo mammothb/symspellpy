@@ -13,69 +13,63 @@ class TestSymSpellPy(unittest.TestCase):
         "symspellpy", "frequency_dictionary_en_82_765.txt")
     fortests_path = os.path.join(os.path.dirname(__file__), "fortests")
 
-    def test_negative_initial_capacity(self):
-        with pytest.raises(ValueError) as excinfo:
-            __ = SymSpell(-16, 1, 3)
-        self.assertEqual("initial_capacity cannot be negative",
-                         str(excinfo.value))
-
     def test_negative_max_dictionary_edit_distance(self):
         with pytest.raises(ValueError) as excinfo:
-            __ = SymSpell(16, -1, 3)
+            __ = SymSpell(-1, 3)
         self.assertEqual("max_dictionary_edit_distance cannot be negative",
                          str(excinfo.value))
 
     def test_invalid_prefix_length(self):
         # prefix_length < 1
         with pytest.raises(ValueError) as excinfo:
-            __ = SymSpell(16, 1, 0)
+            __ = SymSpell(1, 0)
         self.assertEqual("prefix_length cannot be less than 1 or "
                          "smaller than max_dictionary_edit_distance",
                          str(excinfo.value))
 
         with pytest.raises(ValueError) as excinfo:
-            __ = SymSpell(16, 1, -1)
+            __ = SymSpell(1, -1)
         self.assertEqual("prefix_length cannot be less than 1 or "
                          "smaller than max_dictionary_edit_distance",
                          str(excinfo.value))
 
         # prefix_length <= max_dictionary_edit_distance
         with pytest.raises(ValueError) as excinfo:
-            __ = SymSpell(16, 2, 2)
+            __ = SymSpell(2, 2)
         self.assertEqual("prefix_length cannot be less than 1 or "
                          "smaller than max_dictionary_edit_distance",
                          str(excinfo.value))
 
     def test_negative_count_threshold(self):
         with pytest.raises(ValueError) as excinfo:
-            __ = SymSpell(16, 1, 3, -1)
+            __ = SymSpell(1, 3, -1)
         self.assertEqual("count_threshold cannot be negative",
                          str(excinfo.value))
 
     def test_invalide_compact_level(self):
         # compact_level < 0
         with pytest.raises(ValueError) as excinfo:
-            __ = SymSpell(16, 1, 3, 1, -1)
+            __ = SymSpell(1, 3, 1, -1)
         self.assertEqual("compact_level must be between 0 and 16",
                          str(excinfo.value))
 
         # compact_level < 0
         with pytest.raises(ValueError) as excinfo:
-            __ = SymSpell(16, 1, 3, 1, 17)
+            __ = SymSpell(1, 3, 1, 17)
         self.assertEqual("compact_level must be between 0 and 16",
                          str(excinfo.value))
 
     def test_create_dictionary_entry_negative_count(self):
-        sym_spell = SymSpell(16, 1, 3)
+        sym_spell = SymSpell(1, 3)
         self.assertEqual(False, sym_spell.create_dictionary_entry("pipe", 0))
         self.assertEqual(False,
                          sym_spell.create_dictionary_entry("pipe", -1))
 
-        sym_spell = SymSpell(16, 1, 3, count_threshold=0)
+        sym_spell = SymSpell(1, 3, count_threshold=0)
         self.assertEqual(True, sym_spell.create_dictionary_entry("pipe", 0))
 
     def test_create_dictionary_entry_below_threshold(self):
-        sym_spell = SymSpell(16, 1, 3, count_threshold=10)
+        sym_spell = SymSpell(1, 3, count_threshold=10)
         sym_spell.create_dictionary_entry("pipe", 4)
         self.assertEqual(1, len(sym_spell.below_threshold_words))
         self.assertEqual(4, sym_spell.below_threshold_words["pipe"])
@@ -99,7 +93,7 @@ class TestSymSpellPy(unittest.TestCase):
         self.assertTrue(len(sym_spell.deletes))
 
     def test_words_with_shared_prefix_should_retain_counts(self):
-        sym_spell = SymSpell(16, 1, 3)
+        sym_spell = SymSpell(1, 3)
         sym_spell.create_dictionary_entry("pipe", 5)
         sym_spell.create_dictionary_entry("pips", 10)
 
@@ -192,7 +186,7 @@ class TestSymSpellPy(unittest.TestCase):
         self.assertEqual("steama", result[0].term)
 
     def test_lookup_should_not_return_non_word_delete(self):
-        sym_spell = SymSpell(16, 2, 7, 10)
+        sym_spell = SymSpell(2, 7, 10)
         sym_spell.create_dictionary_entry("pawn", 10)
         result = sym_spell.lookup("paw", Verbosity.TOP, 0)
         self.assertEqual(0, len(result))
@@ -200,20 +194,20 @@ class TestSymSpellPy(unittest.TestCase):
         self.assertEqual(0, len(result))
 
     def test_lookup_should_not_return_low_count_word(self):
-        sym_spell = SymSpell(16, 2, 7, 10)
+        sym_spell = SymSpell(2, 7, 10)
         sym_spell.create_dictionary_entry("pawn", 1)
         result = sym_spell.lookup("pawn", Verbosity.TOP, 0)
         self.assertEqual(0, len(result))
 
     def test_lookup_should_not_return_low_count_word_that_are_also_delete_word(self):
-        sym_spell = SymSpell(16, 2, 7, 10)
+        sym_spell = SymSpell(2, 7, 10)
         sym_spell.create_dictionary_entry("flame", 20)
         sym_spell.create_dictionary_entry("flam", 1)
         result = sym_spell.lookup("flam", Verbosity.TOP, 0)
         self.assertEqual(0, len(result))
 
     def test_lookup_max_edit_distance_too_large(self):
-        sym_spell = SymSpell(16, 2, 7, 10)
+        sym_spell = SymSpell(2, 7, 10)
         sym_spell.create_dictionary_entry("flame", 20)
         sym_spell.create_dictionary_entry("flam", 1)
         with pytest.raises(ValueError) as excinfo:
@@ -221,7 +215,7 @@ class TestSymSpellPy(unittest.TestCase):
         self.assertEqual("Distance too large", str(excinfo.value))
 
     def test_lookup_include_unknown(self):
-        sym_spell = SymSpell(16, 2, 7, 10)
+        sym_spell = SymSpell(2, 7, 10)
         sym_spell.create_dictionary_entry("flame", 20)
         sym_spell.create_dictionary_entry("flam", 1)
         result = sym_spell.lookup("qwer", Verbosity.TOP, 0, True)
@@ -231,7 +225,7 @@ class TestSymSpellPy(unittest.TestCase):
     def test_load_dictionary_invalid_path(self):
         edit_distance_max = 2
         prefix_length = 7
-        sym_spell = SymSpell(83000, edit_distance_max, prefix_length)
+        sym_spell = SymSpell(edit_distance_max, prefix_length)
         self.assertEqual(False, sym_spell.load_dictionary(
             "invalid/dictionary/path.txt", 0, 1))
 
@@ -239,7 +233,7 @@ class TestSymSpellPy(unittest.TestCase):
         dictionary_path = os.path.join(self.fortests_path, "bad_dict.txt")
         edit_distance_max = 2
         prefix_length = 7
-        sym_spell = SymSpell(83000, edit_distance_max, prefix_length)
+        sym_spell = SymSpell(edit_distance_max, prefix_length)
         self.assertEqual(True, sym_spell.load_dictionary(
             dictionary_path, 0, 1))
         self.assertEqual(2, sym_spell.word_count)
@@ -253,7 +247,7 @@ class TestSymSpellPy(unittest.TestCase):
         edit_distance_max = 2
         prefix_length = 7
         verbosity = Verbosity.CLOSEST
-        sym_spell = SymSpell(83000, edit_distance_max, prefix_length)
+        sym_spell = SymSpell(edit_distance_max, prefix_length)
         sym_spell.load_dictionary(self.dictionary_path, 0, 1)
 
         test_list = []
@@ -271,7 +265,7 @@ class TestSymSpellPy(unittest.TestCase):
     def test_lookup_compound(self):
         edit_distance_max = 2
         prefix_length = 7
-        sym_spell = SymSpell(83000, edit_distance_max, prefix_length)
+        sym_spell = SymSpell(edit_distance_max, prefix_length)
         sym_spell.load_dictionary(self.dictionary_path, 0, 1)
 
         typo = ("whereis th elove hehad dated forImuch of thepast who "
@@ -307,7 +301,7 @@ class TestSymSpellPy(unittest.TestCase):
     def test_lookup_compound_only_combi(self):
         edit_distance_max = 2
         prefix_length = 7
-        sym_spell = SymSpell(16, edit_distance_max, prefix_length)
+        sym_spell = SymSpell(edit_distance_max, prefix_length)
         sym_spell.create_dictionary_entry("steam", 1)
         sym_spell.create_dictionary_entry("machine", 1)
 
@@ -320,7 +314,7 @@ class TestSymSpellPy(unittest.TestCase):
     def test_lookup_compound_no_suggestion(self):
         edit_distance_max = 2
         prefix_length = 7
-        sym_spell = SymSpell(16, edit_distance_max, prefix_length)
+        sym_spell = SymSpell(edit_distance_max, prefix_length)
         sym_spell.create_dictionary_entry("steam", 1)
         sym_spell.create_dictionary_entry("machine", 1)
 
@@ -332,7 +326,7 @@ class TestSymSpellPy(unittest.TestCase):
     def test_lookup_compound_replaced_words(self):
         edit_distance_max = 2
         prefix_length = 7
-        sym_spell = SymSpell(83000, edit_distance_max, prefix_length)
+        sym_spell = SymSpell(edit_distance_max, prefix_length)
         sym_spell.load_dictionary(self.dictionary_path, 0, 1)
 
         typo = ("whereis th elove hehad dated forImuch of thepast who "
@@ -395,7 +389,7 @@ class TestSymSpellPy(unittest.TestCase):
     def test_lookup_compound_ignore_non_words(self):
         edit_distance_max = 2
         prefix_length = 7
-        sym_spell = SymSpell(83000, edit_distance_max, prefix_length)
+        sym_spell = SymSpell(edit_distance_max, prefix_length)
         sym_spell.load_dictionary(self.dictionary_path, 0, 1)
 
         typo = ("whereis th elove 123 hehad dated forImuch of THEPAST who "
@@ -448,7 +442,7 @@ class TestSymSpellPy(unittest.TestCase):
 
         edit_distance_max = 2
         prefix_length = 7
-        sym_spell = SymSpell(83000, edit_distance_max, prefix_length)
+        sym_spell = SymSpell(edit_distance_max, prefix_length)
         sym_spell.load_dictionary(dictionary_path, 0, 1, encoding="utf-8")
 
         result = sym_spell.lookup("АБ", Verbosity.TOP, 2)
@@ -458,7 +452,7 @@ class TestSymSpellPy(unittest.TestCase):
     def test_word_segmentation(self):
         edit_distance_max = 0
         prefix_length = 7
-        sym_spell = SymSpell(83000, edit_distance_max, prefix_length)
+        sym_spell = SymSpell(edit_distance_max, prefix_length)
         sym_spell.load_dictionary(self.dictionary_path, 0, 1)
 
         typo = "thequickbrownfoxjumpsoverthelazydog"
@@ -482,7 +476,7 @@ class TestSymSpellPy(unittest.TestCase):
     def test_word_segmentation_ignore_token(self):
         edit_distance_max = 2
         prefix_length = 7
-        sym_spell = SymSpell(83000, edit_distance_max, prefix_length)
+        sym_spell = SymSpell(edit_distance_max, prefix_length)
         sym_spell.load_dictionary(self.dictionary_path, 0, 1)
 
         typo = "24th december"
@@ -492,7 +486,7 @@ class TestSymSpellPy(unittest.TestCase):
     def test_word_segmentation_with_arguments(self):
         edit_distance_max = 0
         prefix_length = 7
-        sym_spell = SymSpell(83000, edit_distance_max, prefix_length)
+        sym_spell = SymSpell(edit_distance_max, prefix_length)
         sym_spell.load_dictionary(self.dictionary_path, 0, 1)
 
         typo = "thequickbrownfoxjumpsoverthelazydog"
@@ -534,7 +528,7 @@ class TestSymSpellPy(unittest.TestCase):
     def test_create_dictionary_invalid_path(self):
         edit_distance_max = 2
         prefix_length = 7
-        sym_spell = SymSpell(83000, edit_distance_max, prefix_length)
+        sym_spell = SymSpell(edit_distance_max, prefix_length)
         self.assertEqual(False, sym_spell.create_dictionary(
             "invalid/dictionary/path.txt"))
 
@@ -544,7 +538,7 @@ class TestSymSpellPy(unittest.TestCase):
 
         edit_distance_max = 2
         prefix_length = 7
-        sym_spell = SymSpell(83000, edit_distance_max, prefix_length)
+        sym_spell = SymSpell(edit_distance_max, prefix_length)
         sym_spell.create_dictionary(corpus_path, encoding="utf-8")
 
         num_lines = 0

@@ -10,49 +10,49 @@ from symspellpy.editdistance import DistanceAlgorithm, EditDistance
 import symspellpy.helpers as helpers
 
 class Verbosity(Enum):
-    """Controls the closeness/quantity of returned spelling suggestions."""
-    # Top suggestion with the highest term frequency of the suggestions of
-    # smallest edit distance found.
+    """Controls the closeness/quantity of returned spelling
+    suggestions.
+    """
+    # Top suggestion with the highest term frequency of the suggestions
+    # of smallest edit distance found.
     TOP = 0
-    # All suggestions of smallest edit distance found, suggestions ordered by
-    # term frequency.
+    # All suggestions of smallest edit distance found, suggestions
+    # ordered by term frequency.
     CLOSEST = 1
-    # All suggestions within maxEditDistance, suggestions ordered by edit
-    # distance, then by term frequency (slower, no early termination).
+    # All suggestions within maxEditDistance, suggestions ordered by
+    # edit distance, then by term frequency (slower, no early
+    # termination).
     ALL = 2
 
 class SymSpell(object):
-    def __init__(self, initial_capacity=16, max_dictionary_edit_distance=2,
-                 prefix_length=7, count_threshold=1, compact_level=5):
+    def __init__(self, max_dictionary_edit_distance=2, prefix_length=7,
+                 count_threshold=1, compact_level=5):
         """Create a new instance of SymSpell.
-        Specifying an accurate initial_capacity is not essential, but it can
-        help speed up processing by aleviating the need for data
-        restructuring as the size grows.
+        initial_capacity from the original code is omitted since python
+        cannot preallocate memory
 
         Keyword arguments:
-        initial_capacity -- The expected number of words in
-            dictionary. (default 16)
         max_dictionary_edit_distance -- Maximum edit distance for doing
             lookups. (default 2)
         prefix_length -- The length of word prefixes used for spell
             checking. (default 7)
-        count_threshold -- The minimum frequency count for dictionary words
-                to be considered correct spellings. (default 1)
+        count_threshold -- The minimum frequency count for dictionary
+            words to be considered correct spellings. (default 1)
         compact_level -- Degree of favoring lower memory use over speed
-            (0=fastest,most memory, 16=slowest,least memory). (default 5)
+            (0=fastest,most memory, 16=slowest,least memory).
+            (default 5)
         """
-        if initial_capacity < 0:
-            raise ValueError("initial_capacity cannot be negative")
         if max_dictionary_edit_distance < 0:
-            raise ValueError("max_dictionary_edit_distance cannot be negative")
-        if prefix_length < 1 or prefix_length <= max_dictionary_edit_distance:
+            raise ValueError("max_dictionary_edit_distance cannot be "
+                             "negative")
+        if (prefix_length < 1
+                or prefix_length <= max_dictionary_edit_distance):
             raise ValueError("prefix_length cannot be less than 1 or "
                              "smaller than max_dictionary_edit_distance")
         if count_threshold < 0:
             raise ValueError("count_threshold cannot be negative")
         if compact_level < 0 or compact_level > 16:
             raise ValueError("compact_level must be between 0 and 16")
-        self._initial_capacity = initial_capacity
         self._words = dict()
         self._below_threshold_words = dict()
         self._deletes = defaultdict(list)
