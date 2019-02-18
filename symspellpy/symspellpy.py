@@ -1,8 +1,10 @@
 from collections import defaultdict, namedtuple
 from enum import Enum
+import gzip
 from itertools import cycle
 import math
 import os.path
+import pickle
 import re
 import sys
 
@@ -10,49 +12,49 @@ from symspellpy.editdistance import DistanceAlgorithm, EditDistance
 import symspellpy.helpers as helpers
 
 class Verbosity(Enum):
-    """Controls the closeness/quantity of returned spelling suggestions."""
-    # Top suggestion with the highest term frequency of the suggestions of
-    # smallest edit distance found.
+    """Controls the closeness/quantity of returned spelling
+    suggestions.
+    """
+    # Top suggestion with the highest term frequency of the suggestions
+    # of smallest edit distance found.
     TOP = 0
-    # All suggestions of smallest edit distance found, suggestions ordered by
-    # term frequency.
+    # All suggestions of smallest edit distance found, suggestions
+    # ordered by term frequency.
     CLOSEST = 1
-    # All suggestions within maxEditDistance, suggestions ordered by edit
-    # distance, then by term frequency (slower, no early termination).
+    # All suggestions within maxEditDistance, suggestions ordered by
+    # edit distance, then by term frequency (slower, no early
+    # termination).
     ALL = 2
 
 class SymSpell(object):
-    def __init__(self, initial_capacity=16, max_dictionary_edit_distance=2,
-                 prefix_length=7, count_threshold=1, compact_level=5):
+    def __init__(self, max_dictionary_edit_distance=2, prefix_length=7,
+                 count_threshold=1, compact_level=5):
         """Create a new instance of SymSpell.
-        Specifying an accurate initial_capacity is not essential, but it can
-        help speed up processing by aleviating the need for data
-        restructuring as the size grows.
+        initial_capacity from the original code is omitted since python
+        cannot preallocate memory
 
         Keyword arguments:
-        initial_capacity -- The expected number of words in
-            dictionary. (default 16)
         max_dictionary_edit_distance -- Maximum edit distance for doing
             lookups. (default 2)
         prefix_length -- The length of word prefixes used for spell
             checking. (default 7)
-        count_threshold -- The minimum frequency count for dictionary words
-                to be considered correct spellings. (default 1)
+        count_threshold -- The minimum frequency count for dictionary
+            words to be considered correct spellings. (default 1)
         compact_level -- Degree of favoring lower memory use over speed
-            (0=fastest,most memory, 16=slowest,least memory). (default 5)
+            (0=fastest,most memory, 16=slowest,least memory).
+            (default 5)
         """
-        if initial_capacity < 0:
-            raise ValueError("initial_capacity cannot be negative")
         if max_dictionary_edit_distance < 0:
-            raise ValueError("max_dictionary_edit_distance cannot be negative")
-        if prefix_length < 1 or prefix_length <= max_dictionary_edit_distance:
+            raise ValueError("max_dictionary_edit_distance cannot be "
+                             "negative")
+        if (prefix_length < 1
+                or prefix_length <= max_dictionary_edit_distance):
             raise ValueError("prefix_length cannot be less than 1 or "
                              "smaller than max_dictionary_edit_distance")
         if count_threshold < 0:
             raise ValueError("count_threshold cannot be negative")
         if compact_level < 0 or compact_level > 16:
             raise ValueError("compact_level must be between 0 and 16")
-        self._initial_capacity = initial_capacity
         self._words = dict()
         self._below_threshold_words = dict()
         self._deletes = defaultdict(list)
@@ -180,6 +182,24 @@ class SymSpell(object):
             for line in infile:
                 for key in self._parse_words(line):
                     self.create_dictionary_entry(key, 1)
+        return True
+
+    def save_pickle(self, filename, compressed=True):
+        pickle_data = {
+            "deletes": self._deletes,
+            "words": self._words,
+            "max_length": self._max_length
+        }
+        with (gzip.open if compressed else open)(filename, "wb") as f:
+            pickle.dump(pickle_data, f)
+
+    # Load delete combination as pickle. This will reduce the loading time.
+    def load_pickle(self, filename, compressed=True):
+        with (gzip.open if compressed else open)(filename, "rb") as f:
+            pickle_data = pickle.load(f)
+        self._deletes = pickle_data["deletes"]
+        self._words = pickle_data["words"]
+        self._max_length = pickle_data["max_length"]
         return True
 
     def lookup(self, phrase, verbosity, max_edit_distance=None,
@@ -401,6 +421,7 @@ class SymSpell(object):
                         candidates.append(delete)
         if len(suggestions) > 1:
             suggestions.sort()
+        early_exit()
         return suggestions
 
     def lookup_compound(self, phrase, max_edit_distance,
@@ -710,12 +731,13 @@ class SymSpell(object):
 
     def _edits(self, word, edit_distance, delete_words):
         """inexpensive and language independent: only deletes,
-        no transposes + replaces + inserts replaces and inserts are expensive
-        and language dependent
+        no transposes + replaces + inserts replaces and inserts are
+        expensive and language dependent
         """
         edit_distance += 1
-        if len(word) > 1:
-            for i in range(len(word)):
+        word_len = len(word)
+        if word_len > 1:
+            for i in range(word_len):
                 delete = word[: i] + word[i + 1 :]
                 if delete not in delete_words:
                     delete_words.add(delete)
@@ -735,14 +757,12 @@ class SymSpell(object):
 
     def _get_str_hash(self, s):
         s_len = len(s)
-        mask_len = min(s_len, 3)
+        mask_len = 3 if s_len > 3 else s_len
 
         hash_s = 2166136261
-        for i in range(s_len):
-            hash_s ^= ord(s[i])
-            hash_s *= 16777619
-        hash_s &= self._compact_mask
-        hash_s |= mask_len
+        for c in map(ord, s):
+            hash_s = (hash_s ^ c) * 16777619
+        hash_s = (hash_s & self._compact_mask) | mask_len
         return hash_s
 
     @property

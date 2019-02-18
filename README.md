@@ -10,7 +10,7 @@ Please note that the port has not been optimized for speed.
 
 Usage
 ========
-### Installing the  `symspellpy` module
+### Installing the `symspellpy` module
 ```pip install -U symspellpy```
 
 ### Copying the frequency dictionary to your project
@@ -24,7 +24,7 @@ project_dir
 
 ### Adding new terms
   - Use `load_dictionary(corpus=<path/to/dictionary.txt>, <term_index>,<count_index>)`. `dictionary.txt` should contain:
-  ```
+```
 <term> <count>
 <term> <count>
 ...
@@ -41,13 +41,11 @@ import os
 from symspellpy.symspellpy import SymSpell  # import the module
 
 def main():
-    # create object
-    initial_capacity = 83000
     # maximum edit distance per dictionary precalculation
     max_edit_distance_dictionary = 2
     prefix_length = 7
-    sym_spell = SymSpell(initial_capacity, max_edit_distance_dictionary,
-                         prefix_length)
+    # create object
+    sym_spell = SymSpell(max_edit_distance_dictionary, prefix_length)
     
     # create dictionary using corpus.txt
     if not sym_spell.create_dictionary(<path/to/corpus.txt>):
@@ -77,20 +75,18 @@ q1we 1
 ```
 
 ### Sample usage (`lookup` and `lookup_compound`)
-Using ``project.py`` (code is more verbose than required to allow explanation of method arguments)
+Using `project.py` (code is more verbose than required to allow explanation of method arguments)
 ```python
 import os
 
 from symspellpy.symspellpy import SymSpell, Verbosity  # import the module
 
 def main():
-    # create object
-    initial_capacity = 83000
     # maximum edit distance per dictionary precalculation
     max_edit_distance_dictionary = 2
     prefix_length = 7
-    sym_spell = SymSpell(initial_capacity, max_edit_distance_dictionary,
-                         prefix_length)
+    # create object
+    sym_spell = SymSpell(max_edit_distance_dictionary, prefix_length)
     # load dictionary
     dictionary_path = os.path.join(os.path.dirname(__file__),
                                    "frequency_dictionary_en_82_765.txt")
@@ -139,24 +135,14 @@ method arguments)
 ```python
 import os
 
-from symspellpy.symspellpy import SymSpell, Verbosity  # import the module
+from symspellpy.symspellpy import SymSpell  # import the module
 
 def main():
-      edit_distance_max = 0
-      prefix_length = 7
-      sym_spell = SymSpell(83000, edit_distance_max, prefix_length)
-      sym_spell.load_dictionary(dictionary_path, 0, 1)
-
-      typo = "thequickbrownfoxjumpsoverthelazydog"
-      correction = "the quick brown fox jumps over the lazy dog"
-      result = sym_spell.word_segmentation(typo)
-    # create object
-    initial_capacity = 83000
     # maximum edit distance per dictionary precalculation
     max_edit_distance_dictionary = 0
     prefix_length = 7
-    sym_spell = SymSpell(initial_capacity, max_edit_distance_dictionary,
-                         prefix_length)
+    # create object
+    sym_spell = SymSpell(max_edit_distance_dictionary, prefix_length)
     # load dictionary
     dictionary_path = os.path.join(os.path.dirname(__file__),
                                    "frequency_dictionary_en_82_765.txt")
