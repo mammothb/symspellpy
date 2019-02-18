@@ -1,6 +1,14 @@
 CHANGELOG <br>
 ==============
 
+## 6.3.7 (2019-02-18)
+---------------------
+- Fixed `include_unknown` in `lookup`
+- Removed unused `initial_capacity` argument
+- Improved `_get_str_hash` performance
+- Implemented `save_pickle` and `load_pickle` to avoid having to create the
+dictionary every time
+
 ## 6.3.6 (2019-02-11)
 ---------------------
 - Added `create_dictionary()` feature
