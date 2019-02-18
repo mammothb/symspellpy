@@ -548,3 +548,34 @@ class TestSymSpellPy(unittest.TestCase):
                 self.assertEqual(int(count), sym_spell.words[key])
                 num_lines += 1
         self.assertEqual(num_lines, sym_spell.word_count)
+
+    def test_pickle_uncompressed(self):
+        pickle_path = os.path.join(self.fortests_path, "dictionary.pickle")
+        is_compressed = False
+        edit_distance_max = 2
+        prefix_length = 7
+        sym_spell = SymSpell(edit_distance_max, prefix_length)
+        sym_spell.load_dictionary(self.dictionary_path, 0, 1)
+        sym_spell.save_pickle(pickle_path, is_compressed)
+
+        sym_spell_2 = SymSpell(edit_distance_max, prefix_length)
+        sym_spell_2.load_pickle(pickle_path, is_compressed)
+        self.assertEqual(sym_spell.deletes, sym_spell_2.deletes)
+        self.assertEqual(sym_spell.words, sym_spell_2.words)
+        self.assertEqual(sym_spell._max_length, sym_spell_2._max_length)
+        os.remove(pickle_path)
+
+    def test_pickle_compressed(self):
+        pickle_path = os.path.join(self.fortests_path, "dictionary.pickle")
+        edit_distance_max = 2
+        prefix_length = 7
+        sym_spell = SymSpell(edit_distance_max, prefix_length)
+        sym_spell.load_dictionary(self.dictionary_path, 0, 1)
+        sym_spell.save_pickle(pickle_path)
+
+        sym_spell_2 = SymSpell(edit_distance_max, prefix_length)
+        sym_spell_2.load_pickle(pickle_path)
+        self.assertEqual(sym_spell.deletes, sym_spell_2.deletes)
+        self.assertEqual(sym_spell.words, sym_spell_2.words)
+        self.assertEqual(sym_spell._max_length, sym_spell_2._max_length)
+        os.remove(pickle_path)

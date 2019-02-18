@@ -1,8 +1,10 @@
 from collections import defaultdict, namedtuple
 from enum import Enum
+import gzip
 from itertools import cycle
 import math
 import os.path
+import pickle
 import re
 import sys
 
@@ -180,6 +182,24 @@ class SymSpell(object):
             for line in infile:
                 for key in self._parse_words(line):
                     self.create_dictionary_entry(key, 1)
+        return True
+
+    def save_pickle(self, filename, compressed=True):
+        pickle_data = {
+            "deletes": self._deletes,
+            "words": self._words,
+            "max_length": self._max_length
+        }
+        with (gzip.open if compressed else open)(filename, "wb") as f:
+            pickle.dump(pickle_data, f)
+
+    # Load delete combination as pickle. This will reduce the loading time.
+    def load_pickle(self, filename, compressed=True):
+        with (gzip.open if compressed else open)(filename, "rb") as f:
+            pickle_data = pickle.load(f)
+        self._deletes = pickle_data["deletes"]
+        self._words = pickle_data["words"]
+        self._max_length = pickle_data["max_length"]
         return True
 
     def lookup(self, phrase, verbosity, max_edit_distance=None,
