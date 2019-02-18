@@ -711,12 +711,13 @@ class SymSpell(object):
 
     def _edits(self, word, edit_distance, delete_words):
         """inexpensive and language independent: only deletes,
-        no transposes + replaces + inserts replaces and inserts are expensive
-        and language dependent
+        no transposes + replaces + inserts replaces and inserts are
+        expensive and language dependent
         """
         edit_distance += 1
-        if len(word) > 1:
-            for i in range(len(word)):
+        word_len = len(word)
+        if word_len > 1:
+            for i in range(word_len):
                 delete = word[: i] + word[i + 1 :]
                 if delete not in delete_words:
                     delete_words.add(delete)
@@ -736,14 +737,12 @@ class SymSpell(object):
 
     def _get_str_hash(self, s):
         s_len = len(s)
-        mask_len = min(s_len, 3)
+        mask_len = 3 if s_len > 3 else s_len
 
         hash_s = 2166136261
-        for i in range(s_len):
-            hash_s ^= ord(s[i])
-            hash_s *= 16777619
-        hash_s &= self._compact_mask
-        hash_s |= mask_len
+        for c in map(ord, s):
+            hash_s = (hash_s ^ c) * 16777619
+        hash_s = (hash_s & self._compact_mask) | mask_len
         return hash_s
 
     @property
