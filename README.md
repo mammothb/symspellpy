@@ -1,5 +1,6 @@
 symspellpy <br>
 [![Build Status](https://travis-ci.com/mammothb/symspellpy.svg?branch=master)](https://travis-ci.com/mammothb/symspellpy)
+[![Documentation Status](https://readthedocs.org/projects/symspellpy/badge/?version=latest)](https://symspellpy.readthedocs.io/en/latest/?badge=latest)
 [![codecov](https://codecov.io/gh/mammothb/symspellpy/branch/master/graph/badge.svg)](https://codecov.io/gh/mammothb/symspellpy)
 ========
 
