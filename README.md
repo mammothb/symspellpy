@@ -127,8 +127,8 @@ if __name__ == "__main__":
     main()
 ```
 ##### Expected output:
-`members, 226656153, 1`<br><br>
-`where is the love he had dated for much of the past who couldn't read in six grade and inspired him, 300000, 10`
+`members, 1, 226656153`<br><br>
+`where is the love he had dated for much of the past who couldn't read in six grade and inspired him, 9, 300000`
 
 ### Sample usage (`word_segmentation`)
 Using `project.py` (code is more verbose than required to allow explanation of

@@ -275,6 +275,8 @@ class TestSymSpellPy(unittest.TestCase):
         results = sym_spell.lookup_compound(typo, edit_distance_max)
         self.assertEqual(1, len(results))
         self.assertEqual(correction, results[0].term)
+        self.assertEqual(9, results[0].distance)
+        self.assertEqual(300000, results[0].count)
 
         typo = "in te dhird qarter oflast jear he hadlearned ofca sekretplan"
         correction = ("in the third quarter of last year he had learned of a "
@@ -282,6 +284,8 @@ class TestSymSpellPy(unittest.TestCase):
         results = sym_spell.lookup_compound(typo, edit_distance_max)
         self.assertEqual(1, len(results))
         self.assertEqual(correction, results[0].term)
+        self.assertEqual(9, results[0].distance)
+        self.assertEqual(23121323, results[0].count)
 
         typo = ("the bigjest playrs in te strogsommer film slatew ith plety "
                 "of funn")
@@ -290,6 +294,8 @@ class TestSymSpellPy(unittest.TestCase):
         results = sym_spell.lookup_compound(typo, edit_distance_max)
         self.assertEqual(1, len(results))
         self.assertEqual(correction, results[0].term)
+        self.assertEqual(9, results[0].distance)
+        self.assertEqual(3813904, results[0].count)
 
         typo = ("Can yu readthis messa ge despite thehorible sppelingmsitakes")
         correction = ("can you read this message despite the horrible "
@@ -297,6 +303,8 @@ class TestSymSpellPy(unittest.TestCase):
         results = sym_spell.lookup_compound(typo, edit_distance_max)
         self.assertEqual(1, len(results))
         self.assertEqual(correction, results[0].term)
+        self.assertEqual(10, results[0].distance)
+        self.assertEqual(6218089, results[0].count)
 
     def test_lookup_compound_only_combi(self):
         edit_distance_max = 2
@@ -498,14 +506,14 @@ class TestSymSpellPy(unittest.TestCase):
         correction = ("it was a bright cold day in april and the clocks "
                       "were striking thirteen")
         result = sym_spell.word_segmentation(typo, edit_distance_max, 11)
-        self.assertEqual(correction, result[1])
+        self.assertEqual(correction, result.corrected_string)
 
         typo = (" itwasthebestoftimesitwastheworstoftimesitwastheageofwisdom"
                 "itwastheageoffoolishness")
         correction = ("it was the best of times it was the worst of times "
                       "it was the age of wisdom it was the age of foolishness")
         result = sym_spell.word_segmentation(typo, edit_distance_max, 11)
-        self.assertEqual(correction, result[1])
+        self.assertEqual(correction, result.corrected_string)
 
     def test_suggest_item(self):
         si_1 = SuggestItem("asdf", 12, 34)
