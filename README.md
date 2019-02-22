@@ -107,8 +107,8 @@ def main():
                                    max_edit_distance_lookup)
     # display suggestion term, term frequency, and edit distance
     for suggestion in suggestions:
-        print("{}, {}, {}".format(suggestion.term, suggestion.count,
-                                  suggestion.distance))
+        print("{}, {}, {}".format(suggestion.term, suggestion.distance,
+                                  suggestion.count))
 
     # lookup suggestions for multi-word input strings (supports compound
     # splitting & merging)
@@ -120,8 +120,8 @@ def main():
                                             max_edit_distance_lookup)
     # display suggestion term, edit distance, and term frequency
     for suggestion in suggestions:
-        print("{}, {}, {}".format(suggestion.term, suggestion.count,
-                                  suggestion.distance))
+        print("{}, {}, {}".format(suggestion.term, suggestion.distance,
+                                  suggestion.count))
 
 if __name__ == "__main__":
     main()
