@@ -171,8 +171,7 @@ class SymSpell(object):
         # create deletes
         edits = self._edits_prefix(key)
         for delete in edits:
-            delete_hash = self._get_str_hash(delete)
-            self._deletes[delete_hash].append(key)
+            self._deletes[delete].append(key)
         return True
 
     def load_dictionary(self, corpus, term_index, count_index,
@@ -237,7 +236,8 @@ class SymSpell(object):
         pickle_data = {
             "deletes": self._deletes,
             "words": self._words,
-            "max_length": self._max_length
+            "max_length": self._max_length,
+            "data_version": 2
         }
         with (gzip.open if compressed else open)(filename, "wb") as f:
             pickle.dump(pickle_data, f)
@@ -257,6 +257,9 @@ class SymSpell(object):
         """
         with (gzip.open if compressed else open)(filename, "rb") as f:
             pickle_data = pickle.load(f)
+        if "data_version" not in pickle_data or \
+               pickle_data["data_version"] != 2:
+            return False
         self._deletes = pickle_data["deletes"]
         self._words = pickle_data["words"]
         self._max_length = pickle_data["max_length"]
@@ -364,8 +367,8 @@ class SymSpell(object):
                     continue
                 break
 
-            if self._get_str_hash(candidate) in self._deletes:
-                dict_suggestions = self._deletes[self._get_str_hash(candidate)]
+            if candidate in self._deletes:
+                dict_suggestions = self._deletes[candidate]
                 for suggestion in dict_suggestions:
                     if suggestion == phrase:
                         continue
@@ -849,16 +852,6 @@ class SymSpell(object):
             key = key[: self._prefix_length]
         hash_set.add(key)
         return self._edits(key, 0, hash_set)
-
-    def _get_str_hash(self, s):
-        s_len = len(s)
-        mask_len = 3 if s_len > 3 else s_len
-
-        hash_s = 2166136261
-        for c in map(ord, s):
-            hash_s = (hash_s ^ c) * 16777619
-        hash_s = (hash_s & self._compact_mask) | mask_len
-        return hash_s
 
     @property
     def below_threshold_words(self):
