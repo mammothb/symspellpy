@@ -1,6 +1,12 @@
 CHANGELOG <br>
 ==============
 
+## 6.3.8 (2019-03-21)
+---------------------
+- Implemented `delete_dictionary_entry`
+- Improved performance by using python builtin hashing
+- Added versioning of the pickle
+
 ## 6.3.7 (2019-02-18)
 ---------------------
 - Fixed `include_unknown` in `lookup`
