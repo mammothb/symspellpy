@@ -174,6 +174,34 @@ class SymSpell(object):
             self._deletes[delete].append(key)
         return True
 
+    def delete_dictionary_entry(self, key):
+        """Delete an entry in the dictionary. If the deleted entry is
+        the longest word, update self._max_length with the next longest
+        word
+
+        **Args**:
+
+        * key (str): The word to add to dictionary.
+
+        **Return**:
+        True if the word is successfully deleted, or False if the word
+        is not found.
+        """
+        if key not in self._words:
+            return False
+        del self._words[key]
+        # look for the next longest word if we just deleted the
+        # longest word
+        if len(key) == self._max_length:
+            self._max_length = max(map(len, self._words.keys()))
+
+        # create deletes
+        edits = self._edits_prefix(key)
+        for delete in edits:
+            delete_hash = self._get_str_hash(delete)
+            self._deletes[delete_hash].remove(key)
+        return True
+
     def load_dictionary(self, corpus, term_index, count_index,
                         encoding=None):
         """Load multiple dictionary entries from a file of

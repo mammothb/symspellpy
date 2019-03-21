@@ -587,3 +587,38 @@ class TestSymSpellPy(unittest.TestCase):
         self.assertEqual(sym_spell.words, sym_spell_2.words)
         self.assertEqual(sym_spell._max_length, sym_spell_2._max_length)
         os.remove(pickle_path)
+
+    def test_delete_dictionary_entry(self):
+        sym_spell = SymSpell()
+        sym_spell.create_dictionary_entry("stea", 1)
+        sym_spell.create_dictionary_entry("steama", 2)
+        sym_spell.create_dictionary_entry("steem", 3)
+
+        result = sym_spell.lookup("steama", Verbosity.TOP, 2)
+        self.assertEqual(1, len(result))
+        self.assertEqual("steama", result[0].term)
+        self.assertEqual(len("steama"), sym_spell._max_length)
+
+        self.assertTrue(sym_spell.delete_dictionary_entry("steama"))
+        self.assertFalse("steama" in sym_spell.words)
+        self.assertEqual(len("steem"), sym_spell._max_length)
+        result = sym_spell.lookup("steama", Verbosity.TOP, 2)
+        self.assertEqual(1, len(result))
+        self.assertEqual("steem", result[0].term)
+
+    def test_delete_dictionary_entry_invalid_word(self):
+        sym_spell = SymSpell()
+        sym_spell.create_dictionary_entry("stea", 1)
+        sym_spell.create_dictionary_entry("steama", 2)
+        sym_spell.create_dictionary_entry("steem", 3)
+
+        result = sym_spell.lookup("steama", Verbosity.TOP, 2)
+        self.assertEqual(1, len(result))
+        self.assertEqual("steama", result[0].term)
+        self.assertEqual(len("steama"), sym_spell._max_length)
+
+        self.assertFalse(sym_spell.delete_dictionary_entry("steamab"))
+        result = sym_spell.lookup("steama", Verbosity.TOP, 2)
+        self.assertEqual(1, len(result))
+        self.assertEqual("steama", result[0].term)
+        self.assertEqual(len("steama"), sym_spell._max_length)
