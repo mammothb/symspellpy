@@ -49,6 +49,7 @@ class SymSpell(object):
     * _max_length: Length of longest word in the dictionary.
     * _replaced_words: Dictionary corrected/modified words
     """
+    data_version = 2
     def __init__(self, max_dictionary_edit_distance=2, prefix_length=7,
                  count_threshold=1, compact_level=5):
         """Create a new instance of SymSpell. initial_capacity from\
@@ -198,8 +199,7 @@ class SymSpell(object):
         # create deletes
         edits = self._edits_prefix(key)
         for delete in edits:
-            delete_hash = self._get_str_hash(delete)
-            self._deletes[delete_hash].remove(key)
+            self._deletes[delete].remove(key)
         return True
 
     def load_dictionary(self, corpus, term_index, count_index,
@@ -265,7 +265,7 @@ class SymSpell(object):
             "deletes": self._deletes,
             "words": self._words,
             "max_length": self._max_length,
-            "data_version": 2
+            "data_version": self.data_version
         }
         with (gzip.open if compressed else open)(filename, "wb") as f:
             pickle.dump(pickle_data, f)
@@ -285,8 +285,8 @@ class SymSpell(object):
         """
         with (gzip.open if compressed else open)(filename, "rb") as f:
             pickle_data = pickle.load(f)
-        if "data_version" not in pickle_data or \
-               pickle_data["data_version"] != 2:
+        if ("data_version" not in pickle_data
+                or pickle_data["data_version"] != self.data_version):
             return False
         self._deletes = pickle_data["deletes"]
         self._words = pickle_data["words"]

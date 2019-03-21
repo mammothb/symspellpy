@@ -1,4 +1,5 @@
 import os.path
+import pickle
 import sys
 import unittest
 
@@ -588,6 +589,34 @@ class TestSymSpellPy(unittest.TestCase):
         self.assertEqual(sym_spell._max_length, sym_spell_2._max_length)
         os.remove(pickle_path)
 
+    def test_pickle_invalid(self):
+        pickle_path = os.path.join(self.fortests_path, "dictionary.pickle")
+        is_compressed = False
+        edit_distance_max = 2
+        prefix_length = 7
+        sym_spell = SymSpell(edit_distance_max, prefix_length)
+
+        pickle_data = {
+            "deletes": {},
+            "words": {},
+            "max_length": 0,
+            "data_version": -1
+        }
+        with open(pickle_path, "wb") as f:
+            pickle.dump(pickle_data, f)
+        self.assertFalse(sym_spell.load_pickle(pickle_path, is_compressed))
+        os.remove(pickle_path)
+
+        pickle_data = {
+            "deletes": {},
+            "words": {},
+            "max_length": 0
+        }
+        with open(pickle_path, "wb") as f:
+            pickle.dump(pickle_data, f)
+        self.assertFalse(sym_spell.load_pickle(pickle_path, is_compressed))
+        os.remove(pickle_path)
+
     def test_delete_dictionary_entry(self):
         sym_spell = SymSpell()
         sym_spell.create_dictionary_entry("stea", 1)
@@ -601,6 +630,13 @@ class TestSymSpellPy(unittest.TestCase):
 
         self.assertTrue(sym_spell.delete_dictionary_entry("steama"))
         self.assertFalse("steama" in sym_spell.words)
+        self.assertEqual(len("steem"), sym_spell._max_length)
+        result = sym_spell.lookup("steama", Verbosity.TOP, 2)
+        self.assertEqual(1, len(result))
+        self.assertEqual("steem", result[0].term)
+
+        self.assertTrue(sym_spell.delete_dictionary_entry("stea"))
+        self.assertFalse("stea" in sym_spell.words)
         self.assertEqual(len("steem"), sym_spell._max_length)
         result = sym_spell.lookup("steama", Verbosity.TOP, 2)
         self.assertEqual(1, len(result))
