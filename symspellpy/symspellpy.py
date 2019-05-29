@@ -691,17 +691,17 @@ class SymSpell(object):
     def word_segmentation(self, phrase, max_edit_distance=None,
                           max_segmentation_word_length=None,
                           ignore_token=None):
-        """`word_egmentation` divides a string into words by inserting
+        """`word_segmentation` divides a string into words by inserting
         missing spaces at the appropriate positions misspelled words
         are corrected and do not affect segmentation existing spaces
         are allowed and considered for optimum segmentation
 
-        `word_egmentation` uses a novel approach *without* recursion.
+        `word_segmentation` uses a novel approach *without* recursion.
         https://medium.com/@wolfgarbe/fast-word-segmentation-for-noisy-text-2c2c41f9e8da
         While each string of length n can be segmented in 2^n−1
         possible compositions
         https://en.wikipedia.org/wiki/Composition_(combinatorics)
-        `word_egmentation` has a linear runtime O(n) to find the optimum
+        `word_segmentation` has a linear runtime O(n) to find the optimum
         composition
 
         Find suggested spellings for a multi-word input string
@@ -715,6 +715,8 @@ class SymSpell(object):
         * max_edit_distance (int): The maximum edit distance between\
             input and corrected words (0=no correction/segmentation\
             only).
+        * ignore_token (regex pattern): A regex pattern describing\
+            what words/phrases to ignore and leave unchanged
 
         **Returns**:
         The word segmented string, the word segmented and spelling\
