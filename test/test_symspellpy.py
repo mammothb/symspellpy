@@ -219,9 +219,19 @@ class TestSymSpellPy(unittest.TestCase):
         sym_spell = SymSpell(2, 7, 10)
         sym_spell.create_dictionary_entry("flame", 20)
         sym_spell.create_dictionary_entry("flam", 1)
-        result = sym_spell.lookup("qwer", Verbosity.TOP, 0, True)
+        result = sym_spell.lookup("flam", Verbosity.TOP, 0, True)
         self.assertEqual(1, len(result))
-        self.assertEqual("qwer", result[0].term)
+        self.assertEqual("flam", result[0].term)
+
+    def test_lookup_avoid_exact_match_early_exit(self):
+        edit_distance_max = 2
+        sym_spell = SymSpell(edit_distance_max, 7, 10)
+        sym_spell.create_dictionary_entry("flame", 20)
+        sym_spell.create_dictionary_entry("flam", 1)
+        result = sym_spell.lookup("24th", Verbosity.ALL, edit_distance_max,
+                                  ignore_token=r"\d{2}\w*\b")
+        self.assertEqual(1, len(result))
+        self.assertEqual("24th", result[0].term)
 
     def test_load_dictionary_invalid_path(self):
         edit_distance_max = 2
