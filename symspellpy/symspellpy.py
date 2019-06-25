@@ -294,7 +294,8 @@ class SymSpell(object):
         return True
 
     def lookup(self, phrase, verbosity, max_edit_distance=None,
-               include_unknown=False, ignore_token=None):
+               include_unknown=False, ignore_token=None,
+               transfer_casing=False):
         """Find suggested spellings for a given phrase word.
 
         **Args**:
@@ -309,6 +310,9 @@ class SymSpell(object):
             edit distance found.
         * ignore_token (regex pattern): A regex pattern describing\
             what words/phrases to ignore and leave unchanged
+        * transfer_casing (bool): A flag to determine whether the
+            casing (eg upper- vs lowercase) should be carried over\
+            from the phrase
 
         **Returns**:
         A list of :class:`SuggestItem` object representing suggested\
@@ -326,6 +330,11 @@ class SymSpell(object):
             raise ValueError("Distance too large")
         suggestions = list()
         phrase_len = len(phrase)
+
+        if transfer_casing:
+            original_phrase = phrase
+            phrase = phrase.lower()
+
         def early_exit():
             if include_unknown and not suggestions:
                 suggestions.append(SuggestItem(phrase, max_edit_distance + 1,
@@ -534,11 +543,19 @@ class SymSpell(object):
                         candidates.append(delete)
         if len(suggestions) > 1:
             suggestions.sort()
+
+        if transfer_casing:
+            suggestions = [SuggestItem(
+                helpers.transfer_casing_for_similar_text(original_phrase,
+                                                         s.term),
+                s.distance, s.count) for s in suggestions]
+
         early_exit()
         return suggestions
 
     def lookup_compound(self, phrase, max_edit_distance,
-                        ignore_non_words=False):
+                        ignore_non_words=False,
+                        transfer_casing=False):
         """`lookup_compound` supports compound aware automatic spelling
         correction of multi-word input strings with three cases:
 
@@ -557,6 +574,9 @@ class SymSpell(object):
         * phrase (str): The string being spell checked.
         * max_edit_distance (int): The maximum edit distance between\
             input and suggested words.
+        * transfer_casing (bool): A flag to determine whether the
+            casing (eg upper- vs lowercase) should be carried over\
+            from the phrase
 
         **Returns**:
         A list of :class:`SuggestItem` object representing suggested\
@@ -680,12 +700,16 @@ class SymSpell(object):
             joined_term += si.term + " "
             joined_count = min(joined_count, si.count)
         joined_term = joined_term.rstrip()
+        if transfer_casing:
+            joined_term = helpers.transfer_casing_for_similar_text(phrase,
+                                                                   joined_term)
         suggestion = SuggestItem(joined_term,
                                  distance_comparer.compare(
                                      phrase, joined_term, 2 ** 31 - 1),
                                  joined_count)
         suggestions_line = list()
         suggestions_line.append(suggestion)
+
         return suggestions_line
 
     def word_segmentation(self, phrase, max_edit_distance=None,
