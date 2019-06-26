@@ -166,3 +166,27 @@ if __name__ == "__main__":
 ```
 ##### Expected output:
 `the quick brown fox jumps over the lazy dog 8 -34.491167981910635`
+
+
+### Transferring casing
+
+To transfer the casing (eg uppercase/lowercase) from the original phrase
+to the typo-corrected one, use the `transfer_casing` boolean flag of 
+the `lookup()` and the `lookup_compound()` methods:
+
+`lookup_compound()`:
+```
+suggestions = sym_spell.lookup_compound(input_term,
+                                        max_edit_distance_lookup,
+                                        transfer_casing=True)
+```
+
+`lookup()`:
+```
+suggestions = sym_spell.lookup(input_term,
+                               suggestion_verbosity,
+                               max_edit_distance_lookup,
+                               transfer_casing=True)
+```
+
+
