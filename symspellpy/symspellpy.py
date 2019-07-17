@@ -41,7 +41,7 @@ class SymSpell(object):
     * _max_dictionary_edit_distance: Maximum dictionary term length.
     * _prefix_length = The length of word prefixes used for spell\
             checking
-    * _count_threshold: A treshold might be specifid, when a term\
+    * _count_threshold: A threshold might be specified, when a term\
         occurs so frequently in the corpus that it is considered a\
         valid word for spelling correction.
     * _compact_mask: Used for generating string hash
@@ -492,9 +492,7 @@ class SymSpell(object):
                             # expensive, and only pays off when
                             # verbosity is TOP or CLOSEST
                             if ((verbosity != Verbosity.ALL
-                                 and not self._delete_in_suggestion_prefix(
-                                     candidate, candidate_len, suggestion,
-                                     suggestion_len))
+                                 and not self._delete_in_suggestion_prefix(candidate, candidate_len, suggestion, suggestion_len))
                                     or suggestion in considered_suggestions):
                                 continue
                             considered_suggestions.add(suggestion)
@@ -902,7 +900,7 @@ class SymSpell(object):
         hash_set = set()
         if len(key) <= self._max_dictionary_edit_distance:
             hash_set.add("")
-        if len(key) > self._max_dictionary_edit_distance:
+        if len(key) > self._prefix_length:
             key = key[: self._prefix_length]
         hash_set.add(key)
         return self._edits(key, 0, hash_set)
