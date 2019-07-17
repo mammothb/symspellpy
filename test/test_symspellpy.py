@@ -668,3 +668,54 @@ class TestSymSpellPy(unittest.TestCase):
         self.assertEqual(1, len(result))
         self.assertEqual("steama", result[0].term)
         self.assertEqual(len("steama"), sym_spell._max_length)
+
+    def test_lookup_transfer_casing(self):
+        sym_spell = SymSpell()
+        sym_spell.create_dictionary_entry("steam", 4)
+        result = sym_spell.lookup("Stream", Verbosity.TOP, 2,
+                                  transfer_casing=True)
+        self.assertEqual("Steam", result[0].term)
+
+        sym_spell = SymSpell()
+        sym_spell.create_dictionary_entry("steam", 4)
+        result = sym_spell.lookup("StreaM", Verbosity.TOP, 2,
+                                  transfer_casing=True)
+        self.assertEqual("SteaM", result[0].term)
+
+        sym_spell = SymSpell()
+        sym_spell.create_dictionary_entry("steam", 4)
+        result = sym_spell.lookup("STREAM", Verbosity.TOP, 2,
+                                  transfer_casing=True)
+        self.assertEqual("STEAM", result[0].term)
+
+    def test_lookup_compound_transfer_casing(self):
+        edit_distance_max = 2
+        prefix_length = 7
+        sym_spell = SymSpell(edit_distance_max, prefix_length)
+        sym_spell.load_dictionary(self.dictionary_path, 0, 1)
+
+        typo = ("Whereis th elove hehaD Dated forImuch of thepast who "
+                "couqdn'tread in sixthgrade AND ins pired him")
+        correction = ("Where is the love he haD Dated for much of the past "
+                      "who couldn't read in sixth grade AND inspired him")
+
+        results = sym_spell.lookup_compound(typo, edit_distance_max,
+                                            transfer_casing=True)
+        self.assertEqual(correction, results[0].term)
+
+    def test_lookup_compound_transfer_casing_ignore_nonwords(self):
+        edit_distance_max = 2
+        prefix_length = 7
+        sym_spell = SymSpell(edit_distance_max, prefix_length)
+        sym_spell.load_dictionary(self.dictionary_path, 0, 1)
+
+        typo = ("Whereis th elove hehaD Dated FOREEVER forImuch of thepast who"
+                " couqdn'tread in sixthgrade AND ins pired him")
+        correction = ("Where is the love he haD Dated FOREEVER for much of the"
+                      " past who couldn't read in sixth grade AND inspired "
+                      "him")
+
+        results = sym_spell.lookup_compound(typo, edit_distance_max,
+                                            ignore_non_words=True,
+                                            transfer_casing=True)
+        self.assertEqual(correction, results[0].term)
