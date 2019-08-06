@@ -1,6 +1,11 @@
 CHANGELOG <br>
 ==============
 
+## 6.3.9 (2019-08-06)
+---------------------
+- Added `transfer_casing` to `lookup` and `lookup_compound`
+- Fixed prefix length check in `_edits_prefix`
+
 ## 6.3.8 (2019-03-21)
 ---------------------
 - Implemented `delete_dictionary_entry`
