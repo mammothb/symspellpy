@@ -251,15 +251,13 @@ class SymSpell(object):
                     self.create_dictionary_entry(key, 1)
         return True
 
-    def save_pickle(self, filename, compressed=True):
-        """Pickle _deletes, _words, and _max_length for quicker loading
-        later.
+    def save_pickle_stream(self, stream):
+        """Pickle _deletes, _words, and _max_length into a stream for quicker
+        loading later.
 
         **Args**:
 
-        * filename (str): The path+filename of the pickle file
-        * compressed (bool): A flag to determine whether to compress\
-            the pickled data
+        * stream (str): The stream where to save the pickle data
         """
         pickle_data = {
             "deletes": self._deletes,
@@ -267,11 +265,43 @@ class SymSpell(object):
             "max_length": self._max_length,
             "data_version": self.data_version
         }
+        pickle.dump(pickle_data, stream)
+
+    def save_pickle(self, filename, compressed=True):
+        """Pickle _deletes, _words, and _max_length into a file for quicker
+        loading later.
+
+        **Args**:
+
+        * filename (str): The path+filename of the pickle file
+        * compressed (bool): A flag to determine whether to compress\
+            the pickled data
+        """
         with (gzip.open if compressed else open)(filename, "wb") as f:
-            pickle.dump(pickle_data, f)
+            self.save_pickle_stream(f)
+
+    def load_pickle_stream(self, stream):
+        """Load delete combination from stream as pickle. This will reduce the
+        loading time compared to running :meth:`load_dictionary` again.
+
+        **Args**:
+
+        * stream (str): The stream where to load the pickle data
+
+        **Returns**:
+        True if delete combinations are successfully loaded.
+        """
+        pickle_data = pickle.load(stream)
+        if ("data_version" not in pickle_data
+                or pickle_data["data_version"] != self.data_version):
+            return False
+        self._deletes = pickle_data["deletes"]
+        self._words = pickle_data["words"]
+        self._max_length = pickle_data["max_length"]
+        return True
 
     def load_pickle(self, filename, compressed=True):
-        """Load delete combination as pickle. This will reduce the
+        """Load delete combination from file as pickle. This will reduce the
         loading time compared to running :meth:`load_dictionary` again.
 
         **Args**:
@@ -284,14 +314,7 @@ class SymSpell(object):
         True if delete combinations are successfully loaded.
         """
         with (gzip.open if compressed else open)(filename, "rb") as f:
-            pickle_data = pickle.load(f)
-        if ("data_version" not in pickle_data
-                or pickle_data["data_version"] != self.data_version):
-            return False
-        self._deletes = pickle_data["deletes"]
-        self._words = pickle_data["words"]
-        self._max_length = pickle_data["max_length"]
-        return True
+            return self.load_pickle_stream(f)
 
     def lookup(self, phrase, verbosity, max_edit_distance=None,
                include_unknown=False, ignore_token=None,
