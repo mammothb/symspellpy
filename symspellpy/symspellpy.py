@@ -50,6 +50,14 @@ class SymSpell(object):
     * _replaced_words: Dictionary corrected/modified words
     """
     data_version = 2
+    # number of all words in the corpus used to generate the
+    # frequency dictionary. This is used to calculate the word
+    # occurrence probability p from word counts c : p=c/N. N equals
+    # the sum of all counts c in the dictionary only if the
+    # dictionary is complete, but not if the dictionary is
+    # truncated or filtered
+    N = 1024908267229
+    bigram_count_min = sys.maxsize
     def __init__(self, max_dictionary_edit_distance=2, prefix_length=7,
                  count_threshold=1, compact_level=5):
         """Create a new instance of SymSpell. initial_capacity from\
@@ -93,6 +101,7 @@ class SymSpell(object):
             raise ValueError("compact_level must be between 0 and 16")
         self._words = dict()
         self._below_threshold_words = dict()
+        self._bigrams = dict()
         self._deletes = defaultdict(list)
         self._max_dictionary_edit_distance = max_dictionary_edit_distance
         self._prefix_length = prefix_length
@@ -200,6 +209,24 @@ class SymSpell(object):
         edits = self._edits_prefix(key)
         for delete in edits:
             self._deletes[delete].remove(key)
+        return True
+
+    def load_bigram_dictionary(self, corpus, term_index, count_index,
+                               separator=None, encoding=None):
+        if not os.path.exists(corpus):
+            return False
+        with open(corpus, "r", encoding=encoding) as infile:
+            for line in infile:
+                line_parts = line.rstrip().split(separator)
+                if len(line_parts) >= 3:
+                    key = ("{} {}".format(line_parts[term_index],
+                                          line_parts[term_index + 1])
+                           if separator is None else line_parts[term_index])
+                    count = helpers.try_parse_int64(line_parts[count_index])
+                    if count is not None:
+                        self._bigrams[key] = count
+                        if count < self.bigram_count_min:
+                            self.bigram_count_min = count
         return True
 
     def load_dictionary(self, corpus, term_index, count_index,
@@ -636,16 +663,19 @@ class SymSpell(object):
                     if suggestions:
                         best_2 = suggestions[0]
                     else:
+                        # estimated word occurrence probability
+                        # P=10 / (N * 10^word length l)
                         best_2 = SuggestItem(term_list_1[i],
-                                             max_edit_distance + 1, 0)
-                    # make sure we're comparing with the lowercase form
-                    # of the previous word
-                    distance_1 = distance_comparer.compare(
-                        term_list_1[i - 1] + " " + term_list_1[i],
-                        best_1.term.lower() + " " + best_2.term,
-                        max_edit_distance)
+                                             max_edit_distance + 1,
+                                             10 // 10 ** len(term_list_1[i]))
+                    # distance_1=edit distance between 2 split terms and
+                    # their best corrections : als comparative value
+                    # for the combination
+                    distance_1 = best_1.distance + best_2.distance
                     if (distance_1 >= 0
-                            and suggestions_combi[0].distance + 1 < distance_1):
+                            and (suggestions_combi[0].distance + 1 < distance_1
+                                 or (suggestions_combi[0].distance + 1 == distance_1
+                                     and (suggestions_combi[0].count > best_1.count / self.N * best_2.count)))):
                         suggestions_combi[0].distance += 1
                         suggestion_parts[-1] = suggestions_combi[0]
                         is_last_combi = True
@@ -654,16 +684,16 @@ class SymSpell(object):
 
             # alway split terms without suggestion / never split terms
             # with suggestion ed=0 / never split single char terms
-            if (suggestions and (suggestions[0].distance == 0
-                                 or len(term_list_1[i]) == 1)):
+            if suggestions and (suggestions[0].distance == 0
+                                or len(term_list_1[i]) == 1):
                 # choose best suggestion
                 suggestion_parts.append(suggestions[0])
             else:
                 # if no perfect suggestion, split word into pairs
-                suggestions_split = list()
+                suggestion_split_best = None
                 # add original term
                 if suggestions:
-                    suggestions_split.append(suggestions[0])
+                    suggestion_split_best = suggestions[0]
                 if len(term_list_1[i]) > 1:
                     for j in range(1, len(term_list_1[i])):
                         part_1 = term_list_1[i][: j]
@@ -671,19 +701,9 @@ class SymSpell(object):
                         suggestions_1 = self.lookup(part_1, Verbosity.TOP,
                                                     max_edit_distance)
                         if suggestions_1:
-                            # if split correction1 == einzelwort
-                            # correction
-                            if (suggestions
-                                    and suggestions[0].term == suggestions_1[0].term):
-                                break
                             suggestions_2 = self.lookup(part_2, Verbosity.TOP,
                                                         max_edit_distance)
                             if suggestions_2:
-                                # if split correction1 == einzelwort
-                                # correction
-                                if (suggestions
-                                        and suggestions[0].term == suggestions_2[0].term):
-                                    break
                                 # select best suggestion for split pair
                                 tmp_term = (suggestions_1[0].term + " " +
                                             suggestions_2[0].term)
@@ -692,34 +712,83 @@ class SymSpell(object):
                                     max_edit_distance)
                                 if tmp_distance < 0:
                                     tmp_distance = max_edit_distance + 1
-                                tmp_count = min(suggestions_1[0].count,
-                                                suggestions_2[0].count)
+                                if suggestion_split_best is not None:
+                                    if tmp_distance > suggestion_split_best.distance:
+                                        continue
+                                    if tmp_distance < suggestion_split_best.distance:
+                                        suggestion_split_best = None
+                                if tmp_term in self._bigrams:
+                                    tmp_count = self._bigrams[tmp_term]
+                                    # increase count, if split
+                                    # corrections are part of or
+                                    # identical to input single term
+                                    # correction exists
+                                    if suggestions:
+                                        best_si = suggestions[0]
+                                        # alternatively remove the
+                                        # single term from
+                                        # suggestion_split, but then
+                                        # other splittings could win
+                                        if suggestions_1[0].term + suggestions_2[0].term == term_list_1[i]:
+                                            # make count bigger than
+                                            # count of single term
+                                            # correction
+                                            tmp_count = max(tmp_count,
+                                                            best_si.count + 2)
+                                        elif (suggestions_1[0].term == best_si.term
+                                                or suggestions_2[0].term == best_si.term):
+                                            # make count bigger than
+                                            # count of single term
+                                            # correction
+                                            tmp_count = max(tmp_count,
+                                                            best_si.count + 1)
+                                    # no single term correction exists
+                                    elif suggestions_1[0].term + suggestions_2[0].term == term_list_1[i]:
+                                        tmp_count = max(
+                                            tmp_count,
+                                            max(suggestions_1[0].count,
+                                                suggestions_2[0].count) + 2)
+                                else:
+                                    # The Naive Bayes probability of
+                                    # the word combination is the
+                                    # product of the two word
+                                    # probabilities: P(AB)=P(A)*P(B)
+                                    # use it to estimate the frequency
+                                    # count of the combination, which
+                                    # then is used to rank/select the
+                                    # best splitting variant
+                                    tmp_count = min(
+                                        self.bigram_count_min,
+                                        int(suggestions_1[0].count /
+                                            self.N * suggestions_2[0].count))
                                 suggestion_split = SuggestItem(
                                     tmp_term, tmp_distance, tmp_count)
-                                suggestions_split.append(suggestion_split)
-                                # early termination of split
-                                if suggestion_split.distance == 1:
-                                    break
+                                if (suggestion_split_best is None or
+                                        suggestion_split.count > suggestion_split_best.count):
+                                    suggestion_split_best = suggestion_split
 
-                    if suggestions_split:
+                    if suggestion_split_best is not None:
                         # select best suggestion for split pair
-                        suggestions_split.sort()
-                        suggestion_parts.append(suggestions_split[0])
-                        self._replaced_words[term_list_1[i]] = suggestions_split[0]
+                        suggestion_parts.append(suggestion_split_best)
+                        self._replaced_words[term_list_1[i]] = suggestion_split_best
                     else:
                         si = SuggestItem(term_list_1[i],
-                                         max_edit_distance + 1, 0)
+                                         max_edit_distance + 1,
+                                         int(10 / 10 ** len(term_list_1[i])))
                         suggestion_parts.append(si)
                         self._replaced_words[term_list_1[i]] = si
                 else:
-                    si = SuggestItem(term_list_1[i], max_edit_distance + 1, 0)
+                    # estimated word occurrence probability
+                    # P=10 / (N * 10^word length l)
+                    si = SuggestItem(term_list_1[i], max_edit_distance + 1,
+                                     int(10 / 10 ** len(term_list_1[i])))
                     suggestion_parts.append(si)
                     self._replaced_words[term_list_1[i]] = si
         joined_term = ""
-        joined_count = sys.maxsize
+        joined_count = self.N
         for si in suggestion_parts:
             joined_term += si.term + " "
-            joined_count = min(joined_count, si.count)
+            joined_count *= si.count / self.N
         joined_term = joined_term.rstrip()
         if transfer_casing:
             joined_term = helpers.transfer_casing_for_similar_text(phrase,
@@ -727,7 +796,7 @@ class SymSpell(object):
         suggestion = SuggestItem(joined_term,
                                  distance_comparer.compare(
                                      phrase, joined_term, 2 ** 31 - 1),
-                                 joined_count)
+                                 int(joined_count))
         suggestions_line = list()
         suggestions_line.append(suggestion)
 
@@ -770,13 +839,6 @@ class SymSpell(object):
             probabilities in log scale (a measure of how common and\
             probable the corrected segmentation is).
         """
-        # number of all words in the corpus used to generate the
-        # frequency dictionary. This is used to calculate the word
-        # occurrence probability p from word counts c : p=c/N. N equals
-        # the sum of all counts c in the dictionary only if the
-        # dictionary is complete, but not if the dictionary is
-        # truncated or filtered
-        N = 1024908267229
         if max_edit_distance is None:
             max_edit_distance = self._max_dictionary_edit_distance
         if max_segmentation_word_length is None:
@@ -832,7 +894,7 @@ class SymSpell(object):
                     # (underflow) the floating number range and become
                     # zero. log(ab)=log(a)+log(b)
                     top_log_prob = math.log10(float(results[0].count) /
-                                              float(N))
+                                              float(self.N))
                 else:
                     top_result = part
                     # default, if word not found. otherwise long input
@@ -840,7 +902,7 @@ class SymSpell(object):
                     # ed=edmax+1), although there there should many
                     # spaces inserted
                     top_ed += len(part)
-                    top_log_prob = math.log10(10.0 / N /
+                    top_log_prob = math.log10(10.0 / self.N /
                                               math.pow(10.0, len(part)))
 
                 dest = (i + idx) % array_size
