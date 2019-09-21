@@ -78,7 +78,7 @@ q1we 1
 ### Sample usage (`lookup` and `lookup_compound`)
 Using `project.py` (code is more verbose than required to allow explanation of method arguments)
 ```python
-import os
+import pkg_resources
 
 from symspellpy.symspellpy import SymSpell, Verbosity  # import the module
 
@@ -89,12 +89,19 @@ def main():
     # create object
     sym_spell = SymSpell(max_edit_distance_dictionary, prefix_length)
     # load dictionary
-    dictionary_path = os.path.join(os.path.dirname(__file__),
-                                   "frequency_dictionary_en_82_765.txt")
-    term_index = 0  # column of the term in the dictionary text file
-    count_index = 1  # column of the term frequency in the dictionary text file
-    if not sym_spell.load_dictionary(dictionary_path, term_index, count_index):
+    dictionary_path = pkg_resources.resource_filename(
+        "symspellpy", "frequency_dictionary_en_82_765.txt")
+    bigram_path = pkg_resources.resource_filename(
+        "symspellpy", "frequency_bigramdictionary_en_243_342.txt")
+    # term_index is the column of the term and count_index is the
+    # column of the term frequency
+    if not sym_spell.load_dictionary(dictionary_path, term_index=0,
+                                     count_index=1):
         print("Dictionary file not found")
+        return
+    if not sym_spell.load_bigram_dictionary(bigram_path, term_index=0,
+                                            count_index=2):
+        print("Bigram dictionary file not found")
         return
 
     # lookup suggestions for single-word input strings
@@ -128,13 +135,13 @@ if __name__ == "__main__":
 ```
 ##### Expected output:
 `members, 1, 226656153`<br><br>
-`where is the love he had dated for much of the past who couldn't read in six grade and inspired him, 9, 300000`
+`where is the love he had dated for much of the past who couldn't read in six grade and inspired him, 9, 0`
 
 ### Sample usage (`word_segmentation`)
 Using `project.py` (code is more verbose than required to allow explanation of
 method arguments)
 ```python
-import os
+import pkg_resources
 
 from symspellpy.symspellpy import SymSpell  # import the module
 
@@ -145,12 +152,19 @@ def main():
     # create object
     sym_spell = SymSpell(max_edit_distance_dictionary, prefix_length)
     # load dictionary
-    dictionary_path = os.path.join(os.path.dirname(__file__),
-                                   "frequency_dictionary_en_82_765.txt")
-    term_index = 0  # column of the term in the dictionary text file
-    count_index = 1  # column of the term frequency in the dictionary text file
-    if not sym_spell.load_dictionary(dictionary_path, term_index, count_index):
+    dictionary_path = pkg_resources.resource_filename(
+        "symspellpy", "frequency_dictionary_en_82_765.txt")
+    bigram_path = pkg_resources.resource_filename(
+        "symspellpy", "frequency_bigramdictionary_en_243_342.txt")
+    # term_index is the column of the term and count_index is the
+    # column of the term frequency
+    if not sym_spell.load_dictionary(dictionary_path, term_index=0,
+                                     count_index=1):
         print("Dictionary file not found")
+        return
+    if not sym_spell.load_bigram_dictionary(dictionary_path, term_index=0,
+                                            count_index=2):
+        print("Bigram dictionary file not found")
         return
 
     # a sentence without any spaces

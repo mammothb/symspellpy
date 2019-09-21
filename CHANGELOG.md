@@ -1,6 +1,13 @@
 CHANGELOG <br>
 ==============
 
+## 6.5.0 (2019-09-21)
+---------------------
+- Added `load_bigram_dictionary` and bigram dictionary `frequency_bigramdictionary_en_243_342.txt`
+- Updated `lookup_compound` algorithm
+- Added `Levenshtein` to compute edit distance
+- Added `save_pickle_stream` and `load_pickle_stream` to save/load SymSpell data alongside other structure (contribution by [marcoffee](https://github.com/marcoffee))
+
 ## 6.3.9 (2019-08-06)
 ---------------------
 - Added `transfer_casing` to `lookup` and `lookup_compound`
