@@ -15,11 +15,12 @@ Usage
 ```pip install -U symspellpy```
 
 ### Copying the frequency dictionary to your project
-Copy `frequency_dictionary_en_82_765.txt` (found in the inner `symspellpy`
+Copy `frequency_dictionary_en_82_765.txt` and `frequency_bigramdictionary_en_243_342.txt` (found in the inner `symspellpy`
 directory) to your project directory so you end up with the following layout:
 ```
 project_dir
   +-frequency_dictionary_en_82_765.txt
+  +-frequency_bigramdictionary_en_243_342.txt
   \-project.py
 ```
 

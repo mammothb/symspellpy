@@ -28,6 +28,11 @@ if sys.argv[-1] == "publish":
     os.system("twine upload dist/*")
     sys.exit()
 
+if sys.argv[-1] == "check":
+    os.system("python setup.py sdist bdist_wheel")
+    os.system("twine check dist/*")
+    sys.exit()
+
 packages = ["symspellpy"]
 
 requires = [
