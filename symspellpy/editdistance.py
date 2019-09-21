@@ -39,7 +39,9 @@ class EditDistance(object):
         **NOTE**: Levenshtein algorithm not yet implemented.
         """
         self._algorithm = algorithm
-        if algorithm == DistanceAlgorithm.DAMERUAUOSA:
+        if algorithm == DistanceAlgorithm.LEVENSHTEIN:
+            self._distance_comparer = Levenshtein()
+        elif algorithm == DistanceAlgorithm.DAMERUAUOSA:
             self._distance_comparer = DamerauOsa()
         else:
             raise ValueError("Unknown distance algorithm")
@@ -193,6 +195,7 @@ class Levenshtein(AbstractDistanceComparer):
                     if prev_char_1_cost < current_cost:
                         current_cost = prev_char_1_cost
                     current_cost += 1
+                char_1_costs[j] = above_char_cost = current_cost
             if char_1_costs[i + len_diff] > max_distance:
                 return -1
         return current_cost if current_cost <= max_distance else -1
