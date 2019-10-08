@@ -1,0 +1,3 @@
+steama	4
+steamb	6
+steamc	2
