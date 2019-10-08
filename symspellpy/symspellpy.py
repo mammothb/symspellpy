@@ -230,7 +230,7 @@ class SymSpell(object):
         return True
 
     def load_dictionary(self, corpus, term_index, count_index,
-                        encoding=None):
+                        separator=" ", encoding=None):
         """Load multiple dictionary entries from a file of
         word/frequency count pairs. Merges with any dictionary data
         already loaded.
@@ -250,7 +250,7 @@ class SymSpell(object):
             return False
         with open(corpus, "r", encoding=encoding) as infile:
             for line in infile:
-                line_parts = line.rstrip().split(" ")
+                line_parts = line.rstrip().split(separator)
                 if len(line_parts) >= 2:
                     key = line_parts[term_index]
                     count = helpers.try_parse_int64(line_parts[count_index])

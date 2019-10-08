@@ -686,6 +686,19 @@ class TestSymSpellPy(unittest.TestCase):
         self.assertEqual(1, len(result))
         self.assertEqual("АБИ", result[0].term)
 
+    def test_load_dictionary_separator(self):
+        dictionary_path = os.path.join(self.fortests_path, "tab_dict.txt")
+
+        edit_distance_max = 2
+        prefix_length = 7
+        sym_spell = SymSpell(edit_distance_max, prefix_length)
+        sym_spell.load_dictionary(dictionary_path, 0, 1, separator="\t",
+                                  encoding="utf-8")
+
+        result = sym_spell.lookup("stream", Verbosity.TOP, 2)
+        self.assertEqual(1, len(result))
+        self.assertEqual("steamb", result[0].term)
+
     def test_word_segmentation(self):
         edit_distance_max = 0
         prefix_length = 7
