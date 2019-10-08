@@ -1,6 +1,10 @@
 CHANGELOG <br>
 ==============
 
+## 6.5.1 (2019-10-08)
+---------------------
+- Added `separator` argument to allow user to choose custom separator for `load_dictionary`
+
 ## 6.5.0 (2019-09-21)
 ---------------------
 - Added `load_bigram_dictionary` and bigram dictionary `frequency_bigramdictionary_en_243_342.txt`
