@@ -228,13 +228,11 @@ class DamerauOsa(AbstractDistanceComparer):
 
     Attributes
     ----------
-    _base_char : int
     _base_char_1_costs : numpy.ndarray
     _base_prev_char_1_costs : numpy.ndarray
 
     """
     def __init__(self):
-        self._base_char = 0
         self._base_char_1_costs = np.zeros(0, dtype=np.int32)
         self._base_prev_char_1_costs = np.zeros(0, dtype=np.int32)
 
