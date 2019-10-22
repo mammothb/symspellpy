@@ -24,30 +24,59 @@ class Verbosity(Enum):
     ALL = 2  #: All suggestions within maxEditDistance, suggestions ordered by edit distance, then by term frequency (slower, no early termination).
 
 class SymSpell(object):
-    """Symmetric Delete spelling correction algorithm
+    """Symmetric Delete spelling correction algorithm.
+    `initial_capacity` from the original code is omitted since python
+    cannot preallocate memory. `compact_mask` from the original code is
+    omitted since we're not mapping suggested corrections to hash
+    codes.
 
-    **Attributes**:
+    Parameters
+    ----------
+    max_dictionary_edit_distance : int, optional
+        Maximum edit distance for doing lookups.
+    prefix_length : int, optional
+        The length of word prefixes used for spell checking.
+    count_threshold : int
+        The minimum frequency count for dictionary words to be
+        considered correct spellings.
 
-    * _words: Dictionary of unique correct spelling words, and the\
-        frequency count for each word.
-    * _below_threshold_words: Dictionary of unique words that are\
-        below the count threshold for being considered correct spellings.
-    * _deletes: Dictionary that contains a mapping of lists of\
-        suggested correction words to the hashCodes of the original\
-        words and the deletes derived from them. Collisions of\
-        hashCodes is tolerated, because suggestions are ultimately\
-        verified via an edit distance function. A list of suggestions\
-        might have a single suggestion, or multiple suggestions.
-    * _max_dictionary_edit_distance: Maximum dictionary term length.
-    * _prefix_length = The length of word prefixes used for spell\
-            checking
-    * _count_threshold: A threshold might be specified, when a term\
-        occurs so frequently in the corpus that it is considered a\
-        valid word for spelling correction.
-    * _compact_mask: Used for generating string hash
-    * _distance_algorithm: Edit distance algorithms
-    * _max_length: Length of longest word in the dictionary.
-    * _replaced_words: Dictionary corrected/modified words
+    Attributes
+    ----------
+    _words : dict
+        Dictionary of unique correct spelling words, and the frequency
+        count for each word.
+    _below_threshold_words : dict
+        Dictionary of unique words that are below the count threshold
+        for being considered correct spellings.
+    _deletes : dict
+        Dictionary that contains a mapping of lists of suggested
+        correction words to the original words and the deletes derived
+        from them. A list of suggestions might have a single
+        suggestion, or multiple suggestions.
+    _max_dictionary_edit_distance : int
+        Maximum dictionary term length.
+    _prefix_length : int
+        The length of word prefixes used for spell checking.
+    _count_threshold : int
+        A threshold may be specified, when a term occurs so frequently
+        in the corpus that it is considered a valid word for spelling
+        correction.
+    _distance_algorithm : :class:`.editdistance.DistanceAlgorithm`
+        Edit distance algorithms
+    _max_length : int
+        Length of longest word in the dictionary.
+    _replaced_words : dict
+        Dictionary corrected/modified words
+
+    Raises
+    ------
+    ValueError
+        If `max_dictionary_edit_distance` is negative.
+    ValueError
+        If `prefix_length` is less than 1 or smaller than
+        `max_dictionary_edit_distance`.
+    ValueError
+        If `count_threshold` is negative.
     """
     data_version = 2
     # number of all words in the corpus used to generate the
@@ -59,35 +88,7 @@ class SymSpell(object):
     N = 1024908267229
     bigram_count_min = sys.maxsize
     def __init__(self, max_dictionary_edit_distance=2, prefix_length=7,
-                 count_threshold=1, compact_level=5):
-        """Create a new instance of SymSpell. initial_capacity from\
-            the original code is omitted since python cannot\
-            preallocate memory
-
-        **Args**:
-
-        * max_dictionary_edit_distance (int): Maximum edit distance\
-            for doing lookups. (default 2)
-        * prefix_length (int): The length of word prefixes used for\
-            spell checking. (default 7)
-        * count_threshold (int): The minimum frequency count for\
-            dictionary words to be considered correct spellings.\
-            (default 1)
-        * compact_level (int): Degree of favoring lower memory use\
-            over speed (0=fastest,most memory, 16=slowest,least\
-            memory). (default 5)
-
-        **Raises**:
-
-        * ValueError: `max_dictionary_edit_distance` is negative
-        * ValueError: `prefix_length` is less than 1 or smaller than\
-            `max_dictionary_edit_distance`
-        * ValueError: `count_threshold` is negative
-        * ValueError: `compact_level` is not between 0 and 16
-
-        **NOTE**: Currently hard coded to use the Damerau optimal\
-            string alignment algorithm
-        """
+                 count_threshold=1):
         if max_dictionary_edit_distance < 0:
             raise ValueError("max_dictionary_edit_distance cannot be "
                              "negative")
@@ -97,8 +98,6 @@ class SymSpell(object):
                              "smaller than max_dictionary_edit_distance")
         if count_threshold < 0:
             raise ValueError("count_threshold cannot be negative")
-        if compact_level < 0 or compact_level > 16:
-            raise ValueError("compact_level must be between 0 and 16")
         self._words = dict()
         self._below_threshold_words = dict()
         self._bigrams = dict()
@@ -106,7 +105,6 @@ class SymSpell(object):
         self._max_dictionary_edit_distance = max_dictionary_edit_distance
         self._prefix_length = prefix_length
         self._count_threshold = count_threshold
-        self._compact_mask = (0xFFFFFFFF >> (3 + min(compact_level, 16))) << 2
         self._distance_algorithm = DistanceAlgorithm.DAMERUAUOSA
         self._max_length = 0
         self._replaced_words = dict()
@@ -120,15 +118,19 @@ class SymSpell(object):
         frequency and new words) at any time by calling
         create_dictionary_entry
 
-        **Args**:
+        Parameters
+        ----------
+        key : str
+            The word to add to dictionary.
+        count : int
+            The frequency count for word.
 
-        * key (str): The word to add to dictionary.
-        * count (int): The frequency count for word.
-
-        **Returns**:
-        True if the word was added as a new correctly spelled word, or\
-            False if the word is added as a below threshold word, or\
-            updates an existing correctly spelled word.
+        Returns
+        -------
+        bool
+            True if the word was added as a new correctly spelled
+            word, or False if the word is added as a below threshold
+            word, or updates an existing correctly spelled word.
         """
         if count <= 0:
             # no point doing anything if count is zero, as it can't
@@ -186,16 +188,19 @@ class SymSpell(object):
 
     def delete_dictionary_entry(self, key):
         """Delete an entry in the dictionary. If the deleted entry is
-        the longest word, update self._max_length with the next longest
-        word
+        the longest word, update :attr:`_max_length` with the next
+        longest word
 
-        **Args**:
+        Parameters
+        ----------
+        key : str
+            The word to add to dictionary.
 
-        * key (str): The word to add to dictionary.
-
-        **Return**:
-        True if the word is successfully deleted, or False if the word
-        is not found.
+        Returns
+        -------
+        bool
+            True if the word is successfully deleted, or False if the
+            word is not found.
         """
         if key not in self._words:
             return False
@@ -213,6 +218,29 @@ class SymSpell(object):
 
     def load_bigram_dictionary(self, corpus, term_index, count_index,
                                separator=None, encoding=None):
+        """Load multiple dictionary entries from a file of
+        word/frequency count pairs
+
+        **NOTE**: Merges with any dictionary data already loaded.
+
+        Parameters
+        ----------
+        corpus : str
+            The path+filename of the file.
+        term_index : int
+            The column position of the word.
+        count_index : int
+            The column position of the frequency count.
+        separator : str, optional
+            Separator characters between term(s) and count.
+        encoding : str, optional
+            Text encoding of the dictionary file
+
+        Returns
+        -------
+        bool
+            True if file loaded, or False if file not found.
+        """
         if not os.path.exists(corpus):
             return False
         with open(corpus, "r", encoding=encoding) as infile:
@@ -232,19 +260,27 @@ class SymSpell(object):
     def load_dictionary(self, corpus, term_index, count_index,
                         separator=" ", encoding=None):
         """Load multiple dictionary entries from a file of
-        word/frequency count pairs. Merges with any dictionary data
-        already loaded.
+        word/frequency count pairs.
 
-        **Args**:
+        **NOTE**: Merges with any dictionary data already loaded.
 
-        * corpus (str): The path+filename of the file.
-        * term_index (int): The column position of the word.
-        * count_index (int): The column position of the frequency\
-            count.
-        * encoding (str): Text encoding of the dictionary file
+        Parameters
+        ----------
+        corpus : str
+            The path+filename of the file.
+        term_index : int
+            The column position of the word.
+        count_index : int
+            The column position of the frequency count.
+        separator : str, optional
+            Separator characters between term(s) and count.
+        encoding : str, optional
+            Text encoding of the dictionary file
 
-        **Returns**:
-        True if file loaded, or False if file not found.
+        Returns
+        -------
+        bool
+            True if file loaded, or False if file not found.
         """
         if not os.path.exists(corpus):
             return False
@@ -260,15 +296,21 @@ class SymSpell(object):
 
     def create_dictionary(self, corpus, encoding=None):
         """Load multiple dictionary words from a file containing plain
-        text. Merges with any dictionary data already loaded.
+        text.
 
-        **Args**:
+        **NOTE**: Merges with any dictionary data already loaded.
 
-        * corpus (str) The path+filename of the file.
-        * encoding (str): Text encoding of the corpus file
+        Parameters
+        ----------
+        corpus : str
+            The path+filename of the file.
+        encoding : str, optional
+            Text encoding of the corpus file.
 
-        **Returns**:
-        True if file loaded, or False if file not found.
+        Returns
+        -------
+        bool
+            True if file loaded, or False if file not found.
         """
         if not os.path.exists(corpus):
             return False
@@ -279,12 +321,13 @@ class SymSpell(object):
         return True
 
     def save_pickle_stream(self, stream):
-        """Pickle _deletes, _words, and _max_length into a stream for quicker
-        loading later.
+        """Pickle :attr:`_deletes`, :attr:`_words`, and
+        :attr:`_max_length` into a stream for quicker loading later.
 
-        **Args**:
-
-        * stream (str): The stream where to save the pickle data
+        Parameters
+        ----------
+        stream : str
+            The stream to store the pickle data.
         """
         pickle_data = {
             "deletes": self._deletes,
@@ -295,28 +338,33 @@ class SymSpell(object):
         pickle.dump(pickle_data, stream)
 
     def save_pickle(self, filename, compressed=True):
-        """Pickle _deletes, _words, and _max_length into a file for quicker
-        loading later.
+        """Pickle :attr:`_deletes`, :attr:`_words`, and
+        :attr:`_max_length` into a stream for quicker loading later.
 
-        **Args**:
-
-        * filename (str): The path+filename of the pickle file
-        * compressed (bool): A flag to determine whether to compress\
-            the pickled data
+        Parameters
+        ----------
+        filename : str
+            The path+filename of the pickle file.
+        compressed : bool, optional
+            A flag to determine whether to compress the pickled data.
         """
         with (gzip.open if compressed else open)(filename, "wb") as f:
             self.save_pickle_stream(f)
 
     def load_pickle_stream(self, stream):
-        """Load delete combination from stream as pickle. This will reduce the
-        loading time compared to running :meth:`load_dictionary` again.
+        """Load delete combination from stream as pickle. This will
+        reduce the loading time compared to running
+        :meth:`load_dictionary` again.
 
-        **Args**:
+        Parameters
+        ----------
+        stream : str
+            The stream from which the pickle data is loaded.
 
-        * stream (str): The stream where to load the pickle data
-
-        **Returns**:
-        True if delete combinations are successfully loaded.
+        Returns
+        -------
+        bool
+            True if delete combinations are successfully loaded.
         """
         pickle_data = pickle.load(stream)
         if ("data_version" not in pickle_data
@@ -328,17 +376,22 @@ class SymSpell(object):
         return True
 
     def load_pickle(self, filename, compressed=True):
-        """Load delete combination from file as pickle. This will reduce the
-        loading time compared to running :meth:`load_dictionary` again.
+        """Load delete combination from file as pickle. This will
+        reduce the loading time compared to running
+        :meth:`load_dictionary` again.
 
-        **Args**:
+        Parameters
+        ----------
+        filename : str
+            The path+filename of the pickle file.
+        compressed : bool, optional
+            A flag to determine whether to read the pickled data as
+            compressed data.
 
-        * filename (str): The path+filename of the pickle file
-        * compressed (bool): A flag to determine whether to read the\
-            pickled data as compressed data
-
-        **Returns**:
-        True if delete combinations are successfully loaded.
+        Returns
+        -------
+        bool
+            True if delete combinations are successfully loaded.
         """
         with (gzip.open if compressed else open)(filename, "rb") as f:
             return self.load_pickle_stream(f)
@@ -348,31 +401,40 @@ class SymSpell(object):
                transfer_casing=False):
         """Find suggested spellings for a given phrase word.
 
-        **Args**:
+        Parameters
+        ----------
+        phrase : str
+            The word being spell checked.
+        verbosity : :class:`Verbosity`
+            The value controlling the quantity/closeness of the
+            returned suggestions.
+        max_edit_distance : int, optional
+            The maximum edit distance between phrase and suggested
+            words. Set to :attr:`_max_dictionary_edit_distance` by
+            default
+        include_unknown : bool, optional
+            A flag to determine whether to include phrase word in
+            suggestions, if no words within edit distance found.
+        ignore_token : regex pattern, optional
+            A regex pattern describing what words/phrases to ignore and
+            leave unchanged
+        transfer_casing : bool, optional
+            A flag to determine whether the casing --- i.e., uppercase
+            vs lowercase --- should be carried over from `phrase`.
 
-        * phrase (str): The word being spell checked.
-        * verbosity (:class:`Verbosity`): The value controlling the\
-            quantity/closeness of the returned suggestions.
-        * max_edit_distance (int): The maximum edit distance between\
-            phrase and suggested words.
-        * include_unknown (bool): A flag to determine whether to\
-            include phrase word in suggestions, if no words within\
-            edit distance found.
-        * ignore_token (regex pattern): A regex pattern describing\
-            what words/phrases to ignore and leave unchanged
-        * transfer_casing (bool): A flag to determine whether the
-            casing (eg upper- vs lowercase) should be carried over\
-            from the phrase
+        Returns
+        -------
+        suggestions : list
+            suggestions is a list of :class:`SuggestItem` objects
+            representing suggested correct spellings for the phrase
+            word, sorted by edit distance, and secondarily by count
+            frequency.
 
-        **Returns**:
-        A list of :class:`SuggestItem` object representing suggested\
-            correct spellings for the phrase word, sorted by edit\
-            distance, and secondarily by count frequency.
-
-        **Raises**:
-
-        * ValueError: `max_edit_distance` is greater than\
-            `_max_dictionary_edit_distance`
+        Raises
+        ------
+        ValueError
+            If `max_edit_distance` is greater than
+            :attr:`_max_dictionary_edit_distance`
         """
         if max_edit_distance is None:
             max_edit_distance = self._max_dictionary_edit_distance
@@ -617,18 +679,25 @@ class SymSpell(object):
         Find suggested spellings for a multi-word input string
         (supports word splitting/merging).
 
-        **Args**:
+        Parameters
+        ----------
+        phrase : str
+            The string being spell checked.
+        max_edit_distance : int
+            The maximum edit distance between input and suggested
+            words.
+        ignore_non_words : bool, optional
+            A flag to determine whether numbers and acronyms are left
+            alone during the spell checking process
+        transfer_casing : bool, optional
+            A flag to determine whether the casing --- i.e., uppercase
+            vs lowercase --- should be carried over from `phrase`.
 
-        * phrase (str): The string being spell checked.
-        * max_edit_distance (int): The maximum edit distance between\
-            input and suggested words.
-        * transfer_casing (bool): A flag to determine whether the
-            casing (eg upper- vs lowercase) should be carried over\
-            from the phrase
-
-        **Returns**:
-        A list of :class:`SuggestItem` object representing suggested\
-            correct spellings for the input string.
+        Returns
+        -------
+        suggestions_line : list
+            suggestions_line is a list of :class:`SuggestItem` objects
+            representing suggested correct spellings for `phrase`.
         """
         # Parse input string into single terms
         term_list_1 = helpers.parse_words(phrase)
@@ -736,7 +805,7 @@ class SymSpell(object):
                                             tmp_count = max(tmp_count,
                                                             best_si.count + 2)
                                         elif (suggestions_1[0].term == best_si.term
-                                                or suggestions_2[0].term == best_si.term):
+                                              or suggestions_2[0].term == best_si.term):
                                             # make count bigger than
                                             # count of single term
                                             # correction
@@ -821,22 +890,26 @@ class SymSpell(object):
         Find suggested spellings for a multi-word input string
         (supports word splitting/merging).
 
-        **Args**:
+        Parameters
+        ----------
+        phrase : str
+            The string being spell checked.
+        max_segmentation_word_length : int
+            The maximum word length that should be considered.
+        max_edit_distance : int, optional
+            The maximum edit distance between input and corrected words
+            (0=no correction/segmentation only).
+        ignore_token : regex pattern, optional
+            A regex pattern describing what words/phrases to ignore and
+            leave unchanged
 
-        * phrase (str): The string being spell checked.
-        * max_segmentation_word_length (int): The maximum word length\
-            that should be considered.
-        * max_edit_distance (int): The maximum edit distance between\
-            input and corrected words (0=no correction/segmentation\
-            only).
-        * ignore_token (regex pattern): A regex pattern describing\
-            what words/phrases to ignore and leave unchanged
-
-        **Returns**:
-        The word segmented string, the word segmented and spelling\
-            corrected string, the edit distance sum between input\
-            string and corrected string, the sum of word occurence\
-            probabilities in log scale (a measure of how common and\
+        Returns
+        -------
+        compositions[idx] :class:`Composition`
+            The word segmented string, the word segmented and spelling
+            corrected string, the edit distance sum between input
+            string and corrected string, the sum of word occurence
+            probabilities in log scale (a measure of how common and
             probable the corrected segmentation is).
         """
         if max_edit_distance is None:
@@ -1013,30 +1086,38 @@ class SymSpell(object):
 class SuggestItem(object):
     """Spelling suggestion returned from :meth:`lookup`.
 
-    **Attributes**:
+    Parameters
+    ----------
+    term : str
+        The suggested word.
+    distance : int
+        Edit distance from search word.
+    count : int or float
+        Frequency of suggestion in dictionary or Naive Bayes
+        probability of the individual suggestion parts
 
-    * _term: The suggested correctly spelled word.
-    * _distance: Edit distance between searched for word and\
-        suggestion.
-    * _count: Frequency of suggestion in the dictionary (a measure of\
-        how common the word is).
+    Attributes
+    ----------
+    _term : str
+        The suggested correctly spelled word.
+    _distance : int
+        Edit distance between searched for word and suggestion.
+    _count : int or float
+        Frequency of suggestion in the dictionary (a measure of how
+        common the word is) or Naive Bayes probability of the
+        individual suggestion parts in :meth:`lookup_compound`.
     """
     def __init__(self, term, distance, count):
-        """Create a new instance of SuggestItem.
-
-        **Args**:
-
-        * term (str): The suggested word.
-        * distance (int): Edit distance from search word.
-        * count (int): Frequency of suggestion in dictionary.
-        """
         self._term = term
         self._distance = distance
         self._count = count
 
     def __eq__(self, other):
-        """Order by distance ascending, then by frequency count
-        descending
+        """
+        Returns
+        -------
+        bool
+            True if both distance and frequency count are the same
         """
         if self._distance == other.distance:
             return self._count == other.count
@@ -1044,12 +1125,25 @@ class SuggestItem(object):
             return self._distance == other.distance
 
     def __lt__(self, other):
+        """
+        Returns
+        -------
+        bool
+            Order by distance ascending, then by frequency count
+            descending
+        """
         if self._distance == other.distance:
             return self._count > other.count
         else:
             return self._distance < other.distance
 
     def __str__(self):
+        """
+        Returns
+        -------
+        str
+            Displays attributes as "term, distance, count"
+        """
         return "{}, {}, {}".format(self._term, self._distance, self._count)
 
     @property
@@ -1076,6 +1170,24 @@ class SuggestItem(object):
     def count(self, count):
         self._count = count
 
-Composition = namedtuple("Composition", ["segmented_string", "corrected_string",
-                                         "distance_sum", "log_prob_sum"])
+Composition = namedtuple("Composition",
+                         ["segmented_string", "corrected_string",
+                          "distance_sum", "log_prob_sum"])
 Composition.__new__.__defaults__ = (None,) * len(Composition._fields)
+Composition.__doc__ = """Used by :meth:`word_segmentation`
+
+**NOTE**: "Parameters" is used instead "Attributes" due to a bug which
+overwrites attribute descriptions.
+
+Parameters
+----------
+segmented_string : str
+    The word segmented string.
+corrected_string : str
+    The spelling corrected string.
+distance_sum : int
+    The sum of edit distance between input string and corrected string
+log_prob_sum : float
+    The sum of word occurrence probabilities in log scale (a measure of
+    how common and probable the corrected segmentation is).
+"""
