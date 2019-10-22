@@ -26,10 +26,9 @@ class Verbosity(Enum):
 class SymSpell(object):
     """Symmetric Delete spelling correction algorithm.
     `initial_capacity` from the original code is omitted since python
-    cannot preallocate memory
-
-    **NOTE**: Currently hard coded to use the Damerau optimal string
-    alignment algorithm
+    cannot preallocate memory. `compact_mask` from the original code is
+    omitted since we're not mapping suggested corrections to hash
+    codes.
 
     Parameters
     ----------
@@ -40,9 +39,6 @@ class SymSpell(object):
     count_threshold : int
         The minimum frequency count for dictionary words to be
         considered correct spellings.
-    compact_level : int
-        Degree of favoring lower memory use over speed (0=fastest,most
-        memory, 16=slowest,least memory).
 
     Attributes
     ----------
@@ -65,8 +61,6 @@ class SymSpell(object):
         A threshold may be specified, when a term occurs so frequently
         in the corpus that it is considered a valid word for spelling
         correction.
-    _compact_mask : uint
-        Used for generating string hash
     _distance_algorithm : :class:`.editdistance.DistanceAlgorithm`
         Edit distance algorithms
     _max_length : int
@@ -83,8 +77,6 @@ class SymSpell(object):
         `max_dictionary_edit_distance`.
     ValueError
         If `count_threshold` is negative.
-    ValueError
-        If `compact_level` is not between 0 and 16.
     """
     data_version = 2
     # number of all words in the corpus used to generate the
@@ -96,7 +88,7 @@ class SymSpell(object):
     N = 1024908267229
     bigram_count_min = sys.maxsize
     def __init__(self, max_dictionary_edit_distance=2, prefix_length=7,
-                 count_threshold=1, compact_level=5):
+                 count_threshold=1):
         if max_dictionary_edit_distance < 0:
             raise ValueError("max_dictionary_edit_distance cannot be "
                              "negative")
@@ -106,8 +98,6 @@ class SymSpell(object):
                              "smaller than max_dictionary_edit_distance")
         if count_threshold < 0:
             raise ValueError("count_threshold cannot be negative")
-        if compact_level < 0 or compact_level > 16:
-            raise ValueError("compact_level must be between 0 and 16")
         self._words = dict()
         self._below_threshold_words = dict()
         self._bigrams = dict()
@@ -115,7 +105,6 @@ class SymSpell(object):
         self._max_dictionary_edit_distance = max_dictionary_edit_distance
         self._prefix_length = prefix_length
         self._count_threshold = count_threshold
-        self._compact_mask = (0xFFFFFFFF >> (3 + min(compact_level, 16))) << 2
         self._distance_algorithm = DistanceAlgorithm.DAMERUAUOSA
         self._max_length = 0
         self._replaced_words = dict()

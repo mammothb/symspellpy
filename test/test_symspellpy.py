@@ -49,19 +49,6 @@ class TestSymSpellPy(unittest.TestCase):
         self.assertEqual("count_threshold cannot be negative",
                          str(excinfo.value))
 
-    def test_invalide_compact_level(self):
-        # compact_level < 0
-        with pytest.raises(ValueError) as excinfo:
-            __ = SymSpell(1, 3, 1, -1)
-        self.assertEqual("compact_level must be between 0 and 16",
-                         str(excinfo.value))
-
-        # compact_level < 0
-        with pytest.raises(ValueError) as excinfo:
-            __ = SymSpell(1, 3, 1, 17)
-        self.assertEqual("compact_level must be between 0 and 16",
-                         str(excinfo.value))
-
     def test_create_dictionary_entry_negative_count(self):
         sym_spell = SymSpell(1, 3)
         self.assertEqual(False, sym_spell.create_dictionary_entry("pipe", 0))
