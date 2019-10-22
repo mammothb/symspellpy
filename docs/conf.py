@@ -11,7 +11,7 @@
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#
+
 import os.path
 import sys
 sys.path.insert(0, os.path.abspath(".."))
@@ -26,7 +26,7 @@ author = 'mmb L, Wolf Garbe'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '6.3.7'
+release = '6.5.1'
 
 
 # -- General configuration ---------------------------------------------------
@@ -40,7 +40,10 @@ release = '6.3.7'
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'numpydoc'
 ]
+numpydoc_class_members_toctree = False
+numpydoc_show_inherited_class_members = False
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -75,7 +78,7 @@ pygments_style = None
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'classic'
+html_theme = 'sphinxdoc'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the

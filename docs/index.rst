@@ -15,16 +15,14 @@ symspellpy.py
 =============
 .. automodule:: symspellpy.symspellpy
    :members:
-   :private-members:
-   :special-members: __init__, __eq__
+   :exclude-members: count, index, corrected_string, distance_sum, log_prob_sum, segmented_string
+   :special-members: __eq__, __lt__, __str__
 
 ===============
 editdistance.py
 ===============
 .. automodule:: symspellpy.editdistance
    :members:
-   :private-members:
-   :special-members: __init__
 
 ==========
 helpers.py

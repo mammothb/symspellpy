@@ -16,28 +16,26 @@ class DistanceAlgorithm(Enum):
 class EditDistance(object):
     """Edit distance algorithms.
 
-    **Attributes**:
+    Parameters
+    ----------
+    algorithm : :class:`DistanceAlgorithm`
+        The distance algorithm to use.
 
-    * _algorithm: A :class:`DistanceAlgorithm` indicating the desired\
-        edit distance algorithm.
-    * _distance_comparer: An object to compute the relative distance\
-        between two strings.
+    Attributes
+    ----------
+    _algorithm : :class:`DistanceAlgorithm`
+        The edit distance algorithm to use.
+    _distance_comparer : :class:`AbstractDistanceComparer`
+        An object to compute the relative distance between two strings.
+        The concrete object will be chosen based on the value of
+        :attr:`_algorithm`
+
+    Raises
+    ------
+    ValueError
+        If `algorithm` specifies an invalid distance algorithm.
     """
     def __init__(self, algorithm):
-        """Create a new EditDistance object.
-
-        **Args**:
-
-        * algorithm (:class:`DistanceAlgorithm`): The distance\
-            algorithm to use.
-
-        **Raises**:
-
-        * ValueError: `algorithm` specifies an invalid distance\
-            algorithm.
-
-        **NOTE**: Levenshtein algorithm not yet implemented.
-        """
         self._algorithm = algorithm
         if algorithm == DistanceAlgorithm.LEVENSHTEIN:
             self._distance_comparer = Levenshtein()
@@ -50,14 +48,19 @@ class EditDistance(object):
         """Compare a string to the base string to determine the edit
         distance, using the previously selected algorithm.
 
-        **Args**:
+        Parameters
+        ----------
+        string_1 : str
+            Base string.
+        string_2 : str
+            The string to compare.
+        max_distance : int
+            The maximum distance allowed.
 
-        * string_1 (str): Base string.
-        * string_2 (str): The string to compare.
-        * max_distance (int): The maximum distance allowed.
-
-        **Returns**:
-        The edit distance (or -1 if `max_distance` exceeded).
+        Returns
+        -------
+        int
+            The edit distance (or -1 if `max_distance` exceeded).
         """
         return self._distance_comparer.distance(string_1, string_2,
                                                 max_distance)
@@ -67,42 +70,60 @@ class AbstractDistanceComparer(object):
     def distance(self, string_1, string_2, max_distance):
         """Return a measure of the distance between two strings.
 
-        **Args**:
+        Parameters
+        ----------
+        string_1 : str
+            One of the strings to compare.
+        string_2 : str
+            The other string to compare.
+        max_distance : int
+            The maximum distance that is of interest.
 
-        * string_1 (str): One of the strings to compare.
-        * string_2 (str): The other string to compare.
-        * max_distance (int): The maximum distance that is of interest.
+        Returns
+        -------
+        int
+            -1 if the distance is greater than the max_distance, 0 if
+            the strings are equivalent, otherwise a positive number
+            whose magnitude increases as difference between the strings
+            increases.
 
-        **Return**:
-        -1 if the distance is greater than the max_distance, 0 if the\
-            strings are equivalent, otherwise a positive number\
-            whose magnitude increases as difference between the\
-            strings increases.
+        Raises
+        ------
+        NotImplementedError
+            If called from abstract class instead of concrete class
         """
         raise NotImplementedError("Should have implemented this")
 
 class Levenshtein(AbstractDistanceComparer):
     """Class providing Levenshtein algorithm for computing edit
     distance metric between two strings
+
+    Attributes
+    ----------
+    _base_char_1_costs : numpy.ndarray
     """
     def __init__(self):
-        """Create a new instance of Levenshtein"""
         self._base_char_1_costs = np.zeros(0, dtype=np.int32)
 
     def distance(self, string_1, string_2, max_distance):
         """Compute and return the Levenshtein edit distance between two
         strings.
 
-        **Args**:
+        Parameters
+        ----------
+        string_1 : str
+            One of the strings to compare.
+        string_2 : str
+            The other string to compare.
+        max_distance : int
+            The maximum distance that is of interest.
 
-        * string_1 (str): One of the strings to compare.
-        * string2 (str): The other string to compare.
-        * max_distance (int): The maximum distance that is of interest.
-
-        **Returns**:
-        -1 if the distance is greater than the maxDistance, 0 if the\
-            strings are equivalent, otherwise a positive number whose\
-            magnitude increases as difference between the strings \
+        Returns
+        -------
+        int
+            -1 if the distance is greater than the maxDistance, 0 if
+            the strings are equivalent, otherwise a positive number
+            whose magnitude increases as difference between the strings
             increases.
         """
         if string_1 is None or string_2 is None:
@@ -204,9 +225,15 @@ class DamerauOsa(AbstractDistanceComparer):
     """Class providing optimized methods for computing
     Damerau-Levenshtein Optimal String Alignment (OSA) comparisons
     between two strings.
+
+    Attributes
+    ----------
+    _base_char : int
+    _base_char_1_costs : numpy.ndarray
+    _base_prev_char_1_costs : numpy.ndarray
+
     """
     def __init__(self):
-        """Create a new instance of DamerauOsa"""
         self._base_char = 0
         self._base_char_1_costs = np.zeros(0, dtype=np.int32)
         self._base_prev_char_1_costs = np.zeros(0, dtype=np.int32)
@@ -215,17 +242,22 @@ class DamerauOsa(AbstractDistanceComparer):
         """Compute and return the Damerau-Levenshtein optimal string
         alignment edit distance between two strings.
 
-        **Args**:
+        Parameters
+        ----------
+        string_1 : str
+            One of the strings to compare.
+        string_2 : str
+            The other string to compare.
+        max_distance : int
+            The maximum distance that is of interest.
 
-        * string_1 (str): One of the strings to compare.
-        * string_2 (str): The other string to compare.
-        * max_distance (int): The maximum distance that is of interest.
-
-        **Returns**:
-        -1 if the distance is greater than the max_distance, 0 if the\
-            strings are equivalent, otherwise a positive number\
-            whose magnitude increases as difference between the\
-            strings increases.
+        Returns
+        -------
+        int
+            -1 if the distance is greater than the maxDistance, 0 if
+            the strings are equivalent, otherwise a positive number
+            whose magnitude increases as difference between the strings
+            increases.
         """
         if string_1 is None or string_2 is None:
             return helpers.null_distance_results(string_1, string_2,
