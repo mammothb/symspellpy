@@ -1,0 +1,7 @@
+{% extends "!layout.html" %}
+
+{%- block rootrellink %}
+  <li><a href="{{ pathto('index') }}">home</a>|&nbsp;</li>
+  <li><a href="{{ pathto('examples/index') }}">examples</a>|&nbsp;</li>
+  <li><a href="{{ pathto('api/index') }}">API</a>|&nbsp;</li>
+{%- endblock %}
