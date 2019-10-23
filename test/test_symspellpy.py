@@ -229,6 +229,33 @@ class TestSymSpellPy(unittest.TestCase):
         self.assertEqual(False, sym_spell.load_bigram_dictionary(
             "invalid/dictionary/path.txt", 0, 2))
 
+    def test_load_bigram_dictionary_bad_dict(self):
+        dictionary_path = os.path.join(self.fortests_path,
+                                       "bad_dict.txt")
+        edit_distance_max = 2
+        prefix_length = 7
+        sym_spell = SymSpell(edit_distance_max, prefix_length)
+        self.assertEqual(True, sym_spell.load_bigram_dictionary(
+            dictionary_path, 0, 2))
+        self.assertEqual(2, len(sym_spell.bigrams))
+        self.assertEqual(12, sym_spell.bigrams["rtyu tyui"])
+        self.assertEqual(13, sym_spell.bigrams["yuio uiop"])
+
+    def test_load_bigram_dictionary_separator(self):
+        dictionary_path = os.path.join(self.fortests_path,
+                                       "separator_dict.txt")
+        edit_distance_max = 2
+        prefix_length = 7
+        sym_spell = SymSpell(edit_distance_max, prefix_length)
+        self.assertEqual(True, sym_spell.load_bigram_dictionary(
+            dictionary_path, 0, 1, "$"))
+        self.assertEqual(5, len(sym_spell.bigrams))
+        self.assertEqual(23135851162, sym_spell.bigrams["the"])
+        self.assertEqual(13151942776, sym_spell.bigrams["of"])
+        self.assertEqual(10956800, sym_spell.bigrams["abcs of"])
+        self.assertEqual(10721728, sym_spell.bigrams["aaron and"])
+        self.assertEqual(12997637966, sym_spell.bigrams["and"])
+
     def test_load_dictionary_invalid_path(self):
         edit_distance_max = 2
         prefix_length = 7
@@ -246,6 +273,21 @@ class TestSymSpellPy(unittest.TestCase):
         self.assertEqual(2, sym_spell.word_count)
         self.assertEqual(10, sym_spell.words["asdf"])
         self.assertEqual(12, sym_spell.words["sdfg"])
+
+    def test_load_dictionary_separator(self):
+        dictionary_path = os.path.join(self.fortests_path,
+                                       "separator_dict.txt")
+        edit_distance_max = 2
+        prefix_length = 7
+        sym_spell = SymSpell(edit_distance_max, prefix_length)
+        self.assertEqual(True, sym_spell.load_dictionary(
+            dictionary_path, 0, 1, "$"))
+        self.assertEqual(5, sym_spell.word_count)
+        self.assertEqual(23135851162, sym_spell.words["the"])
+        self.assertEqual(13151942776, sym_spell.words["of"])
+        self.assertEqual(10956800, sym_spell.words["abcs of"])
+        self.assertEqual(10721728, sym_spell.words["aaron and"])
+        self.assertEqual(12997637966, sym_spell.words["and"])
 
     def test_lookup_should_replicate_noisy_results(self):
         query_path = os.path.join(self.fortests_path,
@@ -672,19 +714,6 @@ class TestSymSpellPy(unittest.TestCase):
         result = sym_spell.lookup("АБ", Verbosity.TOP, 2)
         self.assertEqual(1, len(result))
         self.assertEqual("АБИ", result[0].term)
-
-    def test_load_dictionary_separator(self):
-        dictionary_path = os.path.join(self.fortests_path, "tab_dict.txt")
-
-        edit_distance_max = 2
-        prefix_length = 7
-        sym_spell = SymSpell(edit_distance_max, prefix_length)
-        sym_spell.load_dictionary(dictionary_path, 0, 1, separator="\t",
-                                  encoding="utf-8")
-
-        result = sym_spell.lookup("stream", Verbosity.TOP, 2)
-        self.assertEqual(1, len(result))
-        self.assertEqual("steamb", result[0].term)
 
     def test_word_segmentation(self):
         edit_distance_max = 0
