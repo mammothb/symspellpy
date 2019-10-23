@@ -15,10 +15,9 @@
 import os.path
 import sys
 
-import symspellpy
-
 sys.path.insert(0, os.path.abspath(".."))
 
+import symspellpy
 
 # -- Project information -----------------------------------------------------
 
