@@ -1,6 +1,13 @@
 CHANGELOG <br>
 ==============
 
+## 6.5.2 (2019-10-23)
+---------------------
+- Modified `load_bigram_dictionary` to allow dictionary entries to be split
+into only 2 parts when using a custom separator
+- Added dictionary files to wheels so `pkg_resources` could be used to access
+them
+
 ## 6.5.1 (2019-10-08)
 ---------------------
 - Added `separator` argument to allow user to choose custom separator for `load_dictionary`

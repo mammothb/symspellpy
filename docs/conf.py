@@ -14,6 +14,9 @@
 
 import os.path
 import sys
+
+import symspellpy
+
 sys.path.insert(0, os.path.abspath(".."))
 
 
@@ -26,7 +29,7 @@ author = 'mmb L, Wolf Garbe'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '6.5.1'
+release = symspellpy.__version__
 
 
 # -- General configuration ---------------------------------------------------
