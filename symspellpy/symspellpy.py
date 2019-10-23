@@ -246,15 +246,18 @@ class SymSpell(object):
         with open(corpus, "r", encoding=encoding) as infile:
             for line in infile:
                 line_parts = line.rstrip().split(separator)
-                if len(line_parts) >= 3:
-                    key = ("{} {}".format(line_parts[term_index],
-                                          line_parts[term_index + 1])
-                           if separator is None else line_parts[term_index])
+                key = count = None
+                if len(line_parts) >= 3 and separator is None:
+                    key = "{} {}".format(line_parts[term_index],
+                                         line_parts[term_index + 1])
+                elif len(line_parts) >= 2 and separator is not None:
+                    key = line_parts[term_index]
+                if key is not None:
                     count = helpers.try_parse_int64(line_parts[count_index])
-                    if count is not None:
-                        self._bigrams[key] = count
-                        if count < self.bigram_count_min:
-                            self.bigram_count_min = count
+                if count is not None:
+                    self._bigrams[key] = count
+                    if count < self.bigram_count_min:
+                        self.bigram_count_min = count
         return True
 
     def load_dictionary(self, corpus, term_index, count_index,
@@ -1066,6 +1069,10 @@ class SymSpell(object):
     @property
     def below_threshold_words(self):
         return self._below_threshold_words
+
+    @property
+    def bigrams(self):
+        return self._bigrams
 
     @property
     def deletes(self):
