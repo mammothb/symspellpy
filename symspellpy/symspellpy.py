@@ -606,9 +606,7 @@ class SymSpell(object):
                             # delete_in_suggestion_prefix is somewhat
                             # expensive, and only pays off when
                             # verbosity is TOP or CLOSEST
-                            if ((verbosity != Verbosity.ALL
-                                 and not self._delete_in_suggestion_prefix(candidate, candidate_len, suggestion, suggestion_len))
-                                    or suggestion in considered_suggestions):
+                            if suggestion in considered_suggestions:
                                 continue
                             considered_suggestions.add(suggestion)
                             distance = distance_comparer.compare(
@@ -1004,7 +1002,7 @@ class SymSpell(object):
         return compositions[idx]
 
     def _delete_in_suggestion_prefix(self, delete, delete_len, suggestion,
-                                     suggestion_len):
+                                     suggestion_len):  # pragma: no cover
         """Check whether all delete chars are present in the suggestion
         prefix in correct order, otherwise this is just a hash
         collision
