@@ -243,19 +243,45 @@ class SymSpell(object):
         """
         if not os.path.exists(corpus):
             return False
-        min_line_parts = 3 if separator is None else 2
         with open(corpus, "r", encoding=encoding) as infile:
-            for line in infile:
-                line_parts = line.rstrip().split(separator)
-                if len(line_parts) >= min_line_parts:
-                    key = ("{} {}".format(line_parts[term_index],
-                                          line_parts[term_index + 1])
-                           if separator is None else line_parts[term_index])
-                    count = helpers.try_parse_int64(line_parts[count_index])
-                    if count is not None:
-                        self._bigrams[key] = count
-                        if count < self.bigram_count_min:
-                            self.bigram_count_min = count
+            return self.load_bigram_dictionary_stream(infile, term_index,
+                                                      count_index, separator)
+
+    def load_bigram_dictionary_stream(self, corpus_stream, term_index=None,
+                                      count_index=None, separator=None):
+        """Load multiple dictionary entries from a stream of
+        word/frequency count pairs
+
+        **NOTE**: Merges with any dictionary data already loaded.
+
+        Parameters
+        ----------
+        corpus : str
+            The path+filename of the file.
+        term_index : int
+            The column position of the word.
+        count_index : int
+            The column position of the frequency count.
+        separator : str, optional
+            Separator characters between term(s) and count.
+
+        Returns
+        -------
+        bool
+            True if file loaded, or False if file not found.
+        """
+        min_line_parts = 3 if separator is None else 2
+        for line in corpus_stream:
+            line_parts = line.rstrip().split(separator)
+            if len(line_parts) >= min_line_parts:
+                key = ("{} {}".format(line_parts[term_index],
+                                      line_parts[term_index + 1])
+                       if separator is None else line_parts[term_index])
+                count = helpers.try_parse_int64(line_parts[count_index])
+                if count is not None:
+                    self._bigrams[key] = count
+                    if count < self.bigram_count_min:
+                        self.bigram_count_min = count
         return True
 
     def load_dictionary(self, corpus, term_index, count_index,
@@ -286,13 +312,39 @@ class SymSpell(object):
         if not os.path.exists(corpus):
             return False
         with open(corpus, "r", encoding=encoding) as infile:
-            for line in infile:
-                line_parts = line.rstrip().split(separator)
-                if len(line_parts) >= 2:
-                    key = line_parts[term_index]
-                    count = helpers.try_parse_int64(line_parts[count_index])
-                    if count is not None:
-                        self.create_dictionary_entry(key, count)
+            return self.load_dictionary_stream(infile, term_index,
+                                               count_index, separator)
+
+    def load_dictionary_stream(self, corpus_stream, term_index,
+                               count_index, separator=" "):
+        """Load multiple dictionary entries from a stream of
+        word/frequency count pairs.
+
+        **NOTE**: Merges with any dictionary data already loaded.
+
+        Parameters
+        ----------
+        corpus : str
+            The path+filename of the file.
+        term_index : int
+            The column position of the word.
+        count_index : int
+            The column position of the frequency count.
+        separator : str, optional
+            Separator characters between term(s) and count.
+
+        Returns
+        -------
+        bool
+            True if file loaded, or False if file not found.
+        """
+        for line in corpus_stream:
+            line_parts = line.rstrip().split(separator)
+            if len(line_parts) >= 2:
+                key = line_parts[term_index]
+                count = helpers.try_parse_int64(line_parts[count_index])
+                if count is not None:
+                    self.create_dictionary_entry(key, count)
         return True
 
     def create_dictionary(self, corpus, encoding=None):
