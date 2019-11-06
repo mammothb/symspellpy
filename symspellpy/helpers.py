@@ -333,4 +333,4 @@ class DictIO:
         return self
 
     def __next__(self):
-        return "{0}{2}{1}".format(*next(self.iteritems), self.separator)
+        return "{0}{2}{1}".format(*(next(self.iteritems) + (self.separator,)))
