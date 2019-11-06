@@ -305,3 +305,32 @@ def transfer_casing_for_similar_text(text_w_casing, text_wo_casing):
                         # characters
                         c += wo.upper() if _last == 'upper' else wo.lower()
     return c
+
+class DictIO:
+    """An iterator wrapper for python dictionary to format the output
+    as required by :meth:`load_dictionary_stream` and
+    :meth:`load_dictionary_bigram_stream`. 
+
+    Parameters
+    ----------
+    dictionary : dict
+        Dictionary with words as keys and frequency count as values
+    separator : str, optional
+        Separator characters between term(s) and count.
+
+    Attributes
+    ----------
+    iteritems : iterator
+        An iterator object of dictionary.items()
+    separator : str
+        Separator characters between term(s) and count.
+    """
+    def __init__(self, dictionary, separator=" "):
+        self.iteritems = iter(dictionary.items())
+        self.separator = separator
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        return "{0}{2}{1}".format(*next(self.iteritems), self.separator)

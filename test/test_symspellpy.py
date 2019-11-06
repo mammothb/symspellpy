@@ -7,6 +7,7 @@ import pkg_resources
 import pytest
 
 from symspellpy import SymSpell, Verbosity
+from symspellpy.helpers import DictIO
 from symspellpy.symspellpy import SuggestItem
 
 class TestSymSpellPy(unittest.TestCase):
@@ -256,6 +257,41 @@ class TestSymSpellPy(unittest.TestCase):
         self.assertEqual(10721728, sym_spell.bigrams["aaron and"])
         self.assertEqual(12997637966, sym_spell.bigrams["and"])
 
+    def test_load_bigram_dictionary_stream(self):
+        dictionary = {"the": 23135851162,
+                      "of": 13151942776,
+                      "abcs of": 10956800,
+                      "aaron and": 10721728,
+                      "and": 12997637966}
+        dict_stream = DictIO(dictionary)
+        edit_distance_max = 2
+        prefix_length = 7
+        sym_spell = SymSpell(edit_distance_max, prefix_length)
+        self.assertEqual(True, sym_spell.load_bigram_dictionary_stream(
+            dict_stream, 0, 2))
+        self.assertEqual(2, len(sym_spell.bigrams))
+        self.assertEqual(10956800, sym_spell.bigrams["abcs of"])
+        self.assertEqual(10721728, sym_spell.bigrams["aaron and"])
+
+    def test_load_bigram_dictionary_stream_separator(self):
+        dictionary = {"the": 23135851162,
+                      "of": 13151942776,
+                      "abcs of": 10956800,
+                      "aaron and": 10721728,
+                      "and": 12997637966}
+        dict_stream = DictIO(dictionary, "$")
+        edit_distance_max = 2
+        prefix_length = 7
+        sym_spell = SymSpell(edit_distance_max, prefix_length)
+        self.assertEqual(True, sym_spell.load_bigram_dictionary_stream(
+            dict_stream, 0, 1, "$"))
+        self.assertEqual(5, len(sym_spell.bigrams))
+        self.assertEqual(23135851162, sym_spell.bigrams["the"])
+        self.assertEqual(13151942776, sym_spell.bigrams["of"])
+        self.assertEqual(10956800, sym_spell.bigrams["abcs of"])
+        self.assertEqual(10721728, sym_spell.bigrams["aaron and"])
+        self.assertEqual(12997637966, sym_spell.bigrams["and"])
+
     def test_load_dictionary_invalid_path(self):
         edit_distance_max = 2
         prefix_length = 7
@@ -282,6 +318,44 @@ class TestSymSpellPy(unittest.TestCase):
         sym_spell = SymSpell(edit_distance_max, prefix_length)
         self.assertEqual(True, sym_spell.load_dictionary(
             dictionary_path, 0, 1, "$"))
+        self.assertEqual(5, sym_spell.word_count)
+        self.assertEqual(23135851162, sym_spell.words["the"])
+        self.assertEqual(13151942776, sym_spell.words["of"])
+        self.assertEqual(10956800, sym_spell.words["abcs of"])
+        self.assertEqual(10721728, sym_spell.words["aaron and"])
+        self.assertEqual(12997637966, sym_spell.words["and"])
+
+    def test_load_dictionary_stream(self):
+        # keys with space in them don't get parsed properly when using
+        # the default separator=" "
+        dictionary = {"the": 23135851162,
+                      "of": 13151942776,
+                      "abcs of": 10956800,
+                      "aaron and": 10721728,
+                      "and": 12997637966}
+        dict_stream = DictIO(dictionary)
+        edit_distance_max = 2
+        prefix_length = 7
+        sym_spell = SymSpell(edit_distance_max, prefix_length)
+        self.assertEqual(True, sym_spell.load_dictionary_stream(
+            dict_stream, 0, 1))
+        self.assertEqual(3, sym_spell.word_count)
+        self.assertEqual(23135851162, sym_spell.words["the"])
+        self.assertEqual(13151942776, sym_spell.words["of"])
+        self.assertEqual(12997637966, sym_spell.words["and"])
+
+    def test_load_dictionary_stream_separator(self):
+        dictionary = {"the": 23135851162,
+                      "of": 13151942776,
+                      "abcs of": 10956800,
+                      "aaron and": 10721728,
+                      "and": 12997637966}
+        dict_stream = DictIO(dictionary, "$")
+        edit_distance_max = 2
+        prefix_length = 7
+        sym_spell = SymSpell(edit_distance_max, prefix_length)
+        self.assertEqual(True, sym_spell.load_dictionary_stream(
+            dict_stream, 0, 1, "$"))
         self.assertEqual(5, sym_spell.word_count)
         self.assertEqual(23135851162, sym_spell.words["the"])
         self.assertEqual(13151942776, sym_spell.words["of"])
