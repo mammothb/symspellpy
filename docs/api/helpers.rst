@@ -12,6 +12,8 @@ Helpers for `editdistance`
 Helpers for `symspellpy`
 ========================
 
+.. autoclass:: symspellpy.helpers.DictIO
+
 .. autofunction:: symspellpy.helpers.try_parse_int64
 
 .. autofunction:: symspellpy.helpers.parse_words
