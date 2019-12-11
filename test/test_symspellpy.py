@@ -725,6 +725,15 @@ class TestSymSpellPy(unittest.TestCase):
         results = sym_spell.lookup_compound(typo, edit_distance_max, True)
         self.assertEqual(1, len(results))
         self.assertEqual(correction, results[0].term)
+        
+        typo = ("is the officeon 1st floor oepn 24/7")
+        correction = ("is the office on 1st floor open 24/7")
+        results = sym_spell.lookup_compound(typo, edit_distance_max, split_phrase_by_space=True, 
+        ignore_non_words=True, ignore_any_term_with_digits=True)
+        self.assertEqual(1, len(results))
+        self.assertEqual(correction, results[0].term)
+        self.assertEqual(2, results[0].distance)
+        self.assertEqual(0, results[0].count)
 
     def test_lookup_compound_ignore_non_words_no_bigram(self):
         edit_distance_max = 2
