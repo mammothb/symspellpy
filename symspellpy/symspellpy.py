@@ -715,8 +715,8 @@ class SymSpell(object):
         return suggestions
 
     def lookup_compound(self, phrase, max_edit_distance,
-                        ignore_non_words=False,
-                        transfer_casing=False):
+                        ignore_non_words=False, transfer_casing=False,
+                        split_phrase_by_space=False, ignore_any_term_with_digits=False):
         """`lookup_compound` supports compound aware automatic spelling
         correction of multi-word input strings with three cases:
 
@@ -743,6 +743,11 @@ class SymSpell(object):
         transfer_casing : bool, optional
             A flag to determine whether the casing --- i.e., uppercase
             vs lowercase --- should be carried over from `phrase`.
+        split_by_space: bool, optional
+            Splits the phrase into words simply based on space
+        ignore_any_term_with_digits: bool, optional
+            A flag to determine whether any term with digits
+            is left alone during the spell checking process
 
         Returns
         -------
@@ -751,11 +756,11 @@ class SymSpell(object):
             representing suggested correct spellings for `phrase`.
         """
         # Parse input string into single terms
-        term_list_1 = helpers.parse_words(phrase)
+        term_list_1 = helpers.parse_words(phrase, split_by_space = split_phrase_by_space)
         # Second list of single terms with preserved cases so we can
         # ignore acronyms (all cap words)
         if ignore_non_words:
-            term_list_2 = helpers.parse_words(phrase, True)
+            term_list_2 = helpers.parse_words(phrase, preserve_case = True, split_by_space = split_phrase_by_space)
         suggestions = list()
         suggestion_parts = list()
         distance_comparer = EditDistance(self._distance_algorithm)
@@ -768,7 +773,7 @@ class SymSpell(object):
                 if helpers.try_parse_int64(term_list_1[i]) is not None:
                     suggestion_parts.append(SuggestItem(term_list_1[i], 0, 0))
                     continue
-                if helpers.is_acronym(term_list_2[i]):
+                if helpers.is_acronym(term_list_2[i], match_any_term_with_digits = ignore_any_term_with_digits):
                     suggestion_parts.append(SuggestItem(term_list_2[i], 0, 0))
                     continue
             suggestions = self.lookup(term_list_1[i], Verbosity.TOP,
