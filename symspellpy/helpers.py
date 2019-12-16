@@ -110,7 +110,7 @@ def try_parse_int64(string):
         return None
     return None if ret < -2 ** 64 or ret >= 2 ** 64 else ret
 
-def parse_words(phrase, preserve_case=False):
+def parse_words(phrase, preserve_case=False, split_by_space=False):
     """Create a non-unique wordlist from sample text. Language
     independent (e.g. works with Chinese characters)
 
@@ -121,27 +121,38 @@ def parse_words(phrase, preserve_case=False):
     preserve_case : bool, optional
         A flag to determine if we can to preserve the cases or convert
         all to lowercase
-
+    split_by_space: bool, optional
+        Splits the phrase into words simply based on space
     Returns
     list
         A list of words
     """
+      
+    if split_by_space:
+        if preserve_case:
+            return phrase.split()
+        else:
+            return phrase.lower().split()
+         
     # \W non-words, use negated set to ignore non-words and "_"
     # (underscore). Compatible with non-latin characters, does not
     # split words at apostrophes
+    
     if preserve_case:
         return re.findall(r"([^\W_]+['’]*[^\W_]*)", phrase)
     else:
         return re.findall(r"([^\W_]+['’]*[^\W_]*)", phrase.lower())
 
-def is_acronym(word):
+def is_acronym(word, match_any_term_with_digits=False):
     """Checks is the word is all caps (acronym) and/or contain numbers
 
     Parameters
     ----------
     word : str
         The word to check
-
+    match_any_term_with_digits: bool, optional
+        A flag to determine whether any term with digits
+        can be considered as acronym
     Returns
     -------
     bool
@@ -149,6 +160,8 @@ def is_acronym(word):
         ABCDE, AB12C. False if the word contains lower case letters,
         e.g., abcde, ABCde, abcDE, abCDe, abc12, ab12c
     """
+    if match_any_term_with_digits:
+        return any(i.isdigit() for i in word)
     return re.match(r"\b[A-Z0-9]{2,}\b", word) is not None
 
 def transfer_casing_for_matching_text(text_w_casing, text_wo_casing):
