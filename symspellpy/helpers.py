@@ -127,17 +127,14 @@ def parse_words(phrase, preserve_case=False, split_by_space=False):
     list
         A list of words
     """
-      
     if split_by_space:
         if preserve_case:
             return phrase.split()
         else:
             return phrase.lower().split()
-         
     # \W non-words, use negated set to ignore non-words and "_"
     # (underscore). Compatible with non-latin characters, does not
     # split words at apostrophes
-    
     if preserve_case:
         return re.findall(r"([^\W_]+['’]*[^\W_]*)", phrase)
     else:
