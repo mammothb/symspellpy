@@ -935,6 +935,12 @@ class TestSymSpellPy(unittest.TestCase):
                                   transfer_casing=True)
         self.assertEqual("STEAM", result[0].term)
 
+        sym_spell = SymSpell()
+        sym_spell.create_dictionary_entry("i", 4)
+        result = sym_spell.lookup("I", Verbosity.TOP, 2,
+                                  transfer_casing=True)
+        self.assertEqual("I", result[0].term)
+
     def test_lookup_compound_transfer_casing(self):
         edit_distance_max = 2
         prefix_length = 7
