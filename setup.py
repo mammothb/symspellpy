@@ -6,6 +6,7 @@ from setuptools.command.test import test as TestCommand
 
 cwd = os.path.realpath(os.path.dirname(__file__))
 
+
 class PyTest(TestCommand):
     user_options = [("pytest-args=", "a", "Arguments to pass into py.test")]
 

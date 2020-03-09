@@ -8,6 +8,7 @@ import pytest
 from symspellpy.editdistance import (AbstractDistanceComparer, DamerauOsa,
                                      EditDistance, Levenshtein)
 
+
 def build_test_strings():
     alphabet = "abcd"
     strings = [""]
@@ -15,6 +16,7 @@ def build_test_strings():
         for combi in combinations(alphabet, i):
             strings += ["".join(p) for p in permutations(combi)]
     return strings
+
 
 def get_levenshtein(string_1, string_2, max_distance):
     max_distance = max_distance = int(min(2 ** 31 - 1, max_distance))
@@ -37,6 +39,7 @@ def get_levenshtein(string_1, string_2, max_distance):
     distance = d[len_1, len_2]
     return distance if distance <= max_distance else -1
 
+
 def get_damerau_osa(string_1, string_2, max_distance):
     max_distance = max_distance = int(min(2 ** 31 - 1, max_distance))
     len_1 = len(string_1)
@@ -57,6 +60,7 @@ def get_damerau_osa(string_1, string_2, max_distance):
                 d[i, j] = min(d[i, j], d[i - 2, j - 2] + cost)
     distance = d[len_1, len_2]
     return distance if distance <= max_distance else -1
+
 
 class TestEditDistance(unittest.TestCase):
     test_strings = build_test_strings()

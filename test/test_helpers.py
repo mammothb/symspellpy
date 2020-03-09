@@ -3,6 +3,7 @@ import unittest
 from symspellpy.helpers import to_similarity,\
     transfer_casing_for_matching_text, transfer_casing_for_similar_text
 
+
 class TestHelpers(unittest.TestCase):
     def test_to_similarity(self):
         distance_1 = 6.0

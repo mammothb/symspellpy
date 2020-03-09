@@ -315,10 +315,15 @@ class SymSpell(object):
         bool
             True if file loaded, or False if file not found.
         """
-        if not os.path.exists(corpus):
-            return False
-        with open(corpus, "r", encoding=encoding) as infile:
-            for line in infile:
+        if isinstance(corpus, str):
+            if not os.path.exists(corpus):
+                return False
+            with open(corpus, "r", encoding=encoding) as infile:
+                for line in infile:
+                    for key in self._parse_words(line):
+                        self.create_dictionary_entry(key, 1)
+        else:
+            for line in corpus:
                 for key in self._parse_words(line):
                     self.create_dictionary_entry(key, 1)
         return True
