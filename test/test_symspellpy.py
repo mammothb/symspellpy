@@ -9,7 +9,6 @@ import pytest
 from symspellpy import SymSpell, Verbosity
 from symspellpy.symspellpy import SuggestItem
 
-
 class TestSymSpellPy(unittest.TestCase):
     dictionary_path = pkg_resources.resource_filename(
         "symspellpy", "frequency_dictionary_en_82_765.txt")
