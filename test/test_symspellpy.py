@@ -230,6 +230,14 @@ class TestSymSpellPy(unittest.TestCase):
         self.assertEqual(False, sym_spell.load_bigram_dictionary(
             "invalid/dictionary/path.txt", 0, 2))
 
+    def test_loading_dictionary_from_fileobject(self):
+        big_words_path = os.path.join(self.fortests_path, "big_words.txt")
+        edit_distance_max = 2
+        prefix_length = 7
+        sym_spell = SymSpell(edit_distance_max, prefix_length)
+        with open(big_words_path, 'r', encoding='utf8') as file:
+            self.assertEqual(True, sym_spell.create_dictionary(file))
+
     def test_load_bigram_dictionary_bad_dict(self):
         dictionary_path = os.path.join(self.fortests_path,
                                        "bad_dict.txt")
@@ -1019,6 +1027,12 @@ class TestSymSpellPy(unittest.TestCase):
         result = sym_spell.lookup("STREAM", Verbosity.TOP, 2,
                                   transfer_casing=True)
         self.assertEqual("STEAM", result[0].term)
+
+        sym_spell = SymSpell()
+        sym_spell.create_dictionary_entry("i", 4)
+        result = sym_spell.lookup("I", Verbosity.TOP, 2,
+                                  transfer_casing=True)
+        self.assertEqual("I", result[0].term)
 
     def test_lookup_compound_transfer_casing(self):
         edit_distance_max = 2

@@ -365,10 +365,15 @@ class SymSpell(object):
         bool
             True if file loaded, or False if file not found.
         """
-        if not os.path.exists(corpus):
-            return False
-        with open(corpus, "r", encoding=encoding) as infile:
-            for line in infile:
+        if isinstance(corpus, str):
+            if not os.path.exists(corpus):
+                return False
+            with open(corpus, "r", encoding=encoding) as infile:
+                for line in infile:
+                    for key in self._parse_words(line):
+                        self.create_dictionary_entry(key, 1)
+        else:
+            for line in corpus:
                 for key in self._parse_words(line):
                     self.create_dictionary_entry(key, 1)
         return True
@@ -513,7 +518,10 @@ class SymSpell(object):
         suggestion_count = 0
         if phrase in self._words:
             suggestion_count = self._words[phrase]
-            suggestions.append(SuggestItem(phrase, 0, suggestion_count))
+            if transfer_casing:
+                suggestions.append(SuggestItem(original_phrase, 0, suggestion_count))
+            else:
+                suggestions.append(SuggestItem(phrase, 0, suggestion_count))
             # early exit - return exact match, unless caller wants all
             # matches
             if verbosity != Verbosity.ALL:
