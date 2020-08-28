@@ -10,7 +10,9 @@ import math
 import os.path
 import pickle
 import re
+import string
 import sys
+import unicodedata
 
 from symspellpy.editdistance import DistanceAlgorithm, EditDistance
 import symspellpy.helpers as helpers
@@ -244,16 +246,40 @@ class SymSpell(object):
         if not os.path.exists(corpus):
             return False
         with open(corpus, "r", encoding=encoding) as infile:
-            for line in infile:
-                line_parts = line.rstrip().split(separator)
-                key = count = None
-                if len(line_parts) >= 3 and separator is None:
-                    key = "{} {}".format(line_parts[term_index],
-                                         line_parts[term_index + 1])
-                elif len(line_parts) >= 2 and separator is not None:
-                    key = line_parts[term_index]
-                if key is not None:
-                    count = helpers.try_parse_int64(line_parts[count_index])
+            return self.load_bigram_dictionary_stream(infile, term_index,
+                                                      count_index, separator)
+
+    def load_bigram_dictionary_stream(self, corpus_stream, term_index=None,
+                                      count_index=None, separator=None):
+        """Load multiple dictionary entries from a stream of
+        word/frequency count pairs
+
+        **NOTE**: Merges with any dictionary data already loaded.
+
+        Parameters
+        ----------
+        corpus : str
+            The path+filename of the file.
+        term_index : int
+            The column position of the word.
+        count_index : int
+            The column position of the frequency count.
+        separator : str, optional
+            Separator characters between term(s) and count.
+
+        Returns
+        -------
+        bool
+            True if file loaded, or False if file not found.
+        """
+        min_line_parts = 3 if separator is None else 2
+        for line in corpus_stream:
+            line_parts = line.rstrip().split(separator)
+            if len(line_parts) >= min_line_parts:
+                key = ("{} {}".format(line_parts[term_index],
+                                      line_parts[term_index + 1])
+                       if separator is None else line_parts[term_index])
+                count = helpers.try_parse_int64(line_parts[count_index])
                 if count is not None:
                     self._bigrams[key] = count
                     if count < self.bigram_count_min:
@@ -288,13 +314,39 @@ class SymSpell(object):
         if not os.path.exists(corpus):
             return False
         with open(corpus, "r", encoding=encoding) as infile:
-            for line in infile:
-                line_parts = line.rstrip().split(separator)
-                if len(line_parts) >= 2:
-                    key = line_parts[term_index]
-                    count = helpers.try_parse_int64(line_parts[count_index])
-                    if count is not None:
-                        self.create_dictionary_entry(key, count)
+            return self.load_dictionary_stream(infile, term_index,
+                                               count_index, separator)
+
+    def load_dictionary_stream(self, corpus_stream, term_index,
+                               count_index, separator=" "):
+        """Load multiple dictionary entries from a stream of
+        word/frequency count pairs.
+
+        **NOTE**: Merges with any dictionary data already loaded.
+
+        Parameters
+        ----------
+        corpus : str
+            The path+filename of the file.
+        term_index : int
+            The column position of the word.
+        count_index : int
+            The column position of the frequency count.
+        separator : str, optional
+            Separator characters between term(s) and count.
+
+        Returns
+        -------
+        bool
+            True if file loaded, or False if file not found.
+        """
+        for line in corpus_stream:
+            line_parts = line.rstrip().split(separator)
+            if len(line_parts) >= 2:
+                key = line_parts[term_index]
+                count = helpers.try_parse_int64(line_parts[count_index])
+                if count is not None:
+                    self.create_dictionary_entry(key, count)
         return True
 
     def create_dictionary(self, corpus, encoding=None):
@@ -614,9 +666,7 @@ class SymSpell(object):
                             # delete_in_suggestion_prefix is somewhat
                             # expensive, and only pays off when
                             # verbosity is TOP or CLOSEST
-                            if ((verbosity != Verbosity.ALL
-                                 and not self._delete_in_suggestion_prefix(candidate, candidate_len, suggestion, suggestion_len))
-                                    or suggestion in considered_suggestions):
+                            if suggestion in considered_suggestions:
                                 continue
                             considered_suggestions.add(suggestion)
                             distance = distance_comparer.compare(
@@ -675,8 +725,9 @@ class SymSpell(object):
         return suggestions
 
     def lookup_compound(self, phrase, max_edit_distance,
-                        ignore_non_words=False,
-                        transfer_casing=False):
+                        ignore_non_words=False, transfer_casing=False,
+                        split_phrase_by_space=False,
+                        ignore_term_with_digits=False):
         """`lookup_compound` supports compound aware automatic spelling
         correction of multi-word input strings with three cases:
 
@@ -703,6 +754,11 @@ class SymSpell(object):
         transfer_casing : bool, optional
             A flag to determine whether the casing --- i.e., uppercase
             vs lowercase --- should be carried over from `phrase`.
+        split_by_space: bool, optional
+            Splits the phrase into words simply based on space
+        ignore_any_term_with_digits: bool, optional
+            A flag to determine whether any term with digits
+            is left alone during the spell checking process
 
         Returns
         -------
@@ -711,11 +767,14 @@ class SymSpell(object):
             representing suggested correct spellings for `phrase`.
         """
         # Parse input string into single terms
-        term_list_1 = helpers.parse_words(phrase)
+        term_list_1 = helpers.parse_words(
+            phrase, split_by_space=split_phrase_by_space)
         # Second list of single terms with preserved cases so we can
         # ignore acronyms (all cap words)
         if ignore_non_words:
-            term_list_2 = helpers.parse_words(phrase, True)
+            term_list_2 = helpers.parse_words(
+                phrase, preserve_case=True,
+                split_by_space=split_phrase_by_space)
         suggestions = list()
         suggestion_parts = list()
         distance_comparer = EditDistance(self._distance_algorithm)
@@ -728,7 +787,9 @@ class SymSpell(object):
                 if helpers.try_parse_int64(term_list_1[i]) is not None:
                     suggestion_parts.append(SuggestItem(term_list_1[i], 0, 0))
                     continue
-                if helpers.is_acronym(term_list_2[i]):
+                if helpers.is_acronym(
+                        term_list_2[i],
+                        match_any_term_with_digits=ignore_term_with_digits):
                     suggestion_parts.append(SuggestItem(term_list_2[i], 0, 0))
                     continue
             suggestions = self.lookup(term_list_1[i], Verbosity.TOP,
@@ -923,6 +984,9 @@ class SymSpell(object):
             probabilities in log scale (a measure of how common and
             probable the corrected segmentation is).
         """
+        # normalize ligatures: scientiﬁc -> scientific
+        phrase = unicodedata.normalize("NFKC", phrase).replace("\u002D", "")
+
         if max_edit_distance is None:
             max_edit_distance = self._max_dictionary_edit_distance
         if max_segmentation_word_length is None:
@@ -961,10 +1025,16 @@ class SymSpell(object):
                 part = part.replace(" ", "")
                 top_ed -= len(part)
 
-                results = self.lookup(part, Verbosity.TOP, max_edit_distance,
+                # v6.7: Lookup against the lowercase term
+                results = self.lookup(part.lower(), Verbosity.TOP,
+                                      max_edit_distance,
                                       ignore_token=ignore_token)
                 if results:
                     top_result = results[0].term
+                    # v6.7: retain/preserve upper case
+                    if len(part) > 0 and part[0].isupper():
+                        top_result = top_result.capitalize()
+
                     top_ed += results[0].distance
                     # Naive Bayes Rule. We assume the word
                     # probabilities of two words to be independent.
@@ -1003,16 +1073,28 @@ class SymSpell(object):
                           and compositions[dest].log_prob_sum < compositions[idx].log_prob_sum + top_log_prob)
                       # replace values if smaller edit distance
                       or compositions[idx].distance_sum + separator_len + top_ed < compositions[dest].distance_sum):
-                    compositions[dest] = Composition(
-                        compositions[idx].segmented_string + " " + part,
-                        compositions[idx].corrected_string + " " + top_result,
-                        compositions[idx].distance_sum + separator_len + top_ed,
-                        compositions[idx].log_prob_sum + top_log_prob)
+                    if ((len(top_result) == 1
+                         and top_result[0] in string.punctuation)
+                            or (len(top_result) == 2
+                                and top_result.startswith("'"))):
+                        compositions[dest] = Composition(
+                            compositions[idx].segmented_string + part,
+                            compositions[idx].corrected_string + top_result,
+                            compositions[idx].distance_sum + top_ed,
+                            compositions[idx].log_prob_sum + top_log_prob)
+                    else:
+                        compositions[dest] = Composition(
+                            compositions[idx].segmented_string + " " + part,
+                            (compositions[idx].corrected_string + " " +
+                             top_result),
+                            (compositions[idx].distance_sum + separator_len +
+                             top_ed),
+                            compositions[idx].log_prob_sum + top_log_prob)
             idx = next(circular_index)
         return compositions[idx]
 
     def _delete_in_suggestion_prefix(self, delete, delete_len, suggestion,
-                                     suggestion_len):
+                                     suggestion_len):  # pragma: no cover
         """Check whether all delete chars are present in the suggestion
         prefix in correct order, otherwise this is just a hash
         collision

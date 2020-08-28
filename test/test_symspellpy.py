@@ -7,6 +7,7 @@ import pkg_resources
 import pytest
 
 from symspellpy import SymSpell, Verbosity
+from symspellpy.helpers import DictIO
 from symspellpy.symspellpy import SuggestItem
 
 class TestSymSpellPy(unittest.TestCase):
@@ -264,6 +265,41 @@ class TestSymSpellPy(unittest.TestCase):
         self.assertEqual(10721728, sym_spell.bigrams["aaron and"])
         self.assertEqual(12997637966, sym_spell.bigrams["and"])
 
+    def test_load_bigram_dictionary_stream(self):
+        dictionary = {"the": 23135851162,
+                      "of": 13151942776,
+                      "abcs of": 10956800,
+                      "aaron and": 10721728,
+                      "and": 12997637966}
+        dict_stream = DictIO(dictionary)
+        edit_distance_max = 2
+        prefix_length = 7
+        sym_spell = SymSpell(edit_distance_max, prefix_length)
+        self.assertEqual(True, sym_spell.load_bigram_dictionary_stream(
+            dict_stream, 0, 2))
+        self.assertEqual(2, len(sym_spell.bigrams))
+        self.assertEqual(10956800, sym_spell.bigrams["abcs of"])
+        self.assertEqual(10721728, sym_spell.bigrams["aaron and"])
+
+    def test_load_bigram_dictionary_stream_separator(self):
+        dictionary = {"the": 23135851162,
+                      "of": 13151942776,
+                      "abcs of": 10956800,
+                      "aaron and": 10721728,
+                      "and": 12997637966}
+        dict_stream = DictIO(dictionary, "$")
+        edit_distance_max = 2
+        prefix_length = 7
+        sym_spell = SymSpell(edit_distance_max, prefix_length)
+        self.assertEqual(True, sym_spell.load_bigram_dictionary_stream(
+            dict_stream, 0, 1, "$"))
+        self.assertEqual(5, len(sym_spell.bigrams))
+        self.assertEqual(23135851162, sym_spell.bigrams["the"])
+        self.assertEqual(13151942776, sym_spell.bigrams["of"])
+        self.assertEqual(10956800, sym_spell.bigrams["abcs of"])
+        self.assertEqual(10721728, sym_spell.bigrams["aaron and"])
+        self.assertEqual(12997637966, sym_spell.bigrams["and"])
+
     def test_load_dictionary_invalid_path(self):
         edit_distance_max = 2
         prefix_length = 7
@@ -290,6 +326,44 @@ class TestSymSpellPy(unittest.TestCase):
         sym_spell = SymSpell(edit_distance_max, prefix_length)
         self.assertEqual(True, sym_spell.load_dictionary(
             dictionary_path, 0, 1, "$"))
+        self.assertEqual(5, sym_spell.word_count)
+        self.assertEqual(23135851162, sym_spell.words["the"])
+        self.assertEqual(13151942776, sym_spell.words["of"])
+        self.assertEqual(10956800, sym_spell.words["abcs of"])
+        self.assertEqual(10721728, sym_spell.words["aaron and"])
+        self.assertEqual(12997637966, sym_spell.words["and"])
+
+    def test_load_dictionary_stream(self):
+        # keys with space in them don't get parsed properly when using
+        # the default separator=" "
+        dictionary = {"the": 23135851162,
+                      "of": 13151942776,
+                      "abcs of": 10956800,
+                      "aaron and": 10721728,
+                      "and": 12997637966}
+        dict_stream = DictIO(dictionary)
+        edit_distance_max = 2
+        prefix_length = 7
+        sym_spell = SymSpell(edit_distance_max, prefix_length)
+        self.assertEqual(True, sym_spell.load_dictionary_stream(
+            dict_stream, 0, 1))
+        self.assertEqual(3, sym_spell.word_count)
+        self.assertEqual(23135851162, sym_spell.words["the"])
+        self.assertEqual(13151942776, sym_spell.words["of"])
+        self.assertEqual(12997637966, sym_spell.words["and"])
+
+    def test_load_dictionary_stream_separator(self):
+        dictionary = {"the": 23135851162,
+                      "of": 13151942776,
+                      "abcs of": 10956800,
+                      "aaron and": 10721728,
+                      "and": 12997637966}
+        dict_stream = DictIO(dictionary, "$")
+        edit_distance_max = 2
+        prefix_length = 7
+        sym_spell = SymSpell(edit_distance_max, prefix_length)
+        self.assertEqual(True, sym_spell.load_dictionary_stream(
+            dict_stream, 0, 1, "$"))
         self.assertEqual(5, sym_spell.word_count)
         self.assertEqual(23135851162, sym_spell.words["the"])
         self.assertEqual(13151942776, sym_spell.words["of"])
@@ -660,6 +734,17 @@ class TestSymSpellPy(unittest.TestCase):
         self.assertEqual(1, len(results))
         self.assertEqual(correction, results[0].term)
 
+        typo = "is the officeon 1st floor oepn 24/7"
+        correction = "is the office on 1st floor open 24/7"
+        results = sym_spell.lookup_compound(typo, edit_distance_max,
+                                            split_phrase_by_space=True, 
+                                            ignore_non_words=True,
+                                            ignore_term_with_digits=True)
+        self.assertEqual(1, len(results))
+        self.assertEqual(correction, results[0].term)
+        self.assertEqual(2, results[0].distance)
+        self.assertEqual(0, results[0].count)
+
     def test_lookup_compound_ignore_non_words_no_bigram(self):
         edit_distance_max = 2
         prefix_length = 7
@@ -780,6 +865,52 @@ class TestSymSpellPy(unittest.TestCase):
                       "it was the age of wisdom it was the age of foolishness")
         result = sym_spell.word_segmentation(typo, edit_distance_max, 11)
         self.assertEqual(correction, result.corrected_string)
+
+    def test_word_segmentation_capitalize(self):
+        edit_distance_max = 0
+        prefix_length = 7
+        sym_spell = SymSpell(edit_distance_max, prefix_length)
+        sym_spell.load_dictionary(self.dictionary_path, 0, 1)
+
+        typo = "Thequickbrownfoxjumpsoverthelazydog"
+        correction = "The quick brown fox jumps over the lazy dog"
+        result = sym_spell.word_segmentation(typo)
+        self.assertEqual(correction, result.corrected_string)
+
+        typo = "Itwasabrightcolddayinaprilandtheclockswerestrikingthirteen"
+        correction = ("It was a bright cold day in april and the clocks "
+                      "were striking thirteen")
+        result = sym_spell.word_segmentation(typo)
+        self.assertEqual(correction, result[1])
+
+        typo = ("Itwasthebestoftimesitwastheworstoftimesitwastheageofwisdom"
+                "itwastheageoffoolishness")
+        correction = ("It was the best of times it was the worst of times "
+                      "it was the age of wisdom it was the age of foolishness")
+        result = sym_spell.word_segmentation(typo)
+        self.assertEqual(correction, result[1])
+
+    def test_word_segmentation_apostrophe(self):
+        edit_distance_max = 0
+        prefix_length = 7
+        sym_spell = SymSpell(edit_distance_max, prefix_length)
+        sym_spell.load_dictionary(self.dictionary_path, 0, 1)
+
+        typo = "There'resomewords"
+        correction = ("There' re some words")
+        result = sym_spell.word_segmentation(typo)
+        self.assertEqual(correction, result[1])
+
+    def test_word_segmentation_ligature(self):
+        edit_distance_max = 0
+        prefix_length = 7
+        sym_spell = SymSpell(edit_distance_max, prefix_length)
+        sym_spell.load_dictionary(self.dictionary_path, 0, 1)
+
+        typo = "Therearesomescientiﬁcwords"
+        correction = ("There are some scientific words")
+        result = sym_spell.word_segmentation(typo)
+        self.assertEqual(correction, result[1])
 
     def test_suggest_item(self):
         si_1 = SuggestItem("asdf", 12, 34)
