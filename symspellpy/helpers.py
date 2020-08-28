@@ -254,42 +254,42 @@ def transfer_casing_for_similar_text(text_w_casing, text_wo_casing):
     # two strings and handle them based on the per operation code rules
     for tag, i1, i2, j1, j2 in _sm.get_opcodes():
         # Print the operation codes from the SequenceMatcher:
-        # print('{:7}   a[{}:{}] --> b[{}:{}] {!r:>8} --> {!r}'
-        #       .format(tag, i1, i2, j1, j2,
-        #               text_w_casing[i1:i2],
-        #               text_wo_casing[j1:j2]))
+        print("{:7}   a[{}:{}] --> b[{}:{}] {!r:>8} --> {!r}"
+              .format(tag, i1, i2, j1, j2,
+                      text_w_casing[i1:i2],
+                      text_wo_casing[j1:j2]))
 
         # inserted character(s)
-        if tag == 'insert':
+        if tag == "insert":
             # if this is the first character and so there is no
             # character on the left of this or the left of it a space
             # then take the casing from the following character
-            if i1 == 0 or text_w_casing[i1 - 1] == ' ':
+            if i1 == 0 or text_w_casing[i1 - 1] == " ":
                 if text_w_casing[i1] and text_w_casing[i1].isupper():
-                    c += text_wo_casing[j1:j2].upper()
+                    c += text_wo_casing[j1 : j2].upper()
                 else:
-                    c += text_wo_casing[j1:j2].lower()
+                    c += text_wo_casing[j1 : j2].lower()
             else:
                 # otherwise just take the casing from the prior
                 # character
                 if text_w_casing[i1 - 1].isupper():
-                    c += text_wo_casing[j1:j2].upper()
+                    c += text_wo_casing[j1 : j2].upper()
                 else:
-                    c += text_wo_casing[j1:j2].lower()
+                    c += text_wo_casing[j1 : j2].lower()
 
-        elif tag == 'delete':
+        elif tag == "delete":
             # for deleted characters we don't need to do anything
             pass
 
-        elif tag == 'equal':
+        elif tag == "equal":
             # for 'equal' we just transfer the text from the
             # text_w_casing, as anyhow they are equal (without the
             # casing)
-            c += text_w_casing[i1:i2]
+            c += text_w_casing[i1 : i2]
 
-        elif tag == 'replace':
-            _w_casing = text_w_casing[i1:i2]
-            _wo_casing = text_wo_casing[j1:j2]
+        elif tag == "replace":
+            _w_casing = text_w_casing[i1 : i2]
+            _wo_casing = text_wo_casing[j1 : j2]
 
             # if they are the same length, the transfer is easy
             if len(_w_casing) == len(_wo_casing):
@@ -300,20 +300,20 @@ def transfer_casing_for_similar_text(text_w_casing, text_wo_casing):
                 # transfer the casing character-by-character and using
                 # the last casing to continue if we run out of the
                 # sequence
-                _last = 'lower'
+                _last = "lower"
                 for w, wo in zip_longest(_w_casing, _wo_casing):
                     if w and wo:
                         if w.isupper():
                             c += wo.upper()
-                            _last = 'upper'
+                            _last = "upper"
                         else:
                             c += wo.lower()
-                            _last = 'lower'
+                            _last = "lower"
                     elif not w and wo:
                         # once we ran out of 'w', we will carry over
                         # the last casing to any additional 'wo'
                         # characters
-                        c += wo.upper() if _last == 'upper' else wo.lower()
+                        c += wo.upper() if _last == "upper" else wo.lower()
     return c
 
 class DictIO:

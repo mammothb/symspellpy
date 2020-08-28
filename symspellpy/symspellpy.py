@@ -10,7 +10,9 @@ import math
 import os.path
 import pickle
 import re
+import string
 import sys
+import unicodedata
 
 from symspellpy.editdistance import DistanceAlgorithm, EditDistance
 import symspellpy.helpers as helpers
@@ -982,6 +984,9 @@ class SymSpell(object):
             probabilities in log scale (a measure of how common and
             probable the corrected segmentation is).
         """
+        # normalize ligatures: scientiﬁc -> scientific
+        phrase = unicodedata.normalize("NFKC", phrase).replace("\u002D", "")
+
         if max_edit_distance is None:
             max_edit_distance = self._max_dictionary_edit_distance
         if max_segmentation_word_length is None:
@@ -1020,10 +1025,16 @@ class SymSpell(object):
                 part = part.replace(" ", "")
                 top_ed -= len(part)
 
-                results = self.lookup(part, Verbosity.TOP, max_edit_distance,
+                # v6.7: Lookup against the lowercase term
+                results = self.lookup(part.lower(), Verbosity.TOP,
+                                      max_edit_distance,
                                       ignore_token=ignore_token)
                 if results:
                     top_result = results[0].term
+                    # v6.7: retain/preserve upper case
+                    if len(part) > 0 and part[0].isupper():
+                        top_result = top_result.capitalize()
+
                     top_ed += results[0].distance
                     # Naive Bayes Rule. We assume the word
                     # probabilities of two words to be independent.
@@ -1062,11 +1073,23 @@ class SymSpell(object):
                           and compositions[dest].log_prob_sum < compositions[idx].log_prob_sum + top_log_prob)
                       # replace values if smaller edit distance
                       or compositions[idx].distance_sum + separator_len + top_ed < compositions[dest].distance_sum):
-                    compositions[dest] = Composition(
-                        compositions[idx].segmented_string + " " + part,
-                        compositions[idx].corrected_string + " " + top_result,
-                        compositions[idx].distance_sum + separator_len + top_ed,
-                        compositions[idx].log_prob_sum + top_log_prob)
+                    if ((len(top_result) == 1
+                         and top_result[0] in string.punctuation)
+                            or (len(top_result) == 2
+                                and top_result.startswith("'"))):
+                        compositions[dest] = Composition(
+                            compositions[idx].segmented_string + part,
+                            compositions[idx].corrected_string + top_result,
+                            compositions[idx].distance_sum + top_ed,
+                            compositions[idx].log_prob_sum + top_log_prob)
+                    else:
+                        compositions[dest] = Composition(
+                            compositions[idx].segmented_string + " " + part,
+                            (compositions[idx].corrected_string + " " +
+                             top_result),
+                            (compositions[idx].distance_sum + separator_len +
+                             top_ed),
+                            compositions[idx].log_prob_sum + top_log_prob)
             idx = next(circular_index)
         return compositions[idx]
 

@@ -866,6 +866,52 @@ class TestSymSpellPy(unittest.TestCase):
         result = sym_spell.word_segmentation(typo, edit_distance_max, 11)
         self.assertEqual(correction, result.corrected_string)
 
+    def test_word_segmentation_capitalize(self):
+        edit_distance_max = 0
+        prefix_length = 7
+        sym_spell = SymSpell(edit_distance_max, prefix_length)
+        sym_spell.load_dictionary(self.dictionary_path, 0, 1)
+
+        typo = "Thequickbrownfoxjumpsoverthelazydog"
+        correction = "The quick brown fox jumps over the lazy dog"
+        result = sym_spell.word_segmentation(typo)
+        self.assertEqual(correction, result.corrected_string)
+
+        typo = "Itwasabrightcolddayinaprilandtheclockswerestrikingthirteen"
+        correction = ("It was a bright cold day in april and the clocks "
+                      "were striking thirteen")
+        result = sym_spell.word_segmentation(typo)
+        self.assertEqual(correction, result[1])
+
+        typo = ("Itwasthebestoftimesitwastheworstoftimesitwastheageofwisdom"
+                "itwastheageoffoolishness")
+        correction = ("It was the best of times it was the worst of times "
+                      "it was the age of wisdom it was the age of foolishness")
+        result = sym_spell.word_segmentation(typo)
+        self.assertEqual(correction, result[1])
+
+    def test_word_segmentation_apostrophe(self):
+        edit_distance_max = 0
+        prefix_length = 7
+        sym_spell = SymSpell(edit_distance_max, prefix_length)
+        sym_spell.load_dictionary(self.dictionary_path, 0, 1)
+
+        typo = "There'resomewords"
+        correction = ("There' re some words")
+        result = sym_spell.word_segmentation(typo)
+        self.assertEqual(correction, result[1])
+
+    def test_word_segmentation_ligature(self):
+        edit_distance_max = 0
+        prefix_length = 7
+        sym_spell = SymSpell(edit_distance_max, prefix_length)
+        sym_spell.load_dictionary(self.dictionary_path, 0, 1)
+
+        typo = "Therearesomescientiﬁcwords"
+        correction = ("There are some scientific words")
+        result = sym_spell.word_segmentation(typo)
+        self.assertEqual(correction, result[1])
+
     def test_suggest_item(self):
         si_1 = SuggestItem("asdf", 12, 34)
         si_2 = SuggestItem("sdfg", 12, 34)
