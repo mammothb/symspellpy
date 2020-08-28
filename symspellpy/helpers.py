@@ -254,10 +254,10 @@ def transfer_casing_for_similar_text(text_w_casing, text_wo_casing):
     # two strings and handle them based on the per operation code rules
     for tag, i1, i2, j1, j2 in _sm.get_opcodes():
         # Print the operation codes from the SequenceMatcher:
-        print("{:7}   a[{}:{}] --> b[{}:{}] {!r:>8} --> {!r}"
-              .format(tag, i1, i2, j1, j2,
-                      text_w_casing[i1:i2],
-                      text_wo_casing[j1:j2]))
+        # print("{:7}   a[{}:{}] --> b[{}:{}] {!r:>8} --> {!r}"
+        #       .format(tag, i1, i2, j1, j2,
+        #               text_w_casing[i1:i2],
+        #               text_wo_casing[j1:j2]))
 
         # inserted character(s)
         if tag == "insert":
