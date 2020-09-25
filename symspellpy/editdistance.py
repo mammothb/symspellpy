@@ -4,12 +4,14 @@
 """
 from enum import Enum
 
+import editdistance
 import symspellpy.helpers as helpers
 
 class DistanceAlgorithm(Enum):
     """Supported edit distance algorithms"""
     LEVENSHTEIN = 0  #: Levenshtein algorithm.
     DAMERUAUOSA = 1  #: Damerau optimal string alignment algorithm
+    LAVENSHTEIN_FAST = 2  #: faster implementation of the alg
 
 class EditDistance(object):
     """Edit distance algorithms.
@@ -39,6 +41,8 @@ class EditDistance(object):
             self._distance_comparer = Levenshtein()
         elif algorithm == DistanceAlgorithm.DAMERUAUOSA:
             self._distance_comparer = DamerauOsa()
+        elif algorithm == DistanceAlgorithm.LAVENSHTEIN_FAST:
+            self._distance_comparer = LavenshteinFast()
         else:
             raise ValueError("Unknown distance algorithm")
 
@@ -91,6 +95,13 @@ class AbstractDistanceComparer(object):
             If called from abstract class instead of concrete class
         """
         raise NotImplementedError("Should have implemented this")
+
+
+class LavenshteinFast(AbstractDistanceComparer):
+    def distance(self, string_1, string_2, max_distance):
+        dist = editdistance.eval(string_1, string_2)
+        return dist if dist <= max_distance else -1
+
 
 class Levenshtein(AbstractDistanceComparer):
     """Class providing Levenshtein algorithm for computing edit

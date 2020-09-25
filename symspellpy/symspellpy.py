@@ -107,7 +107,7 @@ class SymSpell(object):
         self._max_dictionary_edit_distance = max_dictionary_edit_distance
         self._prefix_length = prefix_length
         self._count_threshold = count_threshold
-        self._distance_algorithm = DistanceAlgorithm.DAMERUAUOSA
+        self._distance_algorithm = DistanceAlgorithm.LAVENSHTEIN_FAST
         self._max_length = 0
         self._replaced_words = dict()
 
