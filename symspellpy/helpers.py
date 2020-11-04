@@ -5,6 +5,8 @@
 from difflib import SequenceMatcher
 from itertools import zip_longest
 import re
+from nltk.tokenize import ToktokTokenizer
+
 
 def null_distance_results(string1, string2, max_distance):
     """Determines the proper return value of an edit distance function
@@ -110,6 +112,8 @@ def try_parse_int64(string):
         return None
     return None if ret < -2 ** 64 or ret >= 2 ** 64 else ret
 
+TOKENIZER = ToktokTokenizer()
+
 def parse_words(phrase, preserve_case=False):
     """Create a non-unique wordlist from sample text. Language
     independent (e.g. works with Chinese characters)
@@ -130,9 +134,17 @@ def parse_words(phrase, preserve_case=False):
     # (underscore). Compatible with non-latin characters, does not
     # split words at apostrophes
     if preserve_case:
-        return re.findall(r"([^\W_]+['’]*[^\W_]*)", phrase)
+        # return re.findall(r"([^\W_]+['’]*[^\W_]*)", phrase)
+        return TOKENIZER.tokenize(phrase)
     else:
-        return re.findall(r"([^\W_]+['’]*[^\W_]*)", phrase.lower())
+        # return re.findall(r"([^\W_]+['’]*[^\W_]*)", phrase.lower())
+        return TOKENIZER.tokenize(phrase.lower())
+
+
+def is_punctuation(token):
+    """Checks if the token is a punctuation."""
+    return re.match(r"[;,.!?:]+", token) is not None
+
 
 def is_acronym(word):
     """Checks is the word is all caps (acronym) and/or contain numbers

@@ -7,11 +7,18 @@ from enum import Enum
 import numpy as np
 
 import symspellpy.helpers as helpers
+from symspellpy.keyboarddistance import KeyboardDistance
+
+from pyxdameraulevenshtein import damerau_levenshtein_distance as damerau_levenshtein_distance_pyx
+from weighted_levenshtein import osa as weighted_levenshtein_osa
+from unidecode import unidecode
 
 class DistanceAlgorithm(Enum):
     """Supported edit distance algorithms"""
     LEVENSHTEIN = 0  #: Levenshtein algorithm.
     DAMERUAUOSA = 1  #: Damerau optimal string alignment algorithm
+    DAMERAUOSAPYX = 2  #: Damerau-Levenshtein OSA - pyxdameraulevenshtein impl.
+    DAMERAUOSAWEIGHT = 3  #: Damerau-Levenshtein OSA with custom weights - weighted_levenshtein impl.
 
 class EditDistance(object):
     """Edit distance algorithms.
@@ -41,6 +48,12 @@ class EditDistance(object):
             self._distance_comparer = Levenshtein()
         elif algorithm == DistanceAlgorithm.DAMERUAUOSA:
             self._distance_comparer = DamerauOsa()
+        elif algorithm == DistanceAlgorithm.DAMERAUOSAPYX:
+            self._distance_comparer = DamerauOSAPyx()
+        elif algorithm == DistanceAlgorithm.DAMERAUOSAWEIGHT:
+            self._distance_comparer = DamerauOSAWeightened()
+        if isinstance(algorithm, AbstractDistanceComparer):
+            self._distance_comparer = algorithm
         else:
             raise ValueError("Unknown distance algorithm")
 
@@ -384,3 +397,101 @@ class DamerauOsa(AbstractDistanceComparer):
             if char_1_costs[i + len_diff] > max_distance:
                 return -1
         return current_cost if current_cost <= max_distance else -1
+
+
+class DamerauOSAPyx(AbstractDistanceComparer):
+
+    def distance(self, string_1, string_2, max_distance):
+        if string_1 is None or string_2 is None:
+            return helpers.null_distance_results(string_1, string_2, max_distance)
+
+        if max_distance <= 0:
+            return 0 if string_1 == string_2 else -1
+
+        max_distance = int(min(2 ** 31 - 1, max_distance))
+
+        cost = damerau_levenshtein_distance_pyx(string_1, string_2)
+
+        return cost if cost <= max_distance else -1
+
+
+def get_ascii_weights(
+    insert_cost=1,
+    delete_cost=1,
+    substitute_cost=1,
+    transpose_cost=1,
+    distance_metric="euclidean",
+    normalize=True,
+    non_qwerty_char_constant=None
+):
+    # Dels inserts and subs are unweighted as no preceding
+    # or subsequent characters are considered in predictor
+    insert_weights = np.ones(128) * insert_cost
+    delete_weights = np.ones(128) * delete_cost
+    transpose_weights = np.ones((128, 128)) * transpose_cost
+
+    # Weighted with characters distance on the keyboard
+    # excluding ascii characters not used in qwerty keyboard
+    # and setting their distance to constant value or max distance
+    # TODO: check out other ways to normalize
+    keyboard_distance = KeyboardDistance(metric=distance_metric)
+    non_qwerty_idxs = np.array([chr(idx) in keyboard_distance._non_qwerty_ascii_chars for idx in range(128)])
+
+    ascii_distance = keyboard_distance.ascii_chars_distance
+    if normalize:
+        ascii_distance /= ascii_distance[~non_qwerty_idxs].max()
+
+    if non_qwerty_char_constant:
+        ascii_distance[non_qwerty_idxs] = non_qwerty_char_constant
+    else:
+        ascii_distance[non_qwerty_idxs] = ascii_distance[~non_qwerty_idxs].max()
+
+    substitute_weights = ascii_distance * substitute_cost
+
+    return insert_weights, delete_weights, substitute_weights, transpose_weights
+
+
+ascii_weights = get_ascii_weights()
+
+
+class DamerauOSAWeightened(AbstractDistanceComparer):
+
+    def __init__(self, weights=ascii_weights):
+        self._weights = weights
+
+    def distance(self, string_1, string_2, max_distance):
+        if string_1 == string_2:
+            return 0
+
+        if string_1 is None or string_2 is None:
+            return helpers.null_distance_results(string_1, string_2, max_distance)
+
+        if max_distance <= 0:
+            return 0 if string_1 == string_2 else -1
+
+        max_distance = int(min(2 ** 31 - 1, max_distance))
+
+        # with use of unidecode (really good, but a bit slower)
+        cost = 0.0  # base cost value
+        cost += weighted_levenshtein_osa(
+            unidecode(string_1), unidecode(string_2) , *self._weights
+        )
+
+        # TODO: with use of str.stranslate magic :)
+        # cost = weighted_levenshtein_osa(
+        #     string_1.translate(ascii_translator), string_2.translate(ascii_translator)  # , *self._weights
+        # )
+
+        return cost if cost <= max_distance else -1
+
+# TODO:
+# def _get_ascii_translator():
+#     strange = 'ŮôῡΒძěἊἦëĐᾇόἶἧзвŅῑἼźἓŉἐÿἈΌἢὶЁϋυŕŽŎŃğûλВὦėἜŤŨîᾪĝžἙâᾣÚκὔჯᾏᾢĠфĞὝŲŊŁČῐЙῤŌὭŏყἀхῦЧĎὍОуνἱῺèᾒῘᾘὨШūლἚύсÁóĒἍŷöὄЗὤἥბĔõὅῥŋБщἝξĢюᾫაπჟῸდΓÕűřἅгἰშΨńģὌΥÒᾬÏἴქὀῖὣᾙῶŠὟὁἵÖἕΕῨčᾈķЭτἻůᾕἫжΩᾶŇᾁἣჩαἄἹΖеУŹἃἠᾞåᾄГΠКíōĪὮϊὂᾱიżŦИὙἮὖÛĮἳφᾖἋΎΰῩŚἷРῈĲἁéὃσňİΙῠΚĸὛΪᾝᾯψÄᾭêὠÀღЫĩĈμΆᾌἨÑἑïოĵÃŒŸζჭᾼőΣŻçųøΤΑËņĭῙŘАдὗპŰἤცᾓήἯΐÎეὊὼΘЖᾜὢĚἩħĂыῳὧďТΗἺĬὰὡὬὫÇЩᾧñῢĻᾅÆßшδòÂчῌᾃΉᾑΦÍīМƒÜἒĴἿťᾴĶÊΊȘῃΟúχΔὋŴćŔῴῆЦЮΝΛῪŢὯнῬũãáἽĕᾗნᾳἆᾥйᾡὒსᾎĆрĀüСὕÅýფᾺῲšŵкἎἇὑЛვёἂΏθĘэᾋΧĉᾐĤὐὴιăąäὺÈФĺῇἘſგŜæῼῄĊἏØÉПяწДĿᾮἭĜХῂᾦωთĦлðὩზკίᾂᾆἪпἸиᾠώᾀŪāоÙἉἾρаđἌΞļÔβĖÝᾔĨНŀęᾤÓцЕĽŞὈÞუтΈέıàᾍἛśìŶŬȚĳῧῊᾟάεŖᾨᾉςΡმᾊᾸįᾚὥηᾛġÐὓłγľмþᾹἲἔбċῗჰხοἬŗŐἡὲῷῚΫŭᾩὸùᾷĹēრЯĄὉὪῒᾲΜᾰÌœĥტ'
+#     ascii_replacements = 'UoyBdeAieDaoiiZVNiIzeneyAOiiEyyrZONgulVoeETUiOgzEaoUkyjAoGFGYUNLCiIrOOoqaKyCDOOUniOeiIIOSulEySAoEAyooZoibEoornBSEkGYOapzOdGOuraGisPngOYOOIikoioIoSYoiOeEYcAkEtIuiIZOaNaicaaIZEUZaiIaaGPKioIOioaizTIYIyUIifiAYyYSiREIaeosnIIyKkYIIOpAOeoAgYiCmAAINeiojAOYzcAoSZcuoTAEniIRADypUitiiIiIeOoTZIoEIhAYoodTIIIaoOOCSonyKaAsSdoACIaIiFIiMfUeJItaKEISiOuxDOWcRoiTYNLYTONRuaaIeinaaoIoysACRAuSyAypAoswKAayLvEaOtEEAXciHyiiaaayEFliEsgSaOiCAOEPYtDKOIGKiootHLdOzkiaaIPIIooaUaOUAIrAdAKlObEYiINleoOTEKSOTuTEeiaAEsiYUTiyIIaeROAsRmAAiIoiIgDylglMtAieBcihkoIrOieoIYuOouaKerYAOOiaMaIoht'
+#     translator = str.maketrans(strange, ascii_replacements)
+#     return translator
+#
+# ascii_translator = _get_ascii_translator()
+
+
+

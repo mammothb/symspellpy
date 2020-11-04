@@ -726,6 +726,9 @@ class SymSpell(object):
                 if helpers.is_acronym(term_list_2[i]):
                     suggestion_parts.append(SuggestItem(term_list_2[i], 0, 0))
                     continue
+                if helpers.is_punctuation(term_list_2[i]):
+                    suggestion_parts.append(SuggestItem(term_list_2[i], 0, 0))
+                    continue
             suggestions = self.lookup(term_list_1[i], Verbosity.TOP,
                                       max_edit_distance)
             # combi check, always before split
@@ -862,6 +865,15 @@ class SymSpell(object):
         joined_term = ""
         joined_count = self.N
         for si in suggestion_parts:
+
+            if helpers.is_punctuation(si.term):
+                if len(joined_term) < 1:
+                    # omit if trying to place punctuation on first position
+                    continue
+                # there should be a whitespace at the end that we'd
+                # like to remove before joining a punctuation
+                joined_term = joined_term[:-1]
+
             joined_term += si.term + " "
             joined_count *= si.count / self.N
         joined_term = joined_term.rstrip()
