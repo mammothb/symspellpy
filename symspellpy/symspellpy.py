@@ -75,7 +75,7 @@ class SymSpell(object):
     ValueError
         If `max_dictionary_edit_distance` is negative.
     ValueError
-        If `prefix_length` is less than 1 or smaller than
+        If `prefix_length` is less than 1 or not greater than
         `max_dictionary_edit_distance`.
     ValueError
         If `count_threshold` is negative.
@@ -94,10 +94,11 @@ class SymSpell(object):
         if max_dictionary_edit_distance < 0:
             raise ValueError("max_dictionary_edit_distance cannot be "
                              "negative")
-        if (prefix_length < 1
-                or prefix_length <= max_dictionary_edit_distance):
-            raise ValueError("prefix_length cannot be less than 1 or "
-                             "smaller than max_dictionary_edit_distance")
+        if prefix_length < 1:
+            raise ValueError("prefix_length cannot be less than 1")
+        if prefix_length <= max_dictionary_edit_distance:
+            raise ValueError("prefix_length must be greater than "
+                             "max_dictionary_edit_distance")
         if count_threshold < 0:
             raise ValueError("count_threshold cannot be negative")
         self._words = dict()
