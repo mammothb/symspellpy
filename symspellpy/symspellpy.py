@@ -1130,7 +1130,7 @@ class SymSpell(object):
         matches = [match[0] for match in matches]
         return matches
 
-    def _edits(self, word, edit_distance, delete_words):
+    def _edits(self, word, edit_distance, delete_words, current_distance=0):
         """Inexpensive and language independent: only deletes,
         no transposes + replaces + inserts replaces and inserts are
         expensive and language dependent
@@ -1138,14 +1138,14 @@ class SymSpell(object):
         edit_distance += 1
         word_len = len(word)
         if word_len > 1:
-            for i in range(word_len):
+            for i in range(current_distance, word_len):
                 delete = word[: i] + word[i + 1 :]
                 if delete not in delete_words:
                     delete_words.add(delete)
                     # recursion, if maximum edit distance not yet
                     # reached
                     if edit_distance < self._max_dictionary_edit_distance:
-                        self._edits(delete, edit_distance, delete_words)
+                        self._edits(delete, edit_distance, delete_words, current_distance=i)
         return delete_words
 
     def _edits_prefix(self, key):
