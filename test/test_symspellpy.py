@@ -27,21 +27,18 @@ class TestSymSpellPy(unittest.TestCase):
         # prefix_length < 1
         with pytest.raises(ValueError) as excinfo:
             __ = SymSpell(1, 0)
-        self.assertEqual("prefix_length cannot be less than 1 or "
-                         "smaller than max_dictionary_edit_distance",
+        self.assertEqual("prefix_length cannot be less than 1",
                          str(excinfo.value))
 
         with pytest.raises(ValueError) as excinfo:
             __ = SymSpell(1, -1)
-        self.assertEqual("prefix_length cannot be less than 1 or "
-                         "smaller than max_dictionary_edit_distance",
+        self.assertEqual("prefix_length cannot be less than 1",
                          str(excinfo.value))
 
         # prefix_length <= max_dictionary_edit_distance
         with pytest.raises(ValueError) as excinfo:
             __ = SymSpell(2, 2)
-        self.assertEqual("prefix_length cannot be less than 1 or "
-                         "smaller than max_dictionary_edit_distance",
+        self.assertEqual("prefix_length must be greater than max_dictionary_edit_distance",
                          str(excinfo.value))
 
     def test_negative_count_threshold(self):
