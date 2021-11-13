@@ -75,7 +75,7 @@ class SymSpell(object):
     ValueError
         If `max_dictionary_edit_distance` is negative.
     ValueError
-        If `prefix_length` is less than 1 or smaller than
+        If `prefix_length` is less than 1 or not greater than
         `max_dictionary_edit_distance`.
     ValueError
         If `count_threshold` is negative.
@@ -94,10 +94,11 @@ class SymSpell(object):
         if max_dictionary_edit_distance < 0:
             raise ValueError("max_dictionary_edit_distance cannot be "
                              "negative")
-        if (prefix_length < 1
-                or prefix_length <= max_dictionary_edit_distance):
-            raise ValueError("prefix_length cannot be less than 1 or "
-                             "smaller than max_dictionary_edit_distance")
+        if prefix_length < 1:
+            raise ValueError("prefix_length cannot be less than 1")
+        if prefix_length <= max_dictionary_edit_distance:
+            raise ValueError("prefix_length must be greater than "
+                             "max_dictionary_edit_distance")
         if count_threshold < 0:
             raise ValueError("count_threshold cannot be negative")
         self._words = dict()
@@ -1129,7 +1130,7 @@ class SymSpell(object):
         matches = [match[0] for match in matches]
         return matches
 
-    def _edits(self, word, edit_distance, delete_words):
+    def _edits(self, word, edit_distance, delete_words, current_distance=0):
         """Inexpensive and language independent: only deletes,
         no transposes + replaces + inserts replaces and inserts are
         expensive and language dependent
@@ -1137,14 +1138,14 @@ class SymSpell(object):
         edit_distance += 1
         word_len = len(word)
         if word_len > 1:
-            for i in range(word_len):
+            for i in range(current_distance, word_len):
                 delete = word[: i] + word[i + 1 :]
                 if delete not in delete_words:
                     delete_words.add(delete)
                     # recursion, if maximum edit distance not yet
                     # reached
                     if edit_distance < self._max_dictionary_edit_distance:
-                        self._edits(delete, edit_distance, delete_words)
+                        self._edits(delete, edit_distance, delete_words, current_distance=i)
         return delete_words
 
     def _edits_prefix(self, key):
