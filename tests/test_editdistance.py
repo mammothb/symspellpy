@@ -5,8 +5,13 @@ import unittest
 import numpy as np
 import pytest
 
-from symspellpy.editdistance import (AbstractDistanceComparer, DamerauOsa,
-                                     EditDistance, Levenshtein)
+from symspellpy.editdistance import (
+    AbstractDistanceComparer,
+    DamerauOsa,
+    EditDistance,
+    Levenshtein,
+)
+
 
 def build_test_strings():
     alphabet = "abcd"
@@ -15,6 +20,7 @@ def build_test_strings():
         for combi in combinations(alphabet, i):
             strings += ["".join(p) for p in permutations(combi)]
     return strings
+
 
 def get_levenshtein(string_1, string_2, max_distance):
     max_distance = max_distance = int(min(2 ** 31 - 1, max_distance))
@@ -31,11 +37,12 @@ def get_levenshtein(string_1, string_2, max_distance):
                 # no operation
                 d[i, j] = d[i - 1, j - 1]
             else:
-                d[i, j] = min(min(d[i - 1, j] + 1,
-                                  d[i, j - 1] + 1),
-                              d[i - 1, j - 1] + 1)
+                d[i, j] = min(
+                    min(d[i - 1, j] + 1, d[i, j - 1] + 1), d[i - 1, j - 1] + 1
+                )
     distance = d[len_1, len_2]
     return distance if distance <= max_distance else -1
+
 
 def get_damerau_osa(string_1, string_2, max_distance):
     max_distance = max_distance = int(min(2 ** 31 - 1, max_distance))
@@ -49,14 +56,17 @@ def get_damerau_osa(string_1, string_2, max_distance):
     for i in range(1, len_1 + 1):
         for j in range(1, len_2 + 1):
             cost = 0 if string_1[i - 1] == string_2[j - 1] else 1
-            d[i, j] = min(min(d[i - 1, j] + 1,
-                              d[i, j - 1] + 1),
-                          d[i - 1, j - 1] + cost)
-            if (i > 1 and j > 1 and string_1[i - 1] == string_2[j - 2]
-                    and string_1[i - 2] == string_2[j - 1]):
+            d[i, j] = min(min(d[i - 1, j] + 1, d[i, j - 1] + 1), d[i - 1, j - 1] + cost)
+            if (
+                i > 1
+                and j > 1
+                and string_1[i - 1] == string_2[j - 2]
+                and string_1[i - 2] == string_2[j - 1]
+            ):
                 d[i, j] = min(d[i, j], d[i - 2, j - 2] + cost)
     distance = d[len_1, len_2]
     return distance if distance <= max_distance else -1
+
 
 class TestEditDistance(unittest.TestCase):
     test_strings = build_test_strings()
@@ -78,8 +88,10 @@ class TestEditDistance(unittest.TestCase):
         comparer = Levenshtein()
         for s1 in self.test_strings:
             for s2 in self.test_strings:
-                self.assertEqual(get_levenshtein(s1, s2, max_distance),
-                                 comparer.distance(s1, s2, max_distance))
+                self.assertEqual(
+                    get_levenshtein(s1, s2, max_distance),
+                    comparer.distance(s1, s2, max_distance),
+                )
 
     def test_levenshtein_match_ref_max_1(self):
         max_distance = 1
@@ -87,8 +99,10 @@ class TestEditDistance(unittest.TestCase):
         comparer = Levenshtein()
         for s1 in self.test_strings:
             for s2 in self.test_strings:
-                self.assertEqual(get_levenshtein(s1, s2, max_distance),
-                                 comparer.distance(s1, s2, max_distance))
+                self.assertEqual(
+                    get_levenshtein(s1, s2, max_distance),
+                    comparer.distance(s1, s2, max_distance),
+                )
 
     def test_levenshtein_match_ref_max_3(self):
         max_distance = 3
@@ -97,8 +111,10 @@ class TestEditDistance(unittest.TestCase):
         for s1 in self.test_strings:
             for s2 in self.test_strings:
                 print(s1, s2)
-                self.assertEqual(get_levenshtein(s1, s2, max_distance),
-                                 comparer.distance(s1, s2, max_distance))
+                self.assertEqual(
+                    get_levenshtein(s1, s2, max_distance),
+                    comparer.distance(s1, s2, max_distance),
+                )
 
     def test_levenshtein_match_ref_max_huge(self):
         max_distance = sys.maxsize
@@ -106,8 +122,10 @@ class TestEditDistance(unittest.TestCase):
         comparer = Levenshtein()
         for s1 in self.test_strings:
             for s2 in self.test_strings:
-                self.assertEqual(get_levenshtein(s1, s2, max_distance),
-                                 comparer.distance(s1, s2, max_distance))
+                self.assertEqual(
+                    get_levenshtein(s1, s2, max_distance),
+                    comparer.distance(s1, s2, max_distance),
+                )
 
     def test_levenshtein_null_distance(self):
         max_distance = 10
@@ -151,8 +169,7 @@ class TestEditDistance(unittest.TestCase):
         distance = comparer.distance(None, None, max_distance_1)
         self.assertEqual(0, distance)
 
-        distance = comparer.distance(short_string, short_string,
-                                     max_distance_1)
+        distance = comparer.distance(short_string, short_string, max_distance_1)
         self.assertEqual(0, distance)
 
         max_distance_2 = -1
@@ -171,8 +188,7 @@ class TestEditDistance(unittest.TestCase):
         distance = comparer.distance(None, None, max_distance_2)
         self.assertEqual(0, distance)
 
-        distance = comparer.distance(short_string, short_string,
-                                     max_distance_2)
+        distance = comparer.distance(short_string, short_string, max_distance_2)
         self.assertEqual(0, distance)
 
     def test_levenshtein_very_long_string_2(self):
@@ -181,8 +197,7 @@ class TestEditDistance(unittest.TestCase):
         very_long_string = "very_long_string"
 
         comparer = Levenshtein()
-        distance = comparer.distance(short_string, very_long_string,
-                                     max_distance)
+        distance = comparer.distance(short_string, very_long_string, max_distance)
         self.assertEqual(-1, distance)
 
     def test_damerau_osa_match_ref_max_0(self):
@@ -191,8 +206,10 @@ class TestEditDistance(unittest.TestCase):
         comparer = DamerauOsa()
         for s1 in self.test_strings:
             for s2 in self.test_strings:
-                self.assertEqual(get_damerau_osa(s1, s2, max_distance),
-                                 comparer.distance(s1, s2, max_distance))
+                self.assertEqual(
+                    get_damerau_osa(s1, s2, max_distance),
+                    comparer.distance(s1, s2, max_distance),
+                )
 
     def test_damerau_osa_match_ref_max_1(self):
         max_distance = 1
@@ -200,8 +217,10 @@ class TestEditDistance(unittest.TestCase):
         comparer = DamerauOsa()
         for s1 in self.test_strings:
             for s2 in self.test_strings:
-                self.assertEqual(get_damerau_osa(s1, s2, max_distance),
-                                 comparer.distance(s1, s2, max_distance))
+                self.assertEqual(
+                    get_damerau_osa(s1, s2, max_distance),
+                    comparer.distance(s1, s2, max_distance),
+                )
 
     def test_damerau_osa_match_ref_max_3(self):
         max_distance = 3
@@ -210,8 +229,10 @@ class TestEditDistance(unittest.TestCase):
         for s1 in self.test_strings:
             for s2 in self.test_strings:
                 print(s1, s2)
-                self.assertEqual(get_damerau_osa(s1, s2, max_distance),
-                                 comparer.distance(s1, s2, max_distance))
+                self.assertEqual(
+                    get_damerau_osa(s1, s2, max_distance),
+                    comparer.distance(s1, s2, max_distance),
+                )
 
     def test_damerau_osa_match_ref_max_huge(self):
         max_distance = sys.maxsize
@@ -219,8 +240,10 @@ class TestEditDistance(unittest.TestCase):
         comparer = DamerauOsa()
         for s1 in self.test_strings:
             for s2 in self.test_strings:
-                self.assertEqual(get_damerau_osa(s1, s2, max_distance),
-                                 comparer.distance(s1, s2, max_distance))
+                self.assertEqual(
+                    get_damerau_osa(s1, s2, max_distance),
+                    comparer.distance(s1, s2, max_distance),
+                )
 
     def test_damerau_osa_null_distance(self):
         max_distance = 10
@@ -264,8 +287,7 @@ class TestEditDistance(unittest.TestCase):
         distance = comparer.distance(None, None, max_distance_1)
         self.assertEqual(0, distance)
 
-        distance = comparer.distance(short_string, short_string,
-                                     max_distance_1)
+        distance = comparer.distance(short_string, short_string, max_distance_1)
         self.assertEqual(0, distance)
 
         max_distance_2 = -1
@@ -284,8 +306,7 @@ class TestEditDistance(unittest.TestCase):
         distance = comparer.distance(None, None, max_distance_2)
         self.assertEqual(0, distance)
 
-        distance = comparer.distance(short_string, short_string,
-                                     max_distance_2)
+        distance = comparer.distance(short_string, short_string, max_distance_2)
         self.assertEqual(0, distance)
 
     def test_damerau_osa_very_long_string_2(self):
@@ -294,6 +315,5 @@ class TestEditDistance(unittest.TestCase):
         very_long_string = "very_long_string"
 
         comparer = DamerauOsa()
-        distance = comparer.distance(short_string, very_long_string,
-                                     max_distance)
+        distance = comparer.distance(short_string, very_long_string, max_distance)
         self.assertEqual(-1, distance)

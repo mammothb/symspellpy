@@ -6,6 +6,7 @@ from setuptools.command.test import test as TestCommand
 
 cwd = os.path.realpath(os.path.dirname(__file__))
 
+
 class PyTest(TestCommand):
     user_options = [("pytest-args=", "a", "Arguments to pass into py.test")]
 
@@ -21,6 +22,7 @@ class PyTest(TestCommand):
         errno = pytest.main(shlex.split(self.pytest_args))
         sys.exit(errno)
 
+
 # "setup.py publish" shortcut.
 if sys.argv[-1] == "publish":
     os.system("python setup.py sdist bdist_wheel")
@@ -34,23 +36,18 @@ if sys.argv[-1] == "check":
 
 packages = ["symspellpy"]
 
-requires = [
-    "numpy>=1.13.1"
-]
-test_requirements = [
-    'pytest-cov',
-    'pytest>=3.7.1'
-]
+requires = ["numpy>=1.13.1"]
+test_requirements = ["pytest-cov", "pytest>=3.7.1"]
 
 about = {}
-with open(os.path.join(cwd, "symspellpy", "__version__.py"), "r",
-          encoding="utf-8") as infile:
+with open(
+    os.path.join(cwd, "symspellpy", "__version__.py"), "r", encoding="utf-8"
+) as infile:
     exec(infile.read(), about)
 
 with open(os.path.join(cwd, "README.md"), "r", encoding="utf-8") as infile:
     readme = infile.read()
-with open(os.path.join(cwd, "CHANGELOG.md"), "r",
-          encoding="utf-8") as infile:
+with open(os.path.join(cwd, "CHANGELOG.md"), "r", encoding="utf-8") as infile:
     changelog = infile.read()
 
 setup(
@@ -63,8 +60,12 @@ setup(
     author_email=about["__author_email__"],
     url=about["__url__"],
     packages=packages,
-    package_data={"symspellpy": ["frequency_dictionary_en_82_765.txt",
-                                 "frequency_bigramdictionary_en_243_342.txt"]},
+    package_data={
+        "symspellpy": [
+            "frequency_dictionary_en_82_765.txt",
+            "frequency_bigramdictionary_en_243_342.txt",
+        ]
+    },
     package_dir={"symspellpy": "symspellpy"},
     include_package_data=True,
     python_requires=">=3.4",
@@ -81,7 +82,7 @@ setup(
         "Programming Language :: Python :: 3.4",
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7"
+        "Programming Language :: Python :: 3.7",
     ],
     cmdclass={"test": PyTest},
     tests_require=test_requirements,

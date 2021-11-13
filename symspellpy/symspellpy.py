@@ -2,10 +2,7 @@
 .. module:: symspellpy
    :synopsis: Module for Symmetric Delete spelling correction algorithm.
 """
-from collections import defaultdict, namedtuple
-from enum import Enum
 import gzip
-from itertools import cycle
 import math
 import os.path
 import pickle
@@ -13,17 +10,23 @@ import re
 import string
 import sys
 import unicodedata
+from collections import defaultdict, namedtuple
+from enum import Enum
+from itertools import cycle
 
-from symspellpy.editdistance import DistanceAlgorithm, EditDistance
 import symspellpy.helpers as helpers
+from symspellpy.editdistance import DistanceAlgorithm, EditDistance
+
 
 class Verbosity(Enum):
     """Controls the closeness/quantity of returned spelling
     suggestions.
     """
+
     TOP = 0  #: Top suggestion with the highest term frequency of the suggestions of smallest edit distance found.
     CLOSEST = 1  #: All suggestions of smallest edit distance found, suggestions ordered by term frequency.
     ALL = 2  #: All suggestions within maxEditDistance, suggestions ordered by edit distance, then by term frequency (slower, no early termination).
+
 
 class SymSpell(object):
     """Symmetric Delete spelling correction algorithm.
@@ -80,6 +83,7 @@ class SymSpell(object):
     ValueError
         If `count_threshold` is negative.
     """
+
     data_version = 2
     # number of all words in the corpus used to generate the
     # frequency dictionary. This is used to calculate the word
@@ -89,16 +93,18 @@ class SymSpell(object):
     # truncated or filtered
     N = 1024908267229
     bigram_count_min = sys.maxsize
-    def __init__(self, max_dictionary_edit_distance=2, prefix_length=7,
-                 count_threshold=1):
+
+    def __init__(
+        self, max_dictionary_edit_distance=2, prefix_length=7, count_threshold=1
+    ):
         if max_dictionary_edit_distance < 0:
-            raise ValueError("max_dictionary_edit_distance cannot be "
-                             "negative")
+            raise ValueError("max_dictionary_edit_distance cannot be negative")
         if prefix_length < 1:
             raise ValueError("prefix_length cannot be less than 1")
         if prefix_length <= max_dictionary_edit_distance:
-            raise ValueError("prefix_length must be greater than "
-                             "max_dictionary_edit_distance")
+            raise ValueError(
+                "prefix_length must be greater than max_dictionary_edit_distance"
+            )
         if count_threshold < 0:
             raise ValueError("count_threshold cannot be negative")
         self._words = dict()
@@ -149,9 +155,11 @@ class SymSpell(object):
         if self._count_threshold > 1 and key in self._below_threshold_words:
             count_previous = self._below_threshold_words[key]
             # calculate new count for below threshold word
-            count = (count_previous + count
-                     if sys.maxsize - count_previous > count
-                     else sys.maxsize)
+            count = (
+                count_previous + count
+                if sys.maxsize - count_previous > count
+                else sys.maxsize
+            )
             # has reached threshold - remove from below threshold
             # collection (it will be added to correct words below)
             if count >= self._count_threshold:
@@ -163,9 +171,11 @@ class SymSpell(object):
             count_previous = self._words[key]
             # just update count if it's an already added above
             # threshold word
-            count = (count_previous + count
-                     if sys.maxsize - count_previous > count
-                     else sys.maxsize)
+            count = (
+                count_previous + count
+                if sys.maxsize - count_previous > count
+                else sys.maxsize
+            )
             self._words[key] = count
             return False
         elif count < self._count_threshold:
@@ -219,8 +229,9 @@ class SymSpell(object):
             self._deletes[delete].remove(key)
         return True
 
-    def load_bigram_dictionary(self, corpus, term_index, count_index,
-                               separator=None, encoding=None):
+    def load_bigram_dictionary(
+        self, corpus, term_index, count_index, separator=None, encoding=None
+    ):
         """Load multiple dictionary entries from a file of
         word/frequency count pairs
 
@@ -247,11 +258,13 @@ class SymSpell(object):
         if not os.path.exists(corpus):
             return False
         with open(corpus, "r", encoding=encoding) as infile:
-            return self.load_bigram_dictionary_stream(infile, term_index,
-                                                      count_index, separator)
+            return self.load_bigram_dictionary_stream(
+                infile, term_index, count_index, separator
+            )
 
-    def load_bigram_dictionary_stream(self, corpus_stream, term_index=None,
-                                      count_index=None, separator=None):
+    def load_bigram_dictionary_stream(
+        self, corpus_stream, term_index=None, count_index=None, separator=None
+    ):
         """Load multiple dictionary entries from a stream of
         word/frequency count pairs
 
@@ -277,9 +290,11 @@ class SymSpell(object):
         for line in corpus_stream:
             line_parts = line.rstrip().split(separator)
             if len(line_parts) >= min_line_parts:
-                key = ("{} {}".format(line_parts[term_index],
-                                      line_parts[term_index + 1])
-                       if separator is None else line_parts[term_index])
+                key = (
+                    "{} {}".format(line_parts[term_index], line_parts[term_index + 1])
+                    if separator is None
+                    else line_parts[term_index]
+                )
                 count = helpers.try_parse_int64(line_parts[count_index])
                 if count is not None:
                     self._bigrams[key] = count
@@ -287,8 +302,9 @@ class SymSpell(object):
                         self.bigram_count_min = count
         return True
 
-    def load_dictionary(self, corpus, term_index, count_index,
-                        separator=" ", encoding=None):
+    def load_dictionary(
+        self, corpus, term_index, count_index, separator=" ", encoding=None
+    ):
         """Load multiple dictionary entries from a file of
         word/frequency count pairs.
 
@@ -315,11 +331,13 @@ class SymSpell(object):
         if not os.path.exists(corpus):
             return False
         with open(corpus, "r", encoding=encoding) as infile:
-            return self.load_dictionary_stream(infile, term_index,
-                                               count_index, separator)
+            return self.load_dictionary_stream(
+                infile, term_index, count_index, separator
+            )
 
-    def load_dictionary_stream(self, corpus_stream, term_index,
-                               count_index, separator=" "):
+    def load_dictionary_stream(
+        self, corpus_stream, term_index, count_index, separator=" "
+    ):
         """Load multiple dictionary entries from a stream of
         word/frequency count pairs.
 
@@ -394,7 +412,7 @@ class SymSpell(object):
             "deletes": self._deletes,
             "words": self._words,
             "max_length": self._max_length,
-            "data_version": self.data_version
+            "data_version": self.data_version,
         }
         pickle.dump(pickle_data, stream)
 
@@ -428,8 +446,10 @@ class SymSpell(object):
             True if delete combinations are successfully loaded.
         """
         pickle_data = pickle.load(stream)
-        if ("data_version" not in pickle_data
-                or pickle_data["data_version"] != self.data_version):
+        if (
+            "data_version" not in pickle_data
+            or pickle_data["data_version"] != self.data_version
+        ):
             return False
         self._deletes = pickle_data["deletes"]
         self._words = pickle_data["words"]
@@ -457,9 +477,15 @@ class SymSpell(object):
         with (gzip.open if compressed else open)(filename, "rb") as f:
             return self.load_pickle_stream(f)
 
-    def lookup(self, phrase, verbosity, max_edit_distance=None,
-               include_unknown=False, ignore_token=None,
-               transfer_casing=False):
+    def lookup(
+        self,
+        phrase,
+        verbosity,
+        max_edit_distance=None,
+        include_unknown=False,
+        ignore_token=None,
+        transfer_casing=False,
+    ):
         """Find suggested spellings for a given phrase word.
 
         Parameters
@@ -510,9 +536,9 @@ class SymSpell(object):
 
         def early_exit():
             if include_unknown and not suggestions:
-                suggestions.append(SuggestItem(phrase, max_edit_distance + 1,
-                                               0))
+                suggestions.append(SuggestItem(phrase, max_edit_distance + 1, 0))
             return suggestions
+
         # early exit - word is too big to possibly match any words
         if phrase_len - max_edit_distance > self._max_length:
             return early_exit()
@@ -530,8 +556,7 @@ class SymSpell(object):
             if verbosity != Verbosity.ALL:
                 return early_exit()
 
-        if (ignore_token is not None
-                and re.match(ignore_token, phrase) is not None):
+        if ignore_token is not None and re.match(ignore_token, phrase) is not None:
             suggestion_count = 1
             suggestions.append(SuggestItem(phrase, 0, suggestion_count))
             # early exit - return exact match, unless caller wants all
@@ -558,7 +583,7 @@ class SymSpell(object):
         phrase_prefix_len = phrase_len
         if phrase_prefix_len > self._prefix_length:
             phrase_prefix_len = self._prefix_length
-            candidates.append(phrase[: phrase_prefix_len])
+            candidates.append(phrase[:phrase_prefix_len])
         else:
             candidates.append(phrase)
         distance_comparer = EditDistance(self._distance_algorithm)
@@ -588,21 +613,23 @@ class SymSpell(object):
                     suggestion_len = len(suggestion)
                     # phrase and suggestion lengths
                     # diff > allowed/current best distance
-                    if (abs(suggestion_len - phrase_len) > max_edit_distance_2
-                            # suggestion must be for a different delete
-                            # string, in same bin only because of hash
-                            # collision
-                            or suggestion_len < candidate_len
-                            # if suggestion len = delete len, then it
-                            # either equals delete or is in same bin
-                            # only because of hash collision
-                            or (suggestion_len == candidate_len
-                                and suggestion != candidate)):
+                    if (
+                        abs(suggestion_len - phrase_len) > max_edit_distance_2
+                        # suggestion must be for a different delete
+                        # string, in same bin only because of hash
+                        # collision
+                        or suggestion_len < candidate_len
+                        # if suggestion len = delete len, then it
+                        # either equals delete or is in same bin
+                        # only because of hash collision
+                        or (suggestion_len == candidate_len and suggestion != candidate)
+                    ):
                         continue
-                    suggestion_prefix_len = min(suggestion_len,
-                                                self._prefix_length)
-                    if (suggestion_prefix_len > phrase_prefix_len
-                            and suggestion_prefix_len - candidate_len > max_edit_distance_2):
+                    suggestion_prefix_len = min(suggestion_len, self._prefix_length)
+                    if (
+                        suggestion_prefix_len > phrase_prefix_len
+                        and suggestion_prefix_len - candidate_len > max_edit_distance_2
+                    ):
                         continue
                     # True Damerau-Levenshtein Edit Distance: adjust
                     # distance, if both distances>0
@@ -629,15 +656,21 @@ class SymSpell(object):
                         # phrase (phrase_len<=max_edit_distance &&
                         # suggestion_len<=max_edit_distance)
                         distance = max(phrase_len, suggestion_len)
-                        if (distance > max_edit_distance_2
-                                or suggestion in considered_suggestions):
+                        if (
+                            distance > max_edit_distance_2
+                            or suggestion in considered_suggestions
+                        ):
                             continue
                     elif suggestion_len == 1:
-                        distance = (phrase_len
-                                    if phrase.index(suggestion[0]) < 0
-                                    else phrase_len - 1)
-                        if (distance > max_edit_distance_2
-                                or suggestion in considered_suggestions):
+                        distance = (
+                            phrase_len
+                            if phrase.index(suggestion[0]) < 0
+                            else phrase_len - 1
+                        )
+                        if (
+                            distance > max_edit_distance_2
+                            or suggestion in considered_suggestions
+                        ):
                             continue
                     # number of edits in prefix ==maxediddistance AND
                     # no identical suffix, then
@@ -650,18 +683,31 @@ class SymSpell(object):
                         # assignment when first boolean expression
                         # evaluates to False
                         if self._prefix_length - max_edit_distance == candidate_len:
-                            min_distance = (min(phrase_len, suggestion_len) -
-                                            self._prefix_length)
+                            min_distance = (
+                                min(phrase_len, suggestion_len) - self._prefix_length
+                            )
                         else:
                             min_distance = 0
                         # pylint: disable=C0301,R0916
-                        if (self._prefix_length - max_edit_distance == candidate_len
-                                and (min_distance > 1
-                                     and phrase[phrase_len + 1 - min_distance :] != suggestion[suggestion_len + 1 - min_distance :])
-                                or (min_distance > 0
-                                    and phrase[phrase_len - min_distance] != suggestion[suggestion_len - min_distance]
-                                    and (phrase[phrase_len - min_distance - 1] != suggestion[suggestion_len - min_distance]
-                                         or phrase[phrase_len - min_distance] != suggestion[suggestion_len - min_distance - 1]))):
+                        if (
+                            self._prefix_length - max_edit_distance == candidate_len
+                            and (
+                                min_distance > 1
+                                and phrase[phrase_len + 1 - min_distance :]
+                                != suggestion[suggestion_len + 1 - min_distance :]
+                            )
+                            or (
+                                min_distance > 0
+                                and phrase[phrase_len - min_distance]
+                                != suggestion[suggestion_len - min_distance]
+                                and (
+                                    phrase[phrase_len - min_distance - 1]
+                                    != suggestion[suggestion_len - min_distance]
+                                    or phrase[phrase_len - min_distance]
+                                    != suggestion[suggestion_len - min_distance - 1]
+                                )
+                            )
+                        ):
                             continue
                         else:
                             # delete_in_suggestion_prefix is somewhat
@@ -671,7 +717,8 @@ class SymSpell(object):
                                 continue
                             considered_suggestions.add(suggestion)
                             distance = distance_comparer.compare(
-                                phrase, suggestion, max_edit_distance_2)
+                                phrase, suggestion, max_edit_distance_2
+                            )
                             if distance < 0:
                                 continue
                     # do not process higher distances than those
@@ -680,8 +727,7 @@ class SymSpell(object):
                     # max_edit_distance when Verbosity.ALL)
                     if distance <= max_edit_distance_2:
                         suggestion_count = self._words[suggestion]
-                        si = SuggestItem(suggestion, distance,
-                                         suggestion_count)
+                        si = SuggestItem(suggestion, distance, suggestion_count)
                         if suggestions:
                             if verbosity == Verbosity.CLOSEST:
                                 # we will calculate DamLev distance
@@ -690,8 +736,10 @@ class SymSpell(object):
                                 if distance < max_edit_distance_2:
                                     suggestions = list()
                             elif verbosity == Verbosity.TOP:
-                                if (distance < max_edit_distance_2
-                                        or suggestion_count > suggestions[0].count):
+                                if (
+                                    distance < max_edit_distance_2
+                                    or suggestion_count > suggestions[0].count
+                                ):
                                     max_edit_distance_2 = distance
                                     suggestions[0] = si
                                 continue
@@ -701,15 +749,13 @@ class SymSpell(object):
             # add edits: derive edits (deletes) from candidate (phrase)
             # and add them to candidates list. this is a recursive
             # process until the maximum edit distance has been reached
-            if (len_diff < max_edit_distance
-                    and candidate_len <= self._prefix_length):
+            if len_diff < max_edit_distance and candidate_len <= self._prefix_length:
                 # do not create edits with edit distance smaller than
                 # suggestions already found
-                if (verbosity != Verbosity.ALL
-                        and len_diff >= max_edit_distance_2):
+                if verbosity != Verbosity.ALL and len_diff >= max_edit_distance_2:
                     continue
                 for i in range(candidate_len):
-                    delete = candidate[: i] + candidate[i + 1 :]
+                    delete = candidate[:i] + candidate[i + 1 :]
                     if delete not in considered_deletes:
                         considered_deletes.add(delete)
                         candidates.append(delete)
@@ -717,18 +763,27 @@ class SymSpell(object):
             suggestions.sort()
 
         if transfer_casing:
-            suggestions = [SuggestItem(
-                helpers.transfer_casing_for_similar_text(original_phrase,
-                                                         s.term),
-                s.distance, s.count) for s in suggestions]
+            suggestions = [
+                SuggestItem(
+                    helpers.transfer_casing_for_similar_text(original_phrase, s.term),
+                    s.distance,
+                    s.count,
+                )
+                for s in suggestions
+            ]
 
         early_exit()
         return suggestions
 
-    def lookup_compound(self, phrase, max_edit_distance,
-                        ignore_non_words=False, transfer_casing=False,
-                        split_phrase_by_space=False,
-                        ignore_term_with_digits=False):
+    def lookup_compound(
+        self,
+        phrase,
+        max_edit_distance,
+        ignore_non_words=False,
+        transfer_casing=False,
+        split_phrase_by_space=False,
+        ignore_term_with_digits=False,
+    ):
         """`lookup_compound` supports compound aware automatic spelling
         correction of multi-word input strings with three cases:
 
@@ -768,14 +823,13 @@ class SymSpell(object):
             representing suggested correct spellings for `phrase`.
         """
         # Parse input string into single terms
-        term_list_1 = helpers.parse_words(
-            phrase, split_by_space=split_phrase_by_space)
+        term_list_1 = helpers.parse_words(phrase, split_by_space=split_phrase_by_space)
         # Second list of single terms with preserved cases so we can
         # ignore acronyms (all cap words)
         if ignore_non_words:
             term_list_2 = helpers.parse_words(
-                phrase, preserve_case=True,
-                split_by_space=split_phrase_by_space)
+                phrase, preserve_case=True, split_by_space=split_phrase_by_space
+            )
         suggestions = list()
         suggestion_parts = list()
         distance_comparer = EditDistance(self._distance_algorithm)
@@ -789,17 +843,18 @@ class SymSpell(object):
                     suggestion_parts.append(SuggestItem(term_list_1[i], 0, 0))
                     continue
                 if helpers.is_acronym(
-                        term_list_2[i],
-                        match_any_term_with_digits=ignore_term_with_digits):
+                    term_list_2[i], match_any_term_with_digits=ignore_term_with_digits
+                ):
                     suggestion_parts.append(SuggestItem(term_list_2[i], 0, 0))
                     continue
-            suggestions = self.lookup(term_list_1[i], Verbosity.TOP,
-                                      max_edit_distance)
+            suggestions = self.lookup(term_list_1[i], Verbosity.TOP, max_edit_distance)
             # combi check, always before split
             if i > 0 and not is_last_combi:
                 suggestions_combi = self.lookup(
-                    term_list_1[i - 1] + term_list_1[i], Verbosity.TOP,
-                    max_edit_distance)
+                    term_list_1[i - 1] + term_list_1[i],
+                    Verbosity.TOP,
+                    max_edit_distance,
+                )
                 if suggestions_combi:
                     best_1 = suggestion_parts[-1]
                     if suggestions:
@@ -807,17 +862,25 @@ class SymSpell(object):
                     else:
                         # estimated word occurrence probability
                         # P=10 / (N * 10^word length l)
-                        best_2 = SuggestItem(term_list_1[i],
-                                             max_edit_distance + 1,
-                                             10 // 10 ** len(term_list_1[i]))
+                        best_2 = SuggestItem(
+                            term_list_1[i],
+                            max_edit_distance + 1,
+                            10 // 10 ** len(term_list_1[i]),
+                        )
                     # distance_1=edit distance between 2 split terms and
                     # their best corrections : als comparative value
                     # for the combination
                     distance_1 = best_1.distance + best_2.distance
-                    if (distance_1 >= 0
-                            and (suggestions_combi[0].distance + 1 < distance_1
-                                 or (suggestions_combi[0].distance + 1 == distance_1
-                                     and (suggestions_combi[0].count > best_1.count / self.N * best_2.count)))):
+                    if distance_1 >= 0 and (
+                        suggestions_combi[0].distance + 1 < distance_1
+                        or (
+                            suggestions_combi[0].distance + 1 == distance_1
+                            and (
+                                suggestions_combi[0].count
+                                > best_1.count / self.N * best_2.count
+                            )
+                        )
+                    ):
                         suggestions_combi[0].distance += 1
                         suggestion_parts[-1] = suggestions_combi[0]
                         is_last_combi = True
@@ -826,8 +889,9 @@ class SymSpell(object):
 
             # alway split terms without suggestion / never split terms
             # with suggestion ed=0 / never split single char terms
-            if suggestions and (suggestions[0].distance == 0
-                                or len(term_list_1[i]) == 1):
+            if suggestions and (
+                suggestions[0].distance == 0 or len(term_list_1[i]) == 1
+            ):
                 # choose best suggestion
                 suggestion_parts.append(suggestions[0])
             else:
@@ -838,20 +902,23 @@ class SymSpell(object):
                     suggestion_split_best = suggestions[0]
                 if len(term_list_1[i]) > 1:
                     for j in range(1, len(term_list_1[i])):
-                        part_1 = term_list_1[i][: j]
-                        part_2 = term_list_1[i][j :]
-                        suggestions_1 = self.lookup(part_1, Verbosity.TOP,
-                                                    max_edit_distance)
+                        part_1 = term_list_1[i][:j]
+                        part_2 = term_list_1[i][j:]
+                        suggestions_1 = self.lookup(
+                            part_1, Verbosity.TOP, max_edit_distance
+                        )
                         if suggestions_1:
-                            suggestions_2 = self.lookup(part_2, Verbosity.TOP,
-                                                        max_edit_distance)
+                            suggestions_2 = self.lookup(
+                                part_2, Verbosity.TOP, max_edit_distance
+                            )
                             if suggestions_2:
                                 # select best suggestion for split pair
-                                tmp_term = (suggestions_1[0].term + " " +
-                                            suggestions_2[0].term)
+                                tmp_term = (
+                                    suggestions_1[0].term + " " + suggestions_2[0].term
+                                )
                                 tmp_distance = distance_comparer.compare(
-                                    term_list_1[i], tmp_term,
-                                    max_edit_distance)
+                                    term_list_1[i], tmp_term, max_edit_distance
+                                )
                                 if tmp_distance < 0:
                                     tmp_distance = max_edit_distance + 1
                                 if suggestion_split_best is not None:
@@ -871,25 +938,40 @@ class SymSpell(object):
                                         # single term from
                                         # suggestion_split, but then
                                         # other splittings could win
-                                        if suggestions_1[0].term + suggestions_2[0].term == term_list_1[i]:
+                                        if (
+                                            suggestions_1[0].term
+                                            + suggestions_2[0].term
+                                            == term_list_1[i]
+                                        ):
                                             # make count bigger than
                                             # count of single term
                                             # correction
-                                            tmp_count = max(tmp_count,
-                                                            best_si.count + 2)
-                                        elif (suggestions_1[0].term == best_si.term
-                                              or suggestions_2[0].term == best_si.term):
+                                            tmp_count = max(
+                                                tmp_count, best_si.count + 2
+                                            )
+                                        elif (
+                                            suggestions_1[0].term == best_si.term
+                                            or suggestions_2[0].term == best_si.term
+                                        ):
                                             # make count bigger than
                                             # count of single term
                                             # correction
-                                            tmp_count = max(tmp_count,
-                                                            best_si.count + 1)
+                                            tmp_count = max(
+                                                tmp_count, best_si.count + 1
+                                            )
                                     # no single term correction exists
-                                    elif suggestions_1[0].term + suggestions_2[0].term == term_list_1[i]:
+                                    elif (
+                                        suggestions_1[0].term + suggestions_2[0].term
+                                        == term_list_1[i]
+                                    ):
                                         tmp_count = max(
                                             tmp_count,
-                                            max(suggestions_1[0].count,
-                                                suggestions_2[0].count) + 2)
+                                            max(
+                                                suggestions_1[0].count,
+                                                suggestions_2[0].count,
+                                            )
+                                            + 2,
+                                        )
                                 else:
                                     # The Naive Bayes probability of
                                     # the word combination is the
@@ -901,12 +983,20 @@ class SymSpell(object):
                                     # best splitting variant
                                     tmp_count = min(
                                         self.bigram_count_min,
-                                        int(suggestions_1[0].count /
-                                            self.N * suggestions_2[0].count))
+                                        int(
+                                            suggestions_1[0].count
+                                            / self.N
+                                            * suggestions_2[0].count
+                                        ),
+                                    )
                                 suggestion_split = SuggestItem(
-                                    tmp_term, tmp_distance, tmp_count)
-                                if (suggestion_split_best is None or
-                                        suggestion_split.count > suggestion_split_best.count):
+                                    tmp_term, tmp_distance, tmp_count
+                                )
+                                if (
+                                    suggestion_split_best is None
+                                    or suggestion_split.count
+                                    > suggestion_split_best.count
+                                ):
                                     suggestion_split_best = suggestion_split
 
                     if suggestion_split_best is not None:
@@ -914,16 +1004,21 @@ class SymSpell(object):
                         suggestion_parts.append(suggestion_split_best)
                         self._replaced_words[term_list_1[i]] = suggestion_split_best
                     else:
-                        si = SuggestItem(term_list_1[i],
-                                         max_edit_distance + 1,
-                                         int(10 / 10 ** len(term_list_1[i])))
+                        si = SuggestItem(
+                            term_list_1[i],
+                            max_edit_distance + 1,
+                            int(10 / 10 ** len(term_list_1[i])),
+                        )
                         suggestion_parts.append(si)
                         self._replaced_words[term_list_1[i]] = si
                 else:
                     # estimated word occurrence probability
                     # P=10 / (N * 10^word length l)
-                    si = SuggestItem(term_list_1[i], max_edit_distance + 1,
-                                     int(10 / 10 ** len(term_list_1[i])))
+                    si = SuggestItem(
+                        term_list_1[i],
+                        max_edit_distance + 1,
+                        int(10 / 10 ** len(term_list_1[i])),
+                    )
                     suggestion_parts.append(si)
                     self._replaced_words[term_list_1[i]] = si
         joined_term = ""
@@ -933,20 +1028,24 @@ class SymSpell(object):
             joined_count *= si.count / self.N
         joined_term = joined_term.rstrip()
         if transfer_casing:
-            joined_term = helpers.transfer_casing_for_similar_text(phrase,
-                                                                   joined_term)
-        suggestion = SuggestItem(joined_term,
-                                 distance_comparer.compare(
-                                     phrase, joined_term, 2 ** 31 - 1),
-                                 int(joined_count))
+            joined_term = helpers.transfer_casing_for_similar_text(phrase, joined_term)
+        suggestion = SuggestItem(
+            joined_term,
+            distance_comparer.compare(phrase, joined_term, 2 ** 31 - 1),
+            int(joined_count),
+        )
         suggestions_line = list()
         suggestions_line.append(suggestion)
 
         return suggestions_line
 
-    def word_segmentation(self, phrase, max_edit_distance=None,
-                          max_segmentation_word_length=None,
-                          ignore_token=None):
+    def word_segmentation(
+        self,
+        phrase,
+        max_edit_distance=None,
+        max_segmentation_word_length=None,
+        ignore_token=None,
+    ):
         """`word_segmentation` divides a string into words by inserting
         missing spaces at the appropriate positions misspelled words
         are corrected and do not affect segmentation existing spaces
@@ -1013,7 +1112,7 @@ class SymSpell(object):
 
                 if part[0].isspace():
                     # remove space for levensthein calculation
-                    part = part[1 :]
+                    part = part[1:]
                 else:
                     # add ed+1: space did not exist, had to be inserted
                     separator_len = 1
@@ -1027,9 +1126,12 @@ class SymSpell(object):
                 top_ed -= len(part)
 
                 # v6.7: Lookup against the lowercase term
-                results = self.lookup(part.lower(), Verbosity.TOP,
-                                      max_edit_distance,
-                                      ignore_token=ignore_token)
+                results = self.lookup(
+                    part.lower(),
+                    Verbosity.TOP,
+                    max_edit_distance,
+                    ignore_token=ignore_token,
+                )
                 if results:
                     top_result = results[0].term
                     # v6.7: retain/preserve upper case
@@ -1048,8 +1150,7 @@ class SymSpell(object):
                     # product of many such small numbers could exceed
                     # (underflow) the floating number range and become
                     # zero. log(ab)=log(a)+log(b)
-                    top_log_prob = math.log10(float(results[0].count) /
-                                              float(self.N))
+                    top_log_prob = math.log10(float(results[0].count) / float(self.N))
                 else:
                     top_result = part
                     # default, if word not found. otherwise long input
@@ -1057,45 +1158,55 @@ class SymSpell(object):
                     # ed=edmax+1), although there there should many
                     # spaces inserted
                     top_ed += len(part)
-                    top_log_prob = math.log10(10.0 / self.N /
-                                              math.pow(10.0, len(part)))
+                    top_log_prob = math.log10(10.0 / self.N / math.pow(10.0, len(part)))
 
                 dest = (i + idx) % array_size
                 # set values in first loop
                 if j == 0:
-                    compositions[dest] = Composition(part, top_result,
-                                                     top_ed, top_log_prob)
+                    compositions[dest] = Composition(
+                        part, top_result, top_ed, top_log_prob
+                    )
                 # pylint: disable=C0301,R0916
-                elif (i == max_segmentation_word_length
-                      # replace values if better log_prob_sum, if same
-                      # edit distance OR one space difference
-                      or ((compositions[idx].distance_sum + top_ed == compositions[dest].distance_sum
-                           or compositions[idx].distance_sum + separator_len + top_ed == compositions[dest].distance_sum)
-                          and compositions[dest].log_prob_sum < compositions[idx].log_prob_sum + top_log_prob)
-                      # replace values if smaller edit distance
-                      or compositions[idx].distance_sum + separator_len + top_ed < compositions[dest].distance_sum):
-                    if ((len(top_result) == 1
-                         and top_result[0] in string.punctuation)
-                            or (len(top_result) == 2
-                                and top_result.startswith("'"))):
+                elif (
+                    i == max_segmentation_word_length
+                    # replace values if better log_prob_sum, if same
+                    # edit distance OR one space difference
+                    or (
+                        (
+                            compositions[idx].distance_sum + top_ed
+                            == compositions[dest].distance_sum
+                            or compositions[idx].distance_sum + separator_len + top_ed
+                            == compositions[dest].distance_sum
+                        )
+                        and compositions[dest].log_prob_sum
+                        < compositions[idx].log_prob_sum + top_log_prob
+                    )
+                    # replace values if smaller edit distance
+                    or compositions[idx].distance_sum + separator_len + top_ed
+                    < compositions[dest].distance_sum
+                ):
+                    if (
+                        len(top_result) == 1 and top_result[0] in string.punctuation
+                    ) or (len(top_result) == 2 and top_result.startswith("'")):
                         compositions[dest] = Composition(
                             compositions[idx].segmented_string + part,
                             compositions[idx].corrected_string + top_result,
                             compositions[idx].distance_sum + top_ed,
-                            compositions[idx].log_prob_sum + top_log_prob)
+                            compositions[idx].log_prob_sum + top_log_prob,
+                        )
                     else:
                         compositions[dest] = Composition(
                             compositions[idx].segmented_string + " " + part,
-                            (compositions[idx].corrected_string + " " +
-                             top_result),
-                            (compositions[idx].distance_sum + separator_len +
-                             top_ed),
-                            compositions[idx].log_prob_sum + top_log_prob)
+                            (compositions[idx].corrected_string + " " + top_result),
+                            (compositions[idx].distance_sum + separator_len + top_ed),
+                            compositions[idx].log_prob_sum + top_log_prob,
+                        )
             idx = next(circular_index)
         return compositions[idx]
 
-    def _delete_in_suggestion_prefix(self, delete, delete_len, suggestion,
-                                     suggestion_len):  # pragma: no cover
+    def _delete_in_suggestion_prefix(
+        self, delete, delete_len, suggestion, suggestion_len
+    ):  # pragma: no cover
         """Check whether all delete chars are present in the suggestion
         prefix in correct order, otherwise this is just a hash
         collision
@@ -1139,13 +1250,15 @@ class SymSpell(object):
         word_len = len(word)
         if word_len > 1:
             for i in range(current_distance, word_len):
-                delete = word[: i] + word[i + 1 :]
+                delete = word[:i] + word[i + 1 :]
                 if delete not in delete_words:
                     delete_words.add(delete)
                     # recursion, if maximum edit distance not yet
                     # reached
                     if edit_distance < self._max_dictionary_edit_distance:
-                        self._edits(delete, edit_distance, delete_words, current_distance=i)
+                        self._edits(
+                            delete, edit_distance, delete_words, current_distance=i
+                        )
         return delete_words
 
     def _edits_prefix(self, key):
@@ -1181,6 +1294,7 @@ class SymSpell(object):
     def word_count(self):
         return len(self._words)
 
+
 class SuggestItem(object):
     """Spelling suggestion returned from :meth:`lookup`.
 
@@ -1205,6 +1319,7 @@ class SuggestItem(object):
         common the word is) or Naive Bayes probability of the
         individual suggestion parts in :meth:`lookup_compound`.
     """
+
     def __init__(self, term, distance, count):
         self._term = term
         self._distance = distance
@@ -1268,9 +1383,11 @@ class SuggestItem(object):
     def count(self, count):
         self._count = count
 
-Composition = namedtuple("Composition",
-                         ["segmented_string", "corrected_string",
-                          "distance_sum", "log_prob_sum"])
+
+Composition = namedtuple(
+    "Composition",
+    ["segmented_string", "corrected_string", "distance_sum", "log_prob_sum"],
+)
 Composition.__new__.__defaults__ = (None,) * len(Composition._fields)
 Composition.__doc__ = """Used by :meth:`word_segmentation`
 

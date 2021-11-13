@@ -6,10 +6,13 @@ from enum import Enum
 
 import symspellpy.helpers as helpers
 
+
 class DistanceAlgorithm(Enum):
     """Supported edit distance algorithms"""
+
     LEVENSHTEIN = 0  #: Levenshtein algorithm.
     DAMERUAUOSA = 1  #: Damerau optimal string alignment algorithm
+
 
 class EditDistance(object):
     """Edit distance algorithms.
@@ -33,6 +36,7 @@ class EditDistance(object):
     ValueError
         If `algorithm` specifies an invalid distance algorithm.
     """
+
     def __init__(self, algorithm):
         self._algorithm = algorithm
         if algorithm == DistanceAlgorithm.LEVENSHTEIN:
@@ -60,11 +64,12 @@ class EditDistance(object):
         int
             The edit distance (or -1 if `max_distance` exceeded).
         """
-        return self._distance_comparer.distance(string_1, string_2,
-                                                max_distance)
+        return self._distance_comparer.distance(string_1, string_2, max_distance)
+
 
 class AbstractDistanceComparer(object):
     """An interface to compute relative distance between two strings"""
+
     def distance(self, string_1, string_2, max_distance):
         """Return a measure of the distance between two strings.
 
@@ -92,6 +97,7 @@ class AbstractDistanceComparer(object):
         """
         raise NotImplementedError("Should have implemented this")
 
+
 class Levenshtein(AbstractDistanceComparer):
     """Class providing Levenshtein algorithm for computing edit
     distance metric between two strings
@@ -100,6 +106,7 @@ class Levenshtein(AbstractDistanceComparer):
     ----------
     _base_char_1_costs : numpy.ndarray
     """
+
     def __init__(self):
         self._base_char_1_costs = []
 
@@ -125,8 +132,7 @@ class Levenshtein(AbstractDistanceComparer):
             increases.
         """
         if string_1 is None or string_2 is None:
-            return helpers.null_distance_results(string_1, string_2,
-                                                 max_distance)
+            return helpers.null_distance_results(string_1, string_2, max_distance)
         if max_distance <= 0:
             return 0 if string_1 == string_2 else -1
         max_distance = max_distance = int(min(2 ** 31 - 1, max_distance))
@@ -146,14 +152,20 @@ class Levenshtein(AbstractDistanceComparer):
         if len_2 > len(self._base_char_1_costs):
             self._base_char_1_costs = [0 for _ in range(len_2)]
         if max_distance < len_2:
-            return self._distance_max(string_1, string_2, len_1, len_2,
-                                      start, max_distance,
-                                      self._base_char_1_costs)
-        return self._distance(string_1, string_2, len_1, len_2, start,
-                              self._base_char_1_costs)
+            return self._distance_max(
+                string_1,
+                string_2,
+                len_1,
+                len_2,
+                start,
+                max_distance,
+                self._base_char_1_costs,
+            )
+        return self._distance(
+            string_1, string_2, len_1, len_2, start, self._base_char_1_costs
+        )
 
-    def _distance(self, string_1, string_2, len_1, len_2, start,
-                  char_1_costs):
+    def _distance(self, string_1, string_2, len_1, len_2, start, char_1_costs):
         """Internal implementation of the core Levenshtein algorithm.
 
         **From**: https://github.com/softwx/SoftWx.Match
@@ -178,15 +190,17 @@ class Levenshtein(AbstractDistanceComparer):
                 char_1_costs[j] = above_char_cost = current_cost
         return current_cost
 
-    def _distance_max(self, string_1, string_2, len_1, len_2, start,
-                      max_distance, char_1_costs):
+    def _distance_max(
+        self, string_1, string_2, len_1, len_2, start, max_distance, char_1_costs
+    ):
         """Internal implementation of the core Levenshtein algorithm
         that accepts a max_distance.
 
         **From**: https://github.com/softwx/SoftWx.Match
         """
-        char_1_costs = [j + 1 if j < max_distance else max_distance + 1
-                        for j in range(len_2)]
+        char_1_costs = [
+            j + 1 if j < max_distance else max_distance + 1 for j in range(len_2)
+        ]
         len_diff = len_2 - len_1
         j_start_offset = max_distance - len_diff
         j_start = 0
@@ -218,6 +232,7 @@ class Levenshtein(AbstractDistanceComparer):
                 return -1
         return current_cost if current_cost <= max_distance else -1
 
+
 class DamerauOsa(AbstractDistanceComparer):
     """Class providing optimized methods for computing
     Damerau-Levenshtein Optimal String Alignment (OSA) comparisons
@@ -229,6 +244,7 @@ class DamerauOsa(AbstractDistanceComparer):
     _base_prev_char_1_costs : numpy.ndarray
 
     """
+
     def __init__(self):
         self._base_char_1_costs = []
         self._base_prev_char_1_costs = []
@@ -255,8 +271,7 @@ class DamerauOsa(AbstractDistanceComparer):
             increases.
         """
         if string_1 is None or string_2 is None:
-            return helpers.null_distance_results(string_1, string_2,
-                                                 max_distance)
+            return helpers.null_distance_results(string_1, string_2, max_distance)
         if max_distance <= 0:
             return 0 if string_1 == string_2 else -1
         max_distance = int(min(2 ** 31 - 1, max_distance))
@@ -277,16 +292,29 @@ class DamerauOsa(AbstractDistanceComparer):
             self._base_char_1_costs = [0 for _ in range(len_2)]
             self._base_prev_char_1_costs = [0 for _ in range(len_2)]
         if max_distance < len_2:
-            return self._distance_max(string_1, string_2, len_1, len_2,
-                                      start, max_distance,
-                                      self._base_char_1_costs,
-                                      self._base_prev_char_1_costs)
-        return self._distance(string_1, string_2, len_1, len_2, start,
-                              self._base_char_1_costs,
-                              self._base_prev_char_1_costs)
+            return self._distance_max(
+                string_1,
+                string_2,
+                len_1,
+                len_2,
+                start,
+                max_distance,
+                self._base_char_1_costs,
+                self._base_prev_char_1_costs,
+            )
+        return self._distance(
+            string_1,
+            string_2,
+            len_1,
+            len_2,
+            start,
+            self._base_char_1_costs,
+            self._base_prev_char_1_costs,
+        )
 
-    def _distance(self, string_1, string_2, len_1, len_2, start,
-                  char_1_costs, prev_char_1_costs):
+    def _distance(
+        self, string_1, string_2, len_1, len_2, start, char_1_costs, prev_char_1_costs
+    ):
         """Internal implementation of the core Damerau-Levenshtein,
         optimal string alignment algorithm.
 
@@ -318,24 +346,37 @@ class DamerauOsa(AbstractDistanceComparer):
                     if left_char_cost < current_cost:
                         current_cost = left_char_cost
                     current_cost += 1
-                    if (i != 0 and j != 0
-                            and char_1 == prev_char_2
-                            and prev_char_1 == char_2
-                            and this_trans_cost + 1 < current_cost):
+                    if (
+                        i != 0
+                        and j != 0
+                        and char_1 == prev_char_2
+                        and prev_char_1 == char_2
+                        and this_trans_cost + 1 < current_cost
+                    ):
                         # transposition
                         current_cost = this_trans_cost + 1
                 char_1_costs[j] = above_char_cost = current_cost
         return current_cost
 
-    def _distance_max(self, string_1, string_2, len_1, len_2, start,
-                      max_distance, char_1_costs, prev_char_1_costs):
+    def _distance_max(
+        self,
+        string_1,
+        string_2,
+        len_1,
+        len_2,
+        start,
+        max_distance,
+        char_1_costs,
+        prev_char_1_costs,
+    ):
         """Internal implementation of the core Damerau-Levenshtein,
         optimal string alignment algorithm that accepts a max_distance.
 
         **From**: https://github.com/softwx/SoftWx.Match
         """
-        char_1_costs = [j + 1 if j < max_distance else max_distance + 1
-                        for j in range(len_2)]
+        char_1_costs = [
+            j + 1 if j < max_distance else max_distance + 1 for j in range(len_2)
+        ]
         len_diff = len_2 - len_1
         j_start_offset = max_distance - len_diff
         j_start = 0
@@ -371,9 +412,13 @@ class DamerauOsa(AbstractDistanceComparer):
                     if left_char_cost < current_cost:
                         current_cost = left_char_cost
                     current_cost += 1
-                    if (i != 0 and j != 0 and char_1 == prev_char_2
-                            and prev_char_1 == char_2
-                            and this_trans_cost + 1 < current_cost):
+                    if (
+                        i != 0
+                        and j != 0
+                        and char_1 == prev_char_2
+                        and prev_char_1 == char_2
+                        and this_trans_cost + 1 < current_cost
+                    ):
                         # transposition
                         current_cost = this_trans_cost + 1
                 char_1_costs[j] = above_char_cost = current_cost
