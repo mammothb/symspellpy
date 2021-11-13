@@ -1,7 +1,8 @@
-import os.path
+import os
 import pickle
 import sys
 import unittest
+from pathlib import Path
 
 import pkg_resources
 import pytest
@@ -17,7 +18,7 @@ class TestSymSpellPy(unittest.TestCase):
     bigram_path = pkg_resources.resource_filename(
         "symspellpy", "frequency_bigramdictionary_en_243_342.txt"
     )
-    fortests_path = os.path.join(os.path.dirname(__file__), "fortests")
+    fortests_dir = Path(__file__).resolve().parent / "fortests"
 
     def test_negative_max_dictionary_edit_distance(self):
         with pytest.raises(ValueError) as excinfo:
@@ -231,7 +232,7 @@ class TestSymSpellPy(unittest.TestCase):
         )
 
     def test_loading_dictionary_from_fileobject(self):
-        big_words_path = os.path.join(self.fortests_path, "big_words.txt")
+        big_words_path = self.fortests_dir / "big_words.txt"
         edit_distance_max = 2
         prefix_length = 7
         sym_spell = SymSpell(edit_distance_max, prefix_length)
@@ -239,7 +240,7 @@ class TestSymSpellPy(unittest.TestCase):
             self.assertEqual(True, sym_spell.create_dictionary(file))
 
     def test_load_bigram_dictionary_bad_dict(self):
-        dictionary_path = os.path.join(self.fortests_path, "bad_dict.txt")
+        dictionary_path = self.fortests_dir / "bad_dict.txt"
         edit_distance_max = 2
         prefix_length = 7
         sym_spell = SymSpell(edit_distance_max, prefix_length)
@@ -249,7 +250,7 @@ class TestSymSpellPy(unittest.TestCase):
         self.assertEqual(13, sym_spell.bigrams["yuio uiop"])
 
     def test_load_bigram_dictionary_separator(self):
-        dictionary_path = os.path.join(self.fortests_path, "separator_dict.txt")
+        dictionary_path = self.fortests_dir / "separator_dict.txt"
         edit_distance_max = 2
         prefix_length = 7
         sym_spell = SymSpell(edit_distance_max, prefix_length)
@@ -313,7 +314,7 @@ class TestSymSpellPy(unittest.TestCase):
         )
 
     def test_load_dictionary_bad_dictionary(self):
-        dictionary_path = os.path.join(self.fortests_path, "bad_dict.txt")
+        dictionary_path = self.fortests_dir / "bad_dict.txt"
         edit_distance_max = 2
         prefix_length = 7
         sym_spell = SymSpell(edit_distance_max, prefix_length)
@@ -323,7 +324,7 @@ class TestSymSpellPy(unittest.TestCase):
         self.assertEqual(12, sym_spell.words["sdfg"])
 
     def test_load_dictionary_separator(self):
-        dictionary_path = os.path.join(self.fortests_path, "separator_dict.txt")
+        dictionary_path = self.fortests_dir / "separator_dict.txt"
         edit_distance_max = 2
         prefix_length = 7
         sym_spell = SymSpell(edit_distance_max, prefix_length)
@@ -376,7 +377,7 @@ class TestSymSpellPy(unittest.TestCase):
         self.assertEqual(12997637966, sym_spell.words["and"])
 
     def test_lookup_should_replicate_noisy_results(self):
-        query_path = os.path.join(self.fortests_path, "noisy_query_en_1000.txt")
+        query_path = self.fortests_dir / "noisy_query_en_1000.txt"
 
         edit_distance_max = 2
         prefix_length = 7
@@ -836,7 +837,7 @@ class TestSymSpellPy(unittest.TestCase):
         self.assertEqual(correction, results[0].term)
 
     def test_load_dictionary_encoding(self):
-        dictionary_path = os.path.join(self.fortests_path, "non_en_dict.txt")
+        dictionary_path = self.fortests_dir / "non_en_dict.txt"
 
         edit_distance_max = 2
         prefix_length = 7
@@ -993,8 +994,8 @@ class TestSymSpellPy(unittest.TestCase):
         )
 
     def test_create_dictionary(self):
-        corpus_path = os.path.join(self.fortests_path, "big_modified.txt")
-        big_words_path = os.path.join(self.fortests_path, "big_words.txt")
+        corpus_path = self.fortests_dir / "big_modified.txt"
+        big_words_path = self.fortests_dir / "big_words.txt"
 
         edit_distance_max = 2
         prefix_length = 7
@@ -1010,7 +1011,7 @@ class TestSymSpellPy(unittest.TestCase):
         self.assertEqual(num_lines, sym_spell.word_count)
 
     def test_pickle_uncompressed(self):
-        pickle_path = os.path.join(self.fortests_path, "dictionary.pickle")
+        pickle_path = self.fortests_dir / "dictionary.pickle"
         is_compressed = False
         edit_distance_max = 2
         prefix_length = 7
@@ -1026,7 +1027,7 @@ class TestSymSpellPy(unittest.TestCase):
         os.remove(pickle_path)
 
     def test_pickle_compressed(self):
-        pickle_path = os.path.join(self.fortests_path, "dictionary.pickle")
+        pickle_path = self.fortests_dir / "dictionary.pickle"
         edit_distance_max = 2
         prefix_length = 7
         sym_spell = SymSpell(edit_distance_max, prefix_length)
@@ -1041,7 +1042,7 @@ class TestSymSpellPy(unittest.TestCase):
         os.remove(pickle_path)
 
     def test_pickle_invalid(self):
-        pickle_path = os.path.join(self.fortests_path, "dictionary.pickle")
+        pickle_path = self.fortests_dir / "dictionary.pickle"
         is_compressed = False
         edit_distance_max = 2
         prefix_length = 7

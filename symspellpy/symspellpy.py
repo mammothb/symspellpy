@@ -4,7 +4,6 @@
 """
 import gzip
 import math
-import os.path
 import pickle
 import re
 import string
@@ -13,6 +12,7 @@ import unicodedata
 from collections import defaultdict, namedtuple
 from enum import Enum
 from itertools import cycle
+from pathlib import Path
 
 import symspellpy.helpers as helpers
 from symspellpy.editdistance import DistanceAlgorithm, EditDistance
@@ -255,7 +255,9 @@ class SymSpell(object):
         bool
             True if file loaded, or False if file not found.
         """
-        if not os.path.exists(corpus):
+        if isinstance(corpus, str):
+            corpus = Path(corpus)
+        if not corpus.exists():
             return False
         with open(corpus, "r", encoding=encoding) as infile:
             return self.load_bigram_dictionary_stream(
@@ -328,7 +330,9 @@ class SymSpell(object):
         bool
             True if file loaded, or False if file not found.
         """
-        if not os.path.exists(corpus):
+        if isinstance(corpus, str):
+            corpus = Path(corpus)
+        if not corpus.exists():
             return False
         with open(corpus, "r", encoding=encoding) as infile:
             return self.load_dictionary_stream(
@@ -386,8 +390,10 @@ class SymSpell(object):
         bool
             True if file loaded, or False if file not found.
         """
-        if isinstance(corpus, str):
-            if not os.path.exists(corpus):
+        if isinstance(corpus, (Path, str)):
+            if isinstance(corpus, str):
+                corpus = Path(corpus)
+            if not corpus.exists():
                 return False
             with open(corpus, "r", encoding=encoding) as infile:
                 for line in infile:
