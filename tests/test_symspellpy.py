@@ -5,7 +5,6 @@ import unittest
 
 import pkg_resources
 import pytest
-
 from symspellpy import SymSpell, Verbosity
 from symspellpy.helpers import DictIO
 from symspellpy.symspellpy import SuggestItem
@@ -442,18 +441,16 @@ class TestSymSpellPy(unittest.TestCase):
         self.assertEqual(0, results[0].count)
 
         typo = "in te dhird qarter oflast jear he hadlearned ofca sekretplan"
-        correction = (
-            "in the third quarter of last year he had learned of a " "secret plan"
-        )
+        correction = "in the third quarter of last year he had learned of a secret plan"
         results = sym_spell.lookup_compound(typo, edit_distance_max)
         self.assertEqual(1, len(results))
         self.assertEqual(correction, results[0].term)
         self.assertEqual(9, results[0].distance)
         self.assertEqual(0, results[0].count)
 
-        typo = "the bigjest playrs in te strogsommer film slatew ith plety " "of funn"
+        typo = "the bigjest playrs in te strogsommer film slatew ith plety of funn"
         correction = (
-            "the biggest players in the strong summer film slate " "with plenty of fun"
+            "the biggest players in the strong summer film slate with plenty of fun"
         )
         results = sym_spell.lookup_compound(typo, edit_distance_max)
         self.assertEqual(1, len(results))
@@ -462,9 +459,7 @@ class TestSymSpellPy(unittest.TestCase):
         self.assertEqual(0, results[0].count)
 
         typo = "Can yu readthis messa ge despite thehorible sppelingmsitakes"
-        correction = (
-            "can you read this message despite the horrible " "spelling mistakes"
-        )
+        correction = "can you read this message despite the horrible spelling mistakes"
         results = sym_spell.lookup_compound(typo, edit_distance_max)
         self.assertEqual(1, len(results))
         self.assertEqual(correction, results[0].term)
@@ -516,18 +511,16 @@ class TestSymSpellPy(unittest.TestCase):
         self.assertEqual(0, results[0].count)
 
         typo = "in te dhird qarter oflast jear he hadlearned ofca sekretplan"
-        correction = (
-            "in the third quarter of last year he had learned of " "a secret plan"
-        )
+        correction = "in the third quarter of last year he had learned of a secret plan"
         results = sym_spell.lookup_compound(typo, edit_distance_max)
         self.assertEqual(1, len(results))
         self.assertEqual(correction, results[0].term)
         self.assertEqual(9, results[0].distance)
         self.assertEqual(0, results[0].count)
 
-        typo = "the bigjest playrs in te strogsommer film slatew ith plety " "of funn"
+        typo = "the bigjest playrs in te strogsommer film slatew ith plety of funn"
         correction = (
-            "the biggest players in the strong summer film slate " "with plenty of fun"
+            "the biggest players in the strong summer film slate with plenty of fun"
         )
         results = sym_spell.lookup_compound(typo, edit_distance_max)
         self.assertEqual(1, len(results))
@@ -536,9 +529,7 @@ class TestSymSpellPy(unittest.TestCase):
         self.assertEqual(0, results[0].count)
 
         typo = "Can yu readthis messa ge despite thehorible sppelingmsitakes"
-        correction = (
-            "can you read this message despite the horrible " "spelling mistakes"
-        )
+        correction = "can you read this message despite the horrible spelling mistakes"
         results = sym_spell.lookup_compound(typo, edit_distance_max)
         self.assertEqual(1, len(results))
         self.assertEqual(correction, results[0].term)
@@ -602,9 +593,7 @@ class TestSymSpellPy(unittest.TestCase):
             self.assertEqual(v, sym_spell.replaced_words[k].term)
 
         typo = "in te dhird qarter oflast jear he hadlearned ofca sekretplan"
-        correction = (
-            "in the third quarter of last year he had learned of a " "secret plan"
-        )
+        correction = "in the third quarter of last year he had learned of a secret plan"
         replacement_2 = {
             "te": "the",
             "dhird": "third",
@@ -622,9 +611,9 @@ class TestSymSpellPy(unittest.TestCase):
         for k, v in replacement_2.items():
             self.assertEqual(v, sym_spell.replaced_words[k].term)
 
-        typo = "the bigjest playrs in te strogsommer film slatew ith plety " "of funn"
+        typo = "the bigjest playrs in te strogsommer film slatew ith plety of funn"
         correction = (
-            "the biggest players in the strong summer film slate " "with plenty of fun"
+            "the biggest players in the strong summer film slate with plenty of fun"
         )
         replacement_3 = {
             "bigjest": "biggest",
@@ -676,9 +665,7 @@ class TestSymSpellPy(unittest.TestCase):
             self.assertEqual(v, sym_spell.replaced_words[k].term)
 
         typo = "in te dhird qarter oflast jear he hadlearned ofca sekretplan"
-        correction = (
-            "in the third quarter of last year he had learned of a " "secret plan"
-        )
+        correction = "in the third quarter of last year he had learned of a secret plan"
         replacement_2 = {
             "te": "the",
             "dhird": "third",
@@ -696,9 +683,9 @@ class TestSymSpellPy(unittest.TestCase):
         for k, v in replacement_2.items():
             self.assertEqual(v, sym_spell.replaced_words[k].term)
 
-        typo = "the bigjest playrs in te strogsommer film slatew ith plety " "of funn"
+        typo = "the bigjest playrs in te strogsommer film slatew ith plety of funn"
         correction = (
-            "the biggest players in the strong summer film slate " "with plenty of fun"
+            "the biggest players in the strong summer film slate with plenty of fun"
         )
         replacement_3 = {
             "bigjest": "biggest",
@@ -740,15 +727,13 @@ class TestSymSpellPy(unittest.TestCase):
 
         typo = "in te DHIRD 1 qarter oflast jear he hadlearned ofca sekretplan"
         correction = (
-            "in the DHIRD 1 quarter of last year he had learned " "of a secret plan"
+            "in the DHIRD 1 quarter of last year he had learned of a secret plan"
         )
         results = sym_spell.lookup_compound(typo, edit_distance_max, True)
         self.assertEqual(1, len(results))
         self.assertEqual(correction, results[0].term)
 
-        typo = (
-            "the bigjest playrs in te stroGSOmmer film slatew ith PLETY " "of 12 funn"
-        )
+        typo = "the bigjest playrs in te stroGSOmmer film slatew ith PLETY of 12 funn"
         correction = (
             "the biggest players in the strong summer film slate "
             "with PLETY of 12 fun"
@@ -757,17 +742,17 @@ class TestSymSpellPy(unittest.TestCase):
         self.assertEqual(1, len(results))
         self.assertEqual(correction, results[0].term)
 
-        typo = "Can yu readtHIS messa ge despite thehorible 1234 " "sppelingmsitakes"
+        typo = "Can yu readtHIS messa ge despite thehorible 1234 sppelingmsitakes"
         correction = (
-            "can you read this message despite the horrible 1234 " "spelling mistakes"
+            "can you read this message despite the horrible 1234 spelling mistakes"
         )
         results = sym_spell.lookup_compound(typo, edit_distance_max, True)
         self.assertEqual(1, len(results))
         self.assertEqual(correction, results[0].term)
 
-        typo = "Can yu readtHIS messa ge despite thehorible AB1234 " "sppelingmsitakes"
+        typo = "Can yu readtHIS messa ge despite thehorible AB1234 sppelingmsitakes"
         correction = (
-            "can you read this message despite the horrible AB1234 " "spelling mistakes"
+            "can you read this message despite the horrible AB1234 spelling mistakes"
         )
         results = sym_spell.lookup_compound(typo, edit_distance_max, True)
         self.assertEqual(1, len(results))
@@ -813,15 +798,13 @@ class TestSymSpellPy(unittest.TestCase):
 
         typo = "in te DHIRD 1 qarter oflast jear he hadlearned ofca sekretplan"
         correction = (
-            "in the DHIRD 1 quarter of last year he had learned " "of a secret plan"
+            "in the DHIRD 1 quarter of last year he had learned of a secret plan"
         )
         results = sym_spell.lookup_compound(typo, edit_distance_max, True)
         self.assertEqual(1, len(results))
         self.assertEqual(correction, results[0].term)
 
-        typo = (
-            "the bigjest playrs in te stroGSOmmer film slatew ith PLETY " "of 12 funn"
-        )
+        typo = "the bigjest playrs in te stroGSOmmer film slatew ith PLETY of 12 funn"
         correction = (
             "the biggest players in the strong summer film slate "
             "with PLETY of 12 fun"
@@ -830,17 +813,17 @@ class TestSymSpellPy(unittest.TestCase):
         self.assertEqual(1, len(results))
         self.assertEqual(correction, results[0].term)
 
-        typo = "Can yu readtHIS messa ge despite thehorible 1234 " "sppelingmsitakes"
+        typo = "Can yu readtHIS messa ge despite thehorible 1234 sppelingmsitakes"
         correction = (
-            "can you read this message despite the horrible 1234 " "spelling mistakes"
+            "can you read this message despite the horrible 1234 spelling mistakes"
         )
         results = sym_spell.lookup_compound(typo, edit_distance_max, True)
         self.assertEqual(1, len(results))
         self.assertEqual(correction, results[0].term)
 
-        typo = "Can yu readtHIS messa ge despite thehorible AB1234 " "sppelingmsitakes"
+        typo = "Can yu readtHIS messa ge despite thehorible AB1234 sppelingmsitakes"
         correction = (
-            "can you read this message despite the horrible AB1234 " "spelling mistakes"
+            "can you read this message despite the horrible AB1234 spelling mistakes"
         )
         results = sym_spell.lookup_compound(typo, edit_distance_max, True)
         self.assertEqual(1, len(results))
@@ -877,7 +860,7 @@ class TestSymSpellPy(unittest.TestCase):
 
         typo = "itwasabrightcolddayinaprilandtheclockswerestrikingthirteen"
         correction = (
-            "it was a bright cold day in april and the clocks " "were striking thirteen"
+            "it was a bright cold day in april and the clocks were striking thirteen"
         )
         result = sym_spell.word_segmentation(typo)
         self.assertEqual(correction, result[1])
@@ -916,7 +899,7 @@ class TestSymSpellPy(unittest.TestCase):
 
         typo = "itwasabrightcolddayinaprilandtheclockswerestrikingthirteen"
         correction = (
-            "it was a bright cold day in april and the clocks " "were striking thirteen"
+            "it was a bright cold day in april and the clocks were striking thirteen"
         )
         result = sym_spell.word_segmentation(typo, edit_distance_max, 11)
         self.assertEqual(correction, result.corrected_string)
@@ -945,7 +928,7 @@ class TestSymSpellPy(unittest.TestCase):
 
         typo = "Itwasabrightcolddayinaprilandtheclockswerestrikingthirteen"
         correction = (
-            "It was a bright cold day in april and the clocks " "were striking thirteen"
+            "It was a bright cold day in april and the clocks were striking thirteen"
         )
         result = sym_spell.word_segmentation(typo)
         self.assertEqual(correction, result[1])

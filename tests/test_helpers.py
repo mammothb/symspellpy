@@ -1,7 +1,6 @@
 import unittest
 
 import pytest
-
 from symspellpy.helpers import (
     is_acronym,
     to_similarity,
@@ -81,7 +80,7 @@ class TestHelpers(unittest.TestCase):
         with pytest.raises(ValueError) as excinfo:
             transfer_casing_for_similar_text("", "abcd")
         self.assertEqual(
-            "We need 'text_w_casing' to know what " "casing to transfer!",
+            "We need 'text_w_casing' to know what casing to transfer!",
             str(excinfo.value),
         )
 

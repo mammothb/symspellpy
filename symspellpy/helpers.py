@@ -2,9 +2,9 @@
 .. module:: helpers
    :synopsis: Helper functions
 """
+import re
 from difflib import SequenceMatcher
 from itertools import zip_longest
-import re
 
 
 def null_distance_results(string1, string2, max_distance):
@@ -255,7 +255,7 @@ def transfer_casing_for_similar_text(text_w_casing, text_wo_casing):
         return text_wo_casing
 
     if not text_w_casing:
-        raise ValueError("We need 'text_w_casing' to know what " "casing to transfer!")
+        raise ValueError("We need 'text_w_casing' to know what casing to transfer!")
 
     _sm = SequenceMatcher(None, text_w_casing.lower(), text_wo_casing)
 
