@@ -6,6 +6,7 @@ from difflib import SequenceMatcher
 from itertools import zip_longest
 import re
 
+
 def null_distance_results(string1, string2, max_distance):
     """Determines the proper return value of an edit distance function
     when one or both strings are null.
@@ -33,6 +34,7 @@ def null_distance_results(string1, string2, max_distance):
         else:
             return len(string2) if len(string2) <= max_distance else -1
     return len(string1) if len(string1) <= max_distance else -1
+
 
 def prefix_suffix_prep(string1, string2):
     """Calculates starting position and lengths of two strings such
@@ -69,6 +71,7 @@ def prefix_suffix_prep(string1, string2):
         len2 -= start
     return len1, len2, start
 
+
 def to_similarity(distance, length):
     """Calculate a similarity measure from an edit distance.
 
@@ -87,6 +90,7 @@ def to_similarity(distance, length):
         -1 if distance is negative
     """
     return -1 if distance < 0 else 1.0 - distance / length
+
 
 def try_parse_int64(string):
     """Converts the string representation of a number to its 64-bit
@@ -108,7 +112,8 @@ def try_parse_int64(string):
         ret = int(string)
     except ValueError:
         return None
-    return None if ret < -2 ** 64 or ret >= 2 ** 64 else ret
+    return None if ret < -(2 ** 64) or ret >= 2 ** 64 else ret
+
 
 def parse_words(phrase, preserve_case=False, split_by_space=False):
     """Create a non-unique wordlist from sample text. Language
@@ -140,6 +145,7 @@ def parse_words(phrase, preserve_case=False, split_by_space=False):
     else:
         return re.findall(r"([^\W_]+['’]*[^\W_]*)", phrase.lower())
 
+
 def is_acronym(word, match_any_term_with_digits=False):
     """Checks is the word is all caps (acronym) and/or contain numbers
 
@@ -157,9 +163,10 @@ def is_acronym(word, match_any_term_with_digits=False):
         ABCDE, AB12C. False if the word contains lower case letters,
         e.g., abcde, ABCde, abcDE, abCDe, abc12, ab12c
     """
-    if match_any_term_with_digits:
-        return any(i.isdigit() for i in word)
-    return re.match(r"\b[A-Z0-9]{2,}\b", word) is not None
+    return re.match(r"\b[A-Z0-9]{2,}\b", word) is not None or (
+        match_any_term_with_digits and any(i.isdigit() for i in word)
+    )
+
 
 def transfer_casing_for_matching_text(text_w_casing, text_wo_casing):
     """Transferring the casing from one text to another - assuming that
@@ -184,14 +191,21 @@ def transfer_casing_for_matching_text(text_w_casing, text_wo_casing):
         If the input texts have different lengths
     """
     if len(text_w_casing) != len(text_wo_casing):
-        raise ValueError("The 'text_w_casing' and 'text_wo_casing' "
-                         "don't have the same length, "
-                         "so you can't use them with this method, "
-                         "you should be using the more general "
-                         "transfer_casing_similar_text() method.")
+        raise ValueError(
+            "The 'text_w_casing' and 'text_wo_casing' "
+            "don't have the same length, "
+            "so you can't use them with this method, "
+            "you should be using the more general "
+            "transfer_casing_similar_text() method."
+        )
 
-    return ''.join([y.upper() if x.isupper() else y.lower()
-                    for x, y in zip(text_w_casing, text_wo_casing)])
+    return "".join(
+        [
+            y.upper() if x.isupper() else y.lower()
+            for x, y in zip(text_w_casing, text_wo_casing)
+        ]
+    )
+
 
 def transfer_casing_for_similar_text(text_w_casing, text_wo_casing):
     """Transferring the casing from one text to another - for similar
@@ -241,14 +255,12 @@ def transfer_casing_for_similar_text(text_w_casing, text_wo_casing):
         return text_wo_casing
 
     if not text_w_casing:
-        raise ValueError("We need 'text_w_casing' to know what "
-                         "casing to transfer!")
+        raise ValueError("We need 'text_w_casing' to know what " "casing to transfer!")
 
-    _sm = SequenceMatcher(None, text_w_casing.lower(),
-                          text_wo_casing)
+    _sm = SequenceMatcher(None, text_w_casing.lower(), text_wo_casing)
 
     # we will collect the case_text:
-    c = ''
+    c = ""
 
     # get the operation codes describing the differences between the
     # two strings and handle them based on the per operation code rules
@@ -266,16 +278,16 @@ def transfer_casing_for_similar_text(text_w_casing, text_wo_casing):
             # then take the casing from the following character
             if i1 == 0 or text_w_casing[i1 - 1] == " ":
                 if text_w_casing[i1] and text_w_casing[i1].isupper():
-                    c += text_wo_casing[j1 : j2].upper()
+                    c += text_wo_casing[j1:j2].upper()
                 else:
-                    c += text_wo_casing[j1 : j2].lower()
+                    c += text_wo_casing[j1:j2].lower()
             else:
                 # otherwise just take the casing from the prior
                 # character
                 if text_w_casing[i1 - 1].isupper():
-                    c += text_wo_casing[j1 : j2].upper()
+                    c += text_wo_casing[j1:j2].upper()
                 else:
-                    c += text_wo_casing[j1 : j2].lower()
+                    c += text_wo_casing[j1:j2].lower()
 
         elif tag == "delete":
             # for deleted characters we don't need to do anything
@@ -285,16 +297,17 @@ def transfer_casing_for_similar_text(text_w_casing, text_wo_casing):
             # for 'equal' we just transfer the text from the
             # text_w_casing, as anyhow they are equal (without the
             # casing)
-            c += text_w_casing[i1 : i2]
+            c += text_w_casing[i1:i2]
 
         elif tag == "replace":
-            _w_casing = text_w_casing[i1 : i2]
-            _wo_casing = text_wo_casing[j1 : j2]
+            _w_casing = text_w_casing[i1:i2]
+            _wo_casing = text_wo_casing[j1:j2]
 
             # if they are the same length, the transfer is easy
             if len(_w_casing) == len(_wo_casing):
                 c += transfer_casing_for_matching_text(
-                    text_w_casing=_w_casing, text_wo_casing=_wo_casing)
+                    text_w_casing=_w_casing, text_wo_casing=_wo_casing
+                )
             else:
                 # if the replaced has a different length, then we
                 # transfer the casing character-by-character and using
@@ -316,10 +329,11 @@ def transfer_casing_for_similar_text(text_w_casing, text_wo_casing):
                         c += wo.upper() if _last == "upper" else wo.lower()
     return c
 
+
 class DictIO:
     """An iterator wrapper for python dictionary to format the output
     as required by :meth:`load_dictionary_stream` and
-    :meth:`load_dictionary_bigram_stream`. 
+    :meth:`load_dictionary_bigram_stream`.
 
     Parameters
     ----------
@@ -335,6 +349,7 @@ class DictIO:
     separator : str
         Separator characters between term(s) and count.
     """
+
     def __init__(self, dictionary, separator=" "):
         self.iteritems = iter(dictionary.items())
         self.separator = separator
