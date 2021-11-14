@@ -843,7 +843,7 @@ class SymSpell(object):
         # translate every item to its best suggestion, otherwise it
         # remains unchanged
         is_last_combi = False
-        for i, __ in enumerate(term_list_1):
+        for i, _ in enumerate(term_list_1):
             if ignore_non_words:
                 if helpers.try_parse_int64(term_list_1[i]) is not None:
                     suggestion_parts.append(SuggestItem(term_list_1[i], 0, 0))

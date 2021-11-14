@@ -1,10 +1,8 @@
-from itertools import combinations, permutations
 import sys
-import unittest
+from itertools import combinations, permutations
 
 import numpy as np
 import pytest
-
 from symspellpy.editdistance import (
     AbstractDistanceComparer,
     DamerauOsa,
@@ -12,17 +10,12 @@ from symspellpy.editdistance import (
     Levenshtein,
 )
 
-
-def build_test_strings():
-    alphabet = "abcd"
-    strings = [""]
-    for i in range(1, len(alphabet) + 1):
-        for combi in combinations(alphabet, i):
-            strings += ["".join(p) for p in permutations(combi)]
-    return strings
+SHORT_STRING = "string"
+LONG_STRING = "long_string"
+VERY_LONG_STRING = "very_long_string"
 
 
-def get_levenshtein(string_1, string_2, max_distance):
+def expected_levenshtein(string_1, string_2, max_distance):
     max_distance = max_distance = int(min(2 ** 31 - 1, max_distance))
     len_1 = len(string_1)
     len_2 = len(string_2)
@@ -44,7 +37,7 @@ def get_levenshtein(string_1, string_2, max_distance):
     return distance if distance <= max_distance else -1
 
 
-def get_damerau_osa(string_1, string_2, max_distance):
+def expected_damerau_osa(string_1, string_2, max_distance):
     max_distance = max_distance = int(min(2 ** 31 - 1, max_distance))
     len_1 = len(string_1)
     len_2 = len(string_2)
@@ -68,252 +61,83 @@ def get_damerau_osa(string_1, string_2, max_distance):
     return distance if distance <= max_distance else -1
 
 
-class TestEditDistance(unittest.TestCase):
-    test_strings = build_test_strings()
+@pytest.fixture(params=["damerau_osa", "levenshtein"])
+def get_comparer(request):
+    comparer_dict = {
+        "damerau_osa": {"actual": DamerauOsa(), "expected": expected_damerau_osa},
+        "levenshtein": {"actual": Levenshtein(), "expected": expected_levenshtein},
+    }
+    yield comparer_dict[request.param]["actual"], comparer_dict[request.param][
+        "expected"
+    ]
 
+
+@pytest.fixture
+def get_short_and_long_strings():
+    return [
+        (SHORT_STRING, None, {"null": len(SHORT_STRING), "zero": -1, "neg": -1}),
+        (LONG_STRING, None, {"null": -1, "zero": -1, "neg": -1}),
+        (None, SHORT_STRING, {"null": len(SHORT_STRING), "zero": -1, "neg": -1}),
+        (None, LONG_STRING, {"null": -1, "zero": -1, "neg": -1}),
+        (SHORT_STRING, SHORT_STRING, {"null": 0, "zero": 0, "neg": 0}),
+        (None, None, {"null": 0, "zero": 0, "neg": 0}),
+    ]
+
+
+@pytest.fixture(params=[0, 1, 3, sys.maxsize])
+def get_strings(request):
+    alphabet = "abcd"
+    strings = [""]
+    for i in range(1, len(alphabet) + 1):
+        for combi in combinations(alphabet, i):
+            strings += ["".join(p) for p in permutations(combi)]
+    yield strings, request.param
+
+
+class TestEditDistance:
     def test_unknown_distance_algorithm(self):
         with pytest.raises(ValueError) as excinfo:
-            __ = EditDistance(2)
-        self.assertEqual("Unknown distance algorithm", str(excinfo.value))
+            _ = EditDistance(2)
+        assert "Unknown distance algorithm" == str(excinfo.value)
 
     def test_abstract_distance_comparer(self):
         with pytest.raises(NotImplementedError) as excinfo:
             comparer = AbstractDistanceComparer()
-            __ = comparer.distance("string_1", "string_2", 10)
-        self.assertEqual("Should have implemented this", str(excinfo.value))
+            _ = comparer.distance("string_1", "string_2", 10)
+        assert "Should have implemented this" == str(excinfo.value)
 
-    def test_levenshtein_match_ref_max_0(self):
-        max_distance = 0
+    def test_comparer_match_ref(self, get_comparer, get_strings):
+        comparer, expected = get_comparer
+        strings, max_distance = get_strings
 
-        comparer = Levenshtein()
-        for s1 in self.test_strings:
-            for s2 in self.test_strings:
-                self.assertEqual(
-                    get_levenshtein(s1, s2, max_distance),
-                    comparer.distance(s1, s2, max_distance),
+        for s1 in strings:
+            for s2 in strings:
+                assert expected(s1, s2, max_distance) == comparer.distance(
+                    s1, s2, max_distance
                 )
 
-    def test_levenshtein_match_ref_max_1(self):
-        max_distance = 1
+    def test_comparer_null_distance(self, get_comparer, get_short_and_long_strings):
+        comparer, _ = get_comparer
 
-        comparer = Levenshtein()
-        for s1 in self.test_strings:
-            for s2 in self.test_strings:
-                self.assertEqual(
-                    get_levenshtein(s1, s2, max_distance),
-                    comparer.distance(s1, s2, max_distance),
-                )
+        for s1, s2, expected in get_short_and_long_strings:
+            distance = comparer.distance(s1, s2, 10)
+            assert expected["null"] == distance
 
-    def test_levenshtein_match_ref_max_3(self):
-        max_distance = 3
+    def test_comparer_negative_max_distance(
+        self, get_comparer, get_short_and_long_strings
+    ):
+        comparer, _ = get_comparer
 
-        comparer = Levenshtein()
-        for s1 in self.test_strings:
-            for s2 in self.test_strings:
-                print(s1, s2)
-                self.assertEqual(
-                    get_levenshtein(s1, s2, max_distance),
-                    comparer.distance(s1, s2, max_distance),
-                )
+        for s1, s2, expected in get_short_and_long_strings:
+            distance = comparer.distance(s1, s2, 0)
+            assert expected["zero"] == distance
 
-    def test_levenshtein_match_ref_max_huge(self):
-        max_distance = sys.maxsize
+        for s1, s2, expected in get_short_and_long_strings:
+            distance = comparer.distance(s1, s2, 0)
+            assert expected["neg"] == distance
 
-        comparer = Levenshtein()
-        for s1 in self.test_strings:
-            for s2 in self.test_strings:
-                self.assertEqual(
-                    get_levenshtein(s1, s2, max_distance),
-                    comparer.distance(s1, s2, max_distance),
-                )
+    def test_comparer_very_long_string(self, get_comparer):
+        comparer, _ = get_comparer
+        distance = comparer.distance(SHORT_STRING, VERY_LONG_STRING, 5)
 
-    def test_levenshtein_null_distance(self):
-        max_distance = 10
-        short_string = "string"
-        long_string = "long_string"
-
-        comparer = Levenshtein()
-        distance = comparer.distance(short_string, None, max_distance)
-        self.assertEqual(len(short_string), distance)
-
-        distance = comparer.distance(long_string, None, max_distance)
-        self.assertEqual(-1, distance)
-
-        distance = comparer.distance(None, short_string, max_distance)
-        self.assertEqual(len(short_string), distance)
-
-        distance = comparer.distance(None, long_string, max_distance)
-        self.assertEqual(-1, distance)
-
-        distance = comparer.distance(None, None, max_distance)
-        self.assertEqual(0, distance)
-
-    def test_levenshtein_negative_max_distance(self):
-        max_distance_1 = 0
-        short_string = "string"
-        long_string = "long_string"
-
-        comparer = Levenshtein()
-        distance = comparer.distance(short_string, None, max_distance_1)
-        self.assertEqual(-1, distance)
-
-        distance = comparer.distance(long_string, None, max_distance_1)
-        self.assertEqual(-1, distance)
-
-        distance = comparer.distance(None, short_string, max_distance_1)
-        self.assertEqual(-1, distance)
-
-        distance = comparer.distance(None, long_string, max_distance_1)
-        self.assertEqual(-1, distance)
-
-        distance = comparer.distance(None, None, max_distance_1)
-        self.assertEqual(0, distance)
-
-        distance = comparer.distance(short_string, short_string, max_distance_1)
-        self.assertEqual(0, distance)
-
-        max_distance_2 = -1
-        distance = comparer.distance(short_string, None, max_distance_2)
-        self.assertEqual(-1, distance)
-
-        distance = comparer.distance(long_string, None, max_distance_2)
-        self.assertEqual(-1, distance)
-
-        distance = comparer.distance(None, short_string, max_distance_2)
-        self.assertEqual(-1, distance)
-
-        distance = comparer.distance(None, long_string, max_distance_2)
-        self.assertEqual(-1, distance)
-
-        distance = comparer.distance(None, None, max_distance_2)
-        self.assertEqual(0, distance)
-
-        distance = comparer.distance(short_string, short_string, max_distance_2)
-        self.assertEqual(0, distance)
-
-    def test_levenshtein_very_long_string_2(self):
-        max_distance = 5
-        short_string = "string"
-        very_long_string = "very_long_string"
-
-        comparer = Levenshtein()
-        distance = comparer.distance(short_string, very_long_string, max_distance)
-        self.assertEqual(-1, distance)
-
-    def test_damerau_osa_match_ref_max_0(self):
-        max_distance = 0
-
-        comparer = DamerauOsa()
-        for s1 in self.test_strings:
-            for s2 in self.test_strings:
-                self.assertEqual(
-                    get_damerau_osa(s1, s2, max_distance),
-                    comparer.distance(s1, s2, max_distance),
-                )
-
-    def test_damerau_osa_match_ref_max_1(self):
-        max_distance = 1
-
-        comparer = DamerauOsa()
-        for s1 in self.test_strings:
-            for s2 in self.test_strings:
-                self.assertEqual(
-                    get_damerau_osa(s1, s2, max_distance),
-                    comparer.distance(s1, s2, max_distance),
-                )
-
-    def test_damerau_osa_match_ref_max_3(self):
-        max_distance = 3
-
-        comparer = DamerauOsa()
-        for s1 in self.test_strings:
-            for s2 in self.test_strings:
-                print(s1, s2)
-                self.assertEqual(
-                    get_damerau_osa(s1, s2, max_distance),
-                    comparer.distance(s1, s2, max_distance),
-                )
-
-    def test_damerau_osa_match_ref_max_huge(self):
-        max_distance = sys.maxsize
-
-        comparer = DamerauOsa()
-        for s1 in self.test_strings:
-            for s2 in self.test_strings:
-                self.assertEqual(
-                    get_damerau_osa(s1, s2, max_distance),
-                    comparer.distance(s1, s2, max_distance),
-                )
-
-    def test_damerau_osa_null_distance(self):
-        max_distance = 10
-        short_string = "string"
-        long_string = "long_string"
-
-        comparer = DamerauOsa()
-        distance = comparer.distance(short_string, None, max_distance)
-        self.assertEqual(len(short_string), distance)
-
-        distance = comparer.distance(long_string, None, max_distance)
-        self.assertEqual(-1, distance)
-
-        distance = comparer.distance(None, short_string, max_distance)
-        self.assertEqual(len(short_string), distance)
-
-        distance = comparer.distance(None, long_string, max_distance)
-        self.assertEqual(-1, distance)
-
-        distance = comparer.distance(None, None, max_distance)
-        self.assertEqual(0, distance)
-
-    def test_damerau_osa_negative_max_distance(self):
-        max_distance_1 = 0
-        short_string = "string"
-        long_string = "long_string"
-
-        comparer = DamerauOsa()
-        distance = comparer.distance(short_string, None, max_distance_1)
-        self.assertEqual(-1, distance)
-
-        distance = comparer.distance(long_string, None, max_distance_1)
-        self.assertEqual(-1, distance)
-
-        distance = comparer.distance(None, short_string, max_distance_1)
-        self.assertEqual(-1, distance)
-
-        distance = comparer.distance(None, long_string, max_distance_1)
-        self.assertEqual(-1, distance)
-
-        distance = comparer.distance(None, None, max_distance_1)
-        self.assertEqual(0, distance)
-
-        distance = comparer.distance(short_string, short_string, max_distance_1)
-        self.assertEqual(0, distance)
-
-        max_distance_2 = -1
-        distance = comparer.distance(short_string, None, max_distance_2)
-        self.assertEqual(-1, distance)
-
-        distance = comparer.distance(long_string, None, max_distance_2)
-        self.assertEqual(-1, distance)
-
-        distance = comparer.distance(None, short_string, max_distance_2)
-        self.assertEqual(-1, distance)
-
-        distance = comparer.distance(None, long_string, max_distance_2)
-        self.assertEqual(-1, distance)
-
-        distance = comparer.distance(None, None, max_distance_2)
-        self.assertEqual(0, distance)
-
-        distance = comparer.distance(short_string, short_string, max_distance_2)
-        self.assertEqual(0, distance)
-
-    def test_damerau_osa_very_long_string_2(self):
-        max_distance = 5
-        short_string = "string"
-        very_long_string = "very_long_string"
-
-        comparer = DamerauOsa()
-        distance = comparer.distance(short_string, very_long_string, max_distance)
-        self.assertEqual(-1, distance)
+        assert -1 == distance

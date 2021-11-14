@@ -1,0 +1,20 @@
+{
+  "data": [
+    {
+      "typo": "thequickbrownfoxjumpsoverthelazydog",
+      "0": { "term": "the quick brown fox jumps over the lazy dog" }
+    },
+    {
+      "typo": "itwasabrightcolddayinaprilandtheclockswerestrikingthirteen",
+      "0": {
+        "term": "it was a bright cold day in april and the clocks were striking thirteen"
+      }
+    },
+    {
+      "typo": "itwasthebestoftimesitwastheworstoftimesitwastheageofwisdomitwastheageoffoolishness",
+      "0": {
+        "term": "it was the best of times it was the worst of times it was the age of wisdom it was the age of foolishness"
+      }
+    }
+  ]
+}

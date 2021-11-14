@@ -1,0 +1,109 @@
+{
+  "data": [
+    {
+      "typo": "whereis th elove",
+      "bigram": {
+        "num_results": 1,
+        "term": "where is the love",
+        "distance": 2,
+        "count": 585
+      },
+      "unigram": {
+        "num_results": 1,
+        "term": "whereas the love",
+        "distance": 2,
+        "count": 64
+      }
+    },
+    {
+      "typo": "the bigjest playrs",
+      "bigram": {
+        "num_results": 1,
+        "term": "the biggest players",
+        "distance": 2,
+        "count": 34
+      },
+      "unigram": {
+        "num_results": 1,
+        "term": "the biggest players",
+        "distance": 2,
+        "count": 34
+      }
+    },
+    {
+      "typo": "Can yu readthis",
+      "bigram": {
+        "num_results": 1,
+        "term": "can you read this",
+        "distance": 3,
+        "count": 11440
+      },
+      "unigram": {
+        "num_results": 1,
+        "term": "can you read this",
+        "distance": 3,
+        "count": 3
+      }
+    },
+    {
+      "typo": "whereis th elove hehad dated forImuch of thepast who couqdn'tread in sixthgrade and ins pired him",
+      "bigram": {
+        "num_results": 1,
+        "term": "where is the love he had dated for much of the past who couldn't read in sixth grade and inspired him",
+        "distance": 9,
+        "count": 0
+      },
+      "unigram": {
+        "num_results": 1,
+        "term": "whereas the love head dated for much of the past who couldn't read in sixth grade and inspired him",
+        "distance": 9,
+        "count": 0
+      }
+    },
+    {
+      "typo": "in te dhird qarter oflast jear he hadlearned ofca sekretplan",
+      "bigram": {
+        "num_results": 1,
+        "term": "in the third quarter of last year he had learned of a secret plan",
+        "distance": 9,
+        "count": 0
+      },
+      "unigram": {
+        "num_results": 1,
+        "term": "in the third quarter of last year he had learned of a secret plan",
+        "distance": 9,
+        "count": 0
+      }
+    },
+    {
+      "typo": "the bigjest playrs in te strogsommer film slatew ith plety of funn",
+      "bigram": {
+        "num_results": 1,
+        "term": "the biggest players in the strong summer film slate with plenty of fun",
+        "distance": 9,
+        "count": 0
+      },
+      "unigram": {
+        "num_results": 1,
+        "term": "the biggest players in the strong summer film slate with plenty of fun",
+        "distance": 9,
+        "count": 0
+      }
+    },
+    {
+      "typo": "Can yu readthis messa ge despite thehorible sppelingmsitakes",
+      "bigram": {
+        "num_results": 1,
+        "term": "can you read this message despite the horrible spelling mistakes",
+        "distance": 10,
+        "count": 0
+      },
+      "unigram": {
+        "num_results": 1,
+        "term": "can you read this message despite the horrible spelling mistakes",
+        "distance": 10,
+        "count": 0
+      }
+    }
+  ]
+}
