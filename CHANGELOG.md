@@ -1,6 +1,18 @@
 CHANGELOG <br>
 ==============
 
+## 6.7.0 (2020-08-28)
+---------------------
+- Removed numpy dependency
+- `word_segmentation` now retains/preserves case.
+- `word_segmentation` now keeps punctuation or apostrophe adjacent to previous
+word.
+- `word_segmentation` now normalizes ligatures: "scientiﬁc" -> "scientific".
+- `word_segmentation` now removes hyphens prior to word segmentation
+(untested).
+- American English word forms added to dictionary in addition to British
+English e.g. favourable & favorable.
+
 ## 6.5.2 (2019-10-23)
 ---------------------
 - Modified `load_bigram_dictionary` to allow dictionary entries to be split
