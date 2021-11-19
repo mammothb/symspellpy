@@ -1,6 +1,6 @@
-==========
+**********
 Installing
-==========
+**********
 
 Installing an official release
 ==============================
@@ -15,6 +15,7 @@ assumed to work on macOS.
 
 Dictionary data
 ===============
+
 The dictionary files that are shipped with symspellpy can be accesed using
 `pkg_resources`::
 

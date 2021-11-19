@@ -22,7 +22,7 @@ import symspellpy
 # -- Project information -----------------------------------------------------
 
 project = "symspellpy"
-copyright = "2019, mmb L, Wolf Garbe"
+copyright = "2021, mmb L, Wolf Garbe"
 author = "mmb L, Wolf Garbe"
 
 # The short X.Y version
@@ -99,7 +99,7 @@ html_static_path = ["_static"]
 # default: ``['localtoc.html', 'relations.html', 'sourcelink.html',
 # 'searchbox.html']``.
 #
-# html_sidebars = {}
+html_sidebars = {"**": ["globaltoc.html", "searchbox.html"]}
 
 
 # -- Options for HTMLHelp output ---------------------------------------------

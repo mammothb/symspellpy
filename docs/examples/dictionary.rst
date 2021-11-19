@@ -1,6 +1,6 @@
-==========
+**********
 Dictionary
-==========
+**********
 
 Load frequency dictionary
 =========================
@@ -18,20 +18,22 @@ Given a dictionary file like::
 We can use :meth:`~symspellpy.symspellpy.SymSpell.load_dictionary`:
 
 .. code-block:: python
-   :emphasize-lines: 8
+  :emphasize-lines: 10
 
-   from itertools import islice
-   import pkg_resources
-   from symspellpy import SymSpell
+  from itertools import islice
 
-   sym_spell = SymSpell()
-   dictionary_path = pkg_resources.resource_filename(
-       "symspellpy", "frequency_dictionary_en_82_765.txt")
-   sym_spell.load_dictionary(dictionary_path, 0, 1)
+  import pkg_resources
+  from symspellpy import SymSpell
 
-   # Print out first 5 elements to demonstrate that dictionary is
-   # successfully loaded
-   print(list(islice(sym_spell.words.items(), 5)))
+  sym_spell = SymSpell()
+  dictionary_path = pkg_resources.resource_filename(
+      "symspellpy", "frequency_dictionary_en_82_765.txt"
+  )
+  sym_spell.load_dictionary(dictionary_path, 0, 1)
+
+  # Print out first 5 elements to demonstrate that dictionary is
+  # successfully loaded
+  print(list(islice(sym_spell.words.items(), 5)))
 
 Output::
 
@@ -50,20 +52,22 @@ Given a bigram dictionary file like::
 We can use :meth:`~symspellpy.symspellpy.SymSpell.load_bigram_dictionary`:
 
 .. code-block:: python
-   :emphasize-lines: 8
+  :emphasize-lines: 10
 
-   from itertools import islice
-   import pkg_resources
-   from symspellpy import SymSpell
+  from itertools import islice
 
-   sym_spell = SymSpell()
-   dictionary_path = pkg_resources.resource_filename(
-       "symspellpy", "frequency_dictionary_en_82_765.txt")
-   sym_spell.load_bigram_dictionary(dictionary_path, 0, 2)
+  import pkg_resources
+  from symspellpy import SymSpell
 
-   # Print out first 5 elements to demonstrate that dictionary is
-   # successfully loaded
-   print(list(islice(sym_spell.bigrams.items(), 5)))
+  sym_spell = SymSpell()
+  dictionary_path = pkg_resources.resource_filename(
+      "symspellpy", "frequency_bigramdictionary_en_243_342.txt"
+  )
+  sym_spell.load_bigram_dictionary(dictionary_path, 0, 2)
+
+  # Print out first 5 elements to demonstrate that dictionary is
+  # successfully loaded
+  print(list(islice(sym_spell.bigrams.items(), 5)))
 
 Output::
 
@@ -90,19 +94,19 @@ We can specify "$" as the custom `separator` in
 :meth:`~symspellpy.symspellpy.SymSpell.load_dictionary` like:
 
 .. code-block:: python
-   :emphasize-lines: 7
+  :emphasize-lines: 7
 
-   from itertools import islice
-   import pkg_resources
-   from symspellpy import SymSpell
+  from itertools import islice
 
-   sym_spell = SymSpell()
-   dictionary_path = <path/to/dictionary>
-   sym_spell.load_dictionary(dictionary_path, 0, 1, separator="$")
+  from symspellpy import SymSpell
 
-   # Print out first 5 elements to demonstrate that dictionary is
-   # successfully loaded
-   print(list(islice(sym_spell.words.items(), 5)))
+  sym_spell = SymSpell()
+  dictionary_path = <path/to/dictionary>
+  sym_spell.load_dictionary(dictionary_path, 0, 1, separator="$")
+
+  # Print out first 5 elements to demonstrate that dictionary is
+  # successfully loaded
+  print(list(islice(sym_spell.words.items(), 5)))
 
 Output::
 
@@ -119,19 +123,19 @@ We can also specify "$" as the custom `separator` in
 (note that we changed `count_index` from 2 to 1):
 
 .. code-block:: python
-   :emphasize-lines: 7
+  :emphasize-lines: 7
 
-   from itertools import islice
-   import pkg_resources
-   from symspellpy import SymSpell
+  from itertools import islice
 
-   sym_spell = SymSpell()
-   dictionary_path = <path/to/dictionary>
-   sym_spell.load_bigram_dictionary(dictionary_path, 0, 1, separator="$")
+  from symspellpy import SymSpell
 
-   # Print out first 5 elements to demonstrate that dictionary is
-   # successfully loaded
-   print(list(islice(sym_spell.bigrams.items(), 5)))
+  sym_spell = SymSpell()
+  dictionary_path = <path/to/dictionary>
+  sym_spell.load_bigram_dictionary(dictionary_path, 0, 1, separator="$")
+
+  # Print out first 5 elements to demonstrate that dictionary is
+  # successfully loaded
+  print(list(islice(sym_spell.bigrams.items(), 5)))
 
 Output::
 

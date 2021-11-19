@@ -7,10 +7,18 @@
 
 .. title:: symspellpy: a SymSpell Python port
 
-symspellpy
-==========
+.. toctree::
+   :hidden:
 
-symspellpy is a Python port of SymSpell_ v6.5, a Symmetric Delete
+   users/installing
+   examples/index
+   api/index
+
+**********
+symspellpy
+**********
+
+symspellpy is a Python port of SymSpell_ v6.7, a Symmetric Delete
 spelling correction algorithm which provides much higher speed and lower
 memory consumption.
 
@@ -21,21 +29,22 @@ of the port. Please note that the port has tried to replicate the code
 structure of the original project and has not been optimized for speed.
 
 Installation
-------------
+============
 
 Visit the :doc:`symspellpy installation instructions <users/installing>`.
 
 Usage examples
---------------
+==============
 
 Check out :doc:`examples <examples/index>` to learn how to use symspellpy.
 
 Documentation
--------------
+=============
+
 Check out the :doc:`documentation <api/index>`.
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`
