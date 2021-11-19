@@ -1,6 +1,7 @@
 name: Publish to TestPyPI and PyPI
 
 on:
+  workflow_dispatch:
   release:
     types: [published]
 
