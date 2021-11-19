@@ -1,0 +1,31 @@
+name: Publish to TestPyPI and PyPI
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish-test-pypi:
+    name: Build and publish to TestPyPI
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.7
+
+      - name: Build
+        run: |
+          echo "Building ..."
+          python -m pip install --upgrade pip
+          python -m pip install build
+          python -m build
+
+      - name: Publish to TestPyPI
+        uses: pypa/gh-action-pypi-publish@v1.4.2
+        with:
+          user: __token__
+          password: ${{ secrets. TEST_PYPI_API_TOKEN }}
+          repository_url: https://test.pypi.org/legacy/
