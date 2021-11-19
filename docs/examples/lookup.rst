@@ -1,32 +1,32 @@
-======
+******
 lookup
-======
+******
 
 Basic usage
 ===========
 
 .. code-block:: python
-   :emphasize-lines: 15,16
+  :emphasize-lines: 16
 
-   import pkg_resources
-   from symspellpy import SymSpell, Verbosity
+  import pkg_resources
+  from symspellpy import SymSpell, Verbosity
 
-   sym_spell = SymSpell(max_dictionary_edit_distance=2, prefix_length=7)
-   dictionary_path = pkg_resources.resource_filename(
-       "symspellpy", "frequency_dictionary_en_82_765.txt")
-   # term_index is the column of the term and count_index is the
-   # column of the term frequency
-   sym_spell.load_dictionary(dictionary_path, term_index=0, count_index=1)
+  sym_spell = SymSpell(max_dictionary_edit_distance=2, prefix_length=7)
+  dictionary_path = pkg_resources.resource_filename(
+      "symspellpy", "frequency_dictionary_en_82_765.txt"
+  )
+  # term_index is the column of the term and count_index is the
+  # column of the term frequency
+  sym_spell.load_dictionary(dictionary_path, term_index=0, count_index=1)
 
-   # lookup suggestions for single-word input strings
-   input_term = "memebers"  # misspelling of "members"
-   # max edit distance per lookup
-   # (max_edit_distance_lookup <= max_dictionary_edit_distance)
-   suggestions = sym_spell.lookup(input_term, Verbosity.CLOSEST,
-                                  max_edit_distance=2)
-   # display suggestion term, term frequency, and edit distance
-   for suggestion in suggestions:
-       print(suggestion)
+  # lookup suggestions for single-word input strings
+  input_term = "memebers"  # misspelling of "members"
+  # max edit distance per lookup
+  # (max_edit_distance_lookup <= max_dictionary_edit_distance)
+  suggestions = sym_spell.lookup(input_term, Verbosity.CLOSEST, max_edit_distance=2)
+  # display suggestion term, term frequency, and edit distance
+  for suggestion in suggestions:
+      print(suggestion)
 
 Output::
 
@@ -36,27 +36,29 @@ Return original word if no correction within edit distance is found
 ===================================================================
 
 .. code-block:: python
-   :emphasize-lines: 15,16
+  :emphasize-lines: 16,17,18
 
-   import pkg_resources
-   from symspellpy import SymSpell, Verbosity
+  import pkg_resources
+  from symspellpy import SymSpell, Verbosity
 
-   sym_spell = SymSpell(max_dictionary_edit_distance=2, prefix_length=7)
-   dictionary_path = pkg_resources.resource_filename(
-       "symspellpy", "frequency_dictionary_en_82_765.txt")
-   # term_index is the column of the term and count_index is the
-   # column of the term frequency
-   sym_spell.load_dictionary(dictionary_path, term_index=0, count_index=1)
+  sym_spell = SymSpell(max_dictionary_edit_distance=2, prefix_length=7)
+  dictionary_path = pkg_resources.resource_filename(
+      "symspellpy", "frequency_dictionary_en_82_765.txt"
+  )
+  # term_index is the column of the term and count_index is the
+  # column of the term frequency
+  sym_spell.load_dictionary(dictionary_path, term_index=0, count_index=1)
 
-   # lookup suggestions for single-word input strings
-   input_term = "apastraphee"  # misspelling of "apostrophe"
-   # max edit distance per lookup
-   # (max_edit_distance_lookup <= max_dictionary_edit_distance)
-   suggestions = sym_spell.lookup(input_term, Verbosity.CLOSEST,
-                                  max_edit_distance=2, include_unknown=True)
-   # display suggestion term, term frequency, and edit distance
-   for suggestion in suggestions:
-       print(suggestion)
+  # lookup suggestions for single-word input strings
+  input_term = "apastraphee"  # misspelling of "apostrophe"
+  # max edit distance per lookup
+  # (max_edit_distance_lookup <= max_dictionary_edit_distance)
+  suggestions = sym_spell.lookup(
+      input_term, Verbosity.CLOSEST, max_edit_distance=2, include_unknown=True
+  )
+  # display suggestion term, term frequency, and edit distance
+  for suggestion in suggestions:
+      print(suggestion)
 
 Output::
 
@@ -69,27 +71,29 @@ Avoid correcting phrases matching regex
 =======================================
 
 .. code-block:: python
-   :emphasize-lines: 15,16
+  :emphasize-lines: 16,17,18
 
-   import pkg_resources
-   from symspellpy import SymSpell, Verbosity
+  import pkg_resources
+  from symspellpy import SymSpell, Verbosity
 
-   sym_spell = SymSpell(max_dictionary_edit_distance=2, prefix_length=7)
-   dictionary_path = pkg_resources.resource_filename(
-       "symspellpy", "frequency_dictionary_en_82_765.txt")
-   # term_index is the column of the term and count_index is the
-   # column of the term frequency
-   sym_spell.load_dictionary(dictionary_path, term_index=0, count_index=1)
+  sym_spell = SymSpell(max_dictionary_edit_distance=2, prefix_length=7)
+  dictionary_path = pkg_resources.resource_filename(
+      "symspellpy", "frequency_dictionary_en_82_765.txt"
+  )
+  # term_index is the column of the term and count_index is the
+  # column of the term frequency
+  sym_spell.load_dictionary(dictionary_path, term_index=0, count_index=1)
 
-   # lookup suggestions for single-word input strings
-   input_term = "members1"
-   # max edit distance per lookup
-   # (max_edit_distance_lookup <= max_dictionary_edit_distance)
-   suggestions = sym_spell.lookup(input_term, Verbosity.CLOSEST,
-                                  max_edit_distance=2, ignore_token=r"\w+\d")
-   # display suggestion term, term frequency, and edit distance
-   for suggestion in suggestions:
-       print(suggestion)
+  # lookup suggestions for single-word input strings
+  input_term = "members1"
+  # max edit distance per lookup
+  # (max_edit_distance_lookup <= max_dictionary_edit_distance)
+  suggestions = sym_spell.lookup(
+      input_term, Verbosity.CLOSEST, max_edit_distance=2, ignore_token=r"\w+\d"
+  )
+  # display suggestion term, term frequency, and edit distance
+  for suggestion in suggestions:
+      print(suggestion)
 
 Output::
 
@@ -102,27 +106,30 @@ Keep original casing
 ====================
 
 .. code-block:: python
-   :emphasize-lines: 15,16
+  :emphasize-lines: 16,17,18
 
-   import pkg_resources
-   from symspellpy import SymSpell, Verbosity
+  import pkg_resources
+  from symspellpy import SymSpell, Verbosity
 
-   sym_spell = SymSpell(max_dictionary_edit_distance=2, prefix_length=7)
-   dictionary_path = pkg_resources.resource_filename(
-       "symspellpy", "frequency_dictionary_en_82_765.txt")
-   # term_index is the column of the term and count_index is the
-   # column of the term frequency
-   sym_spell.load_dictionary(dictionary_path, term_index=0, count_index=1)
+  sym_spell = SymSpell(max_dictionary_edit_distance=2, prefix_length=7)
+  dictionary_path = pkg_resources.resource_filename(
+      "symspellpy", "frequency_dictionary_en_82_765.txt"
+  )
+  # term_index is the column of the term and count_index is the
+  # column of the term frequency
+  sym_spell.load_dictionary(dictionary_path, term_index=0, count_index=1)
 
-   # lookup suggestions for single-word input strings
-   input_term = "mEmEbers"
-   # max edit distance per lookup
-   # (max_edit_distance_lookup <= max_dictionary_edit_distance)
-   suggestions = sym_spell.lookup(input_term, Verbosity.CLOSEST,
-                                  max_edit_distance=2, transfer_casing=True)
-   # display suggestion term, term frequency, and edit distance
-   for suggestion in suggestions:
-       print(suggestion)
+  # lookup suggestions for single-word input strings
+  input_term = "mEmEbers"
+  # max edit distance per lookup
+  # (max_edit_distance_lookup <= max_dictionary_edit_distance)
+  suggestions = sym_spell.lookup(
+      input_term, Verbosity.CLOSEST, max_edit_distance=2, transfer_casing=True
+  )
+  # display suggestion term, term frequency, and edit distance
+  for suggestion in suggestions:
+      print(suggestion)
+
 
 Output::
 
