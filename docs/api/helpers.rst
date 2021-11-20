@@ -1,6 +1,6 @@
-=======
+*******
 helpers
-=======
+*******
 
 Helpers for `editdistance`
 ==========================
@@ -14,17 +14,20 @@ Helpers for `symspellpy`
 
 .. autoclass:: symspellpy.helpers.DictIO
 
-.. autofunction:: symspellpy.helpers.try_parse_int64
+.. autofunction:: symspellpy.helpers.case_transfer_matching
 
-.. autofunction:: symspellpy.helpers.parse_words
+.. autofunction:: symspellpy.helpers.case_transfer_similar
+
+.. autofunction:: symspellpy.helpers.increment_count
 
 .. autofunction:: symspellpy.helpers.is_acronym
 
-.. autofunction:: symspellpy.helpers.transfer_casing_for_similar_text
+.. autofunction:: symspellpy.helpers.parse_words
+
+.. autofunction:: symspellpy.helpers.try_parse_int64
 
 Misc
 ====
 
 .. autofunction:: symspellpy.helpers.to_similarity
 
-.. autofunction:: symspellpy.helpers.transfer_casing_for_matching_text

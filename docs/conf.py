@@ -40,9 +40,14 @@ release = symspellpy.__version__
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ["sphinx.ext.autodoc", "numpydoc"]
-numpydoc_class_members_toctree = False
-numpydoc_show_inherited_class_members = False
+extensions = [
+    "sphinx.ext.autodoc",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.viewcode",
+    "sphinx_autodoc_typehints",
+]
+# numpydoc_class_members_toctree = False
+# numpydoc_show_inherited_class_members = False
 highlight_language = "none"
 
 # Add any paths that contain templates here, relative to this directory.
@@ -106,77 +111,3 @@ html_sidebars = {"**": ["globaltoc.html", "searchbox.html"]}
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = "symspellpydoc"
-
-
-# -- Options for LaTeX output ------------------------------------------------
-
-latex_elements = {
-    # The paper size ('letterpaper' or 'a4paper').
-    #
-    # 'papersize': 'letterpaper',
-    # The font size ('10pt', '11pt' or '12pt').
-    #
-    # 'pointsize': '10pt',
-    # Additional stuff for the LaTeX preamble.
-    #
-    # 'preamble': '',
-    # Latex figure (float) alignment
-    #
-    # 'figure_align': 'htbp',
-}
-
-# Grouping the document tree into LaTeX files. List of tuples
-# (source start file, target name, title,
-#  author, documentclass [howto, manual, or own class]).
-latex_documents = [
-    (
-        master_doc,
-        "symspellpy.tex",
-        "symspellpy Documentation",
-        "mmb L, Wolf Garbe",
-        "manual",
-    ),
-]
-
-
-# -- Options for manual page output ------------------------------------------
-
-# One entry per manual page. List of tuples
-# (source start file, name, description, authors, manual section).
-man_pages = [(master_doc, "symspellpy", "symspellpy Documentation", [author], 1)]
-
-
-# -- Options for Texinfo output ----------------------------------------------
-
-# Grouping the document tree into Texinfo files. List of tuples
-# (source start file, target name, title, author,
-#  dir menu entry, description, category)
-texinfo_documents = [
-    (
-        master_doc,
-        "symspellpy",
-        "symspellpy Documentation",
-        author,
-        "symspellpy",
-        "One line description of project.",
-        "Miscellaneous",
-    ),
-]
-
-
-# -- Options for Epub output -------------------------------------------------
-
-# Bibliographic Dublin Core info.
-epub_title = project
-
-# The unique identifier of the text. This can be a ISBN number
-# or the project homepage.
-#
-# epub_identifier = ''
-
-# A unique identification for the text.
-#
-# epub_uid = ''
-
-# A list of files that should not be packed into the epub file.
-epub_exclude_files = ["search.html"]
