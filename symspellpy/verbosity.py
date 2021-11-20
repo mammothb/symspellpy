@@ -13,14 +13,26 @@
 # The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
 
-"""symspellpy
-
-.. moduleauthor:: mmb L <mammothb@hotmail.com>
-.. moduleauthor:: Wolf Garbe <wolf.garbe@faroo.com>
+"""
+.. module:: verbosity
+   :synopsis: Enum for lookup results verbosity.
 """
 
-__version__ = "6.7.0.dev1"
+from enum import Enum
 
-from . import editdistance, helpers
-from .symspellpy import SymSpell
-from .verbosity import Verbosity
+
+class Verbosity(Enum):
+    """Controls the closeness/quantity of returned spelling suggestions.
+
+    Attributes:
+        TOP: Top suggestion with the highest term frequency of the suggestions of
+            smallest edit distance found.
+        CLOSEST: All suggestions of smallest edit distance found, suggestions
+            ordered by term frequency.
+        ALL: All suggestions within maxEditDistance, suggestions ordered by edit
+            distance, then by term frequency (slower, no early termination).
+    """
+
+    TOP = 0
+    CLOSEST = 1
+    ALL = 2

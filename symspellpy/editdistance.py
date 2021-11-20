@@ -18,42 +18,39 @@
    :synopsis: Module for edit distance algorithms.
 """
 
+from abc import ABC, abstractmethod
 from enum import Enum
+from typing import List
 
-import symspellpy.helpers as helpers
+from symspellpy import helpers
 
 
 class DistanceAlgorithm(Enum):
-    """Supported edit distance algorithms"""
+    """Supported edit distance algorithms."""
 
     LEVENSHTEIN = 0  #: Levenshtein algorithm.
     DAMERUAUOSA = 1  #: Damerau optimal string alignment algorithm
 
 
-class EditDistance(object):
-
+class EditDistance:
     """Edit distance algorithms.
-    Parameters
-    ----------
-    algorithm : :class:`DistanceAlgorithm`
-        The distance algorithm to use.
 
-    Attributes
-    ----------
-    _algorithm : :class:`DistanceAlgorithm`
-        The edit distance algorithm to use.
-    _distance_comparer : :class:`AbstractDistanceComparer`
-        An object to compute the relative distance between two strings.
-        The concrete object will be chosen based on the value of
-        :attr:`_algorithm`
+    Args:
+        algorithm: The distance algorithm to use.
 
-    Raises
-    ------
-    ValueError
-        If `algorithm` specifies an invalid distance algorithm.
+    Attributes:
+        _algorithm (:class:`DistanceAlgorithm`): The edit distance algorithm to
+            use.
+        _distance_comparer (:class:`AbstractDistanceComparer`): An object to
+            compute the relative distance between two strings. The concrete
+            object will be chosen based on the value of :attr:`_algorithm`.
+
+    Raises:
+        ValueError: If `algorithm` specifies an invalid distance algorithm.
     """
 
-    def __init__(self, algorithm):
+    def __init__(self, algorithm: DistanceAlgorithm) -> None:
+        self._distance_comparer: AbstractDistanceComparer
         self._algorithm = algorithm
         if algorithm == DistanceAlgorithm.LEVENSHTEIN:
             self._distance_comparer = Levenshtein()
@@ -62,100 +59,72 @@ class EditDistance(object):
         else:
             raise ValueError("Unknown distance algorithm")
 
-    def compare(self, string_1, string_2, max_distance):
-        """Compare a string to the base string to determine the edit
-        distance, using the previously selected algorithm.
+    def compare(self, string_1: str, string_2: str, max_distance: int) -> int:
+        """Compares a string to the base string to determine the edit distance,
+        using the previously selected algorithm.
 
-        Parameters
-        ----------
-        string_1 : str
-            Base string.
-        string_2 : str
-            The string to compare.
-        max_distance : int
-            The maximum distance allowed.
+        Args:
+            string_1: Base string.
+            string_2: The string to compare.
+            max_distance: The maximum distance allowed.
 
-        Returns
-        -------
-        int
+        Returns:
             The edit distance (or -1 if `max_distance` exceeded).
         """
         return self._distance_comparer.distance(string_1, string_2, max_distance)
 
 
-class AbstractDistanceComparer(object):
-    """An interface to compute relative distance between two strings"""
+class AbstractDistanceComparer(ABC):
+    """An interface to compute relative distance between two strings."""
 
-    def distance(self, string_1, string_2, max_distance):
-        """Return a measure of the distance between two strings.
+    @abstractmethod
+    def distance(self, string_1: str, string_2: str, max_distance: int) -> int:
+        """Returns a measure of the distance between two strings.
 
-        Parameters
-        ----------
-        string_1 : str
-            One of the strings to compare.
-        string_2 : str
-            The other string to compare.
-        max_distance : int
-            The maximum distance that is of interest.
+        Args:
+            string_1: One of the strings to compare.
+            string_2: The other string to compare.
+            max_distance: The maximum distance that is of interest.
 
-        Returns
-        -------
-        int
-            -1 if the distance is greater than the max_distance, 0 if
-            the strings are equivalent, otherwise a positive number
-            whose magnitude increases as difference between the strings
-            increases.
-
-        Raises
-        ------
-        NotImplementedError
-            If called from abstract class instead of concrete class
+        Returns:
+            -1 if the distance is greater than the max_distance, 0 if the strings
+                are equivalent, otherwise a positive number whose magnitude
+                increases as difference between the strings increases.
         """
-        raise NotImplementedError("Should have implemented this")
 
 
 class Levenshtein(AbstractDistanceComparer):
-    """Class providing Levenshtein algorithm for computing edit
-    distance metric between two strings
+    """Provides Levenshtein algorithm for computing edit distance metric between
+    two strings.
 
-    Attributes
-    ----------
-    _base_char_1_costs : numpy.ndarray
+    Attributes:
+        _base_char_1_costs (List[int]):
     """
 
     def __init__(self):
         self._base_char_1_costs = []
 
-    def distance(self, string_1, string_2, max_distance):
-        """Compute and return the Levenshtein edit distance between two
-        strings.
+    def distance(self, string_1: str, string_2: str, max_distance: int) -> int:
+        """Computes the Levenshtein edit distance between two strings.
 
-        Parameters
-        ----------
-        string_1 : str
-            One of the strings to compare.
-        string_2 : str
-            The other string to compare.
-        max_distance : int
-            The maximum distance that is of interest.
+        Args:
+            string_1: One of the strings to compare.
+            string_2: The other string to compare.
+            max_distance: The maximum distance that is of interest.
 
-        Returns
-        -------
-        int
-            -1 if the distance is greater than the maxDistance, 0 if
-            the strings are equivalent, otherwise a positive number
-            whose magnitude increases as difference between the strings
-            increases.
+        Returns:
+            -1 if the distance is greater than the maxDistance, 0 if the strings
+                are equivalent, otherwise a positive number whose magnitude
+                increases as difference between the strings increases.
         """
         if string_1 is None or string_2 is None:
             return helpers.null_distance_results(string_1, string_2, max_distance)
         if max_distance <= 0:
             return 0 if string_1 == string_2 else -1
         max_distance = max_distance = int(min(2 ** 31 - 1, max_distance))
-        # if strings of different lengths, ensure shorter string is in
-        # string_1. This can result in a little faster speed by
-        # spending more time spinning just the inner loop during the
-        # main processing.
+        # if strings of different lengths, ensure shorter string is in string_1.
+        # This can result in a little faster speed by spending more time spinning
+        # just the inner loop during the main processing.
         if len(string_1) > len(string_2):
             string_2, string_1 = string_1, string_2
         if len(string_2) - len(string_1) > max_distance:
@@ -181,7 +150,15 @@ class Levenshtein(AbstractDistanceComparer):
             string_1, string_2, len_1, len_2, start, self._base_char_1_costs
         )
 
-    def _distance(self, string_1, string_2, len_1, len_2, start, char_1_costs):
+    @staticmethod
+    def _distance(
+        string_1: str,
+        string_2: str,
+        len_1: int,
+        len_2: int,
+        start: int,
+        char_1_costs: List[int],
+    ) -> int:
         """Internal implementation of the core Levenshtein algorithm.
 
         **From**: https://github.com/softwx/SoftWx.Match
@@ -196,8 +173,7 @@ class Levenshtein(AbstractDistanceComparer):
                 current_cost = left_char_cost
                 left_char_cost = char_1_costs[j]
                 if string_2[start + j] != char_1:
-                    # substitution if neither of the two conditions
-                    # below
+                    # substitution if neither of the two conditions below
                     if above_char_cost < current_cost:
                         current_cost = above_char_cost
                     if left_char_cost < current_cost:
@@ -206,11 +182,18 @@ class Levenshtein(AbstractDistanceComparer):
                 char_1_costs[j] = above_char_cost = current_cost
         return current_cost
 
+    @staticmethod
     def _distance_max(
-        self, string_1, string_2, len_1, len_2, start, max_distance, char_1_costs
-    ):
-        """Internal implementation of the core Levenshtein algorithm
-        that accepts a max_distance.
+        string_1: str,
+        string_2: str,
+        len_1: int,
+        len_2: int,
+        start: int,
+        max_distance: int,
+        char_1_costs: List[int],
+    ) -> int:
+        """Internal implementation of the core Levenshtein algorithm that accepts
+        a max_distance.
 
         **From**: https://github.com/softwx/SoftWx.Match
         """
@@ -225,10 +208,9 @@ class Levenshtein(AbstractDistanceComparer):
         for i in range(len_1):
             char_1 = string_1[start + i]
             prev_char_1_cost = above_char_cost = i
-            # no need to look beyond window of lower right
-            # diagonal - max_distance cells (lower right diag is
-            # i - lenDiff) and the upper left diagonal +
-            # max_distance cells (upper left is i)
+            # no need to look beyond window of lower right diagonal -
+            # max_distance cells (lower right diag is i - lenDiff) and the upper
+            # left diagonal + max_distance cells (upper left is i)
             j_start += 1 if i > j_start_offset else 0
             j_end += 1 if j_end < len_2 else 0
             for j in range(j_start, j_end):
@@ -236,8 +218,7 @@ class Levenshtein(AbstractDistanceComparer):
                 current_cost = prev_char_1_cost
                 prev_char_1_cost = char_1_costs[j]
                 if string_2[start + j] != char_1:
-                    # substitution if neither of the two conditions
-                    # below
+                    # substitution if neither of the two conditions below
                     if above_char_cost < current_cost:
                         current_cost = above_char_cost
                     if prev_char_1_cost < current_cost:
@@ -250,51 +231,40 @@ class Levenshtein(AbstractDistanceComparer):
 
 
 class DamerauOsa(AbstractDistanceComparer):
-    """Class providing optimized methods for computing
-    Damerau-Levenshtein Optimal String Alignment (OSA) comparisons
-    between two strings.
+    """Provides optimized methods for computing Damerau-Levenshtein Optimal
+    String Alignment (OSA) comparisons between two strings.
 
-    Attributes
-    ----------
-    _base_char_1_costs : numpy.ndarray
-    _base_prev_char_1_costs : numpy.ndarray
-
+    Attributes:
+        _base_char_1_costs (List[int]):
+        _base_prev_char_1_costs (List[int]):
     """
 
-    def __init__(self):
-        self._base_char_1_costs = []
-        self._base_prev_char_1_costs = []
+    def __init__(self) -> None:
+        self._base_char_1_costs: List[int] = []
+        self._base_prev_char_1_costs: List[int] = []
 
-    def distance(self, string_1, string_2, max_distance):
-        """Compute and return the Damerau-Levenshtein optimal string
-        alignment edit distance between two strings.
+    def distance(self, string_1: str, string_2: str, max_distance: int) -> int:
+        """Computes the Damerau-Levenshtein optimal string alignment edit
+        distance between two strings.
 
-        Parameters
-        ----------
-        string_1 : str
-            One of the strings to compare.
-        string_2 : str
-            The other string to compare.
-        max_distance : int
-            The maximum distance that is of interest.
+        Args:
+            string_1: One of the strings to compare.
+            string_2: The other string to compare.
+            max_distance: The maximum distance that is of interest.
 
-        Returns
-        -------
-        int
-            -1 if the distance is greater than the maxDistance, 0 if
-            the strings are equivalent, otherwise a positive number
-            whose magnitude increases as difference between the strings
-            increases.
+        Returns:
+            -1 if the distance is greater than the maxDistance, 0 if the strings
+                are equivalent, otherwise a positive number whose magnitude
+                increases as difference between the strings increases.
         """
         if string_1 is None or string_2 is None:
             return helpers.null_distance_results(string_1, string_2, max_distance)
         if max_distance <= 0:
             return 0 if string_1 == string_2 else -1
         max_distance = int(min(2 ** 31 - 1, max_distance))
-        # if strings of different lengths, ensure shorter string is in
-        # string_1. This can result in a little faster speed by
-        # spending more time spinning just the inner loop during the
-        # main processing.
+        # if strings of different lengths, ensure shorter string is in string_1.
+        # This can result in a little faster speed by spending more time spinning
+        # just the inner loop during the main processing.
         if len(string_1) > len(string_2):
             string_2, string_1 = string_1, string_2
         if len(string_2) - len(string_1) > max_distance:
@@ -328,11 +298,18 @@ class DamerauOsa(AbstractDistanceComparer):
             self._base_prev_char_1_costs,
         )
 
+    @staticmethod
     def _distance(
-        self, string_1, string_2, len_1, len_2, start, char_1_costs, prev_char_1_costs
-    ):
-        """Internal implementation of the core Damerau-Levenshtein,
-        optimal string alignment algorithm.
+        string_1: str,
+        string_2: str,
+        len_1: int,
+        len_2: int,
+        start: int,
+        char_1_costs: List[int],
+        prev_char_1_costs: List[int],
+    ) -> int:
+        """Internal implementation of the core Damerau-Levenshtein, optimal
+        string alignment algorithm.
 
         **From**: https://github.com/softwx/SoftWx.Match
         """
@@ -374,19 +351,19 @@ class DamerauOsa(AbstractDistanceComparer):
                 char_1_costs[j] = above_char_cost = current_cost
         return current_cost
 
+    @staticmethod
     def _distance_max(
-        self,
-        string_1,
-        string_2,
-        len_1,
-        len_2,
-        start,
-        max_distance,
-        char_1_costs,
-        prev_char_1_costs,
-    ):
-        """Internal implementation of the core Damerau-Levenshtein,
-        optimal string alignment algorithm that accepts a max_distance.
+        string_1: str,
+        string_2: str,
+        len_1: int,
+        len_2: int,
+        start: int,
+        max_distance: int,
+        char_1_costs: List[int],
+        prev_char_1_costs: List[int],
+    ) -> int:
+        """Internal implementation of the core Damerau-Levenshtein, optimal
+        string alignment algorithm that accepts a max_distance.
 
         **From**: https://github.com/softwx/SoftWx.Match
         """
@@ -406,9 +383,8 @@ class DamerauOsa(AbstractDistanceComparer):
             left_char_cost = above_char_cost = i
             next_trans_cost = 0
             # no need to look beyond window of lower right diagonal -
-            # max_distance cells (lower right diag is i - len_diff) and
-            # the upper left diagonal + max_distance cells (upper left
-            # is i)
+            # max_distance cells (lower right diag is i - len_diff) and the upper
+            # left diagonal + max_distance cells (upper left is i)
             j_start += 1 if i > j_start_offset else 0
             j_end += 1 if j_end < len_2 else 0
             for j in range(j_start, j_end):
@@ -416,8 +392,8 @@ class DamerauOsa(AbstractDistanceComparer):
                 next_trans_cost = prev_char_1_costs[j]
                 # cost of diagonal (substitution)
                 prev_char_1_costs[j] = current_cost = left_char_cost
-                # left now equals current cost (which will be diagonal
-                # at next iteration)
+                # left now equals current cost (which will be diagonal at next
+                # iteration)
                 left_char_cost = char_1_costs[j]
                 prev_char_2 = char_2
                 char_2 = string_2[start + j]

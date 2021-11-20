@@ -3,6 +3,7 @@ from itertools import combinations, permutations
 
 import numpy as np
 import pytest
+
 from symspellpy.editdistance import (
     AbstractDistanceComparer,
     DamerauOsa,
@@ -101,10 +102,13 @@ class TestEditDistance:
         assert "Unknown distance algorithm" == str(excinfo.value)
 
     def test_abstract_distance_comparer(self):
-        with pytest.raises(NotImplementedError) as excinfo:
+        with pytest.raises(TypeError) as excinfo:
             comparer = AbstractDistanceComparer()
             _ = comparer.distance("string_1", "string_2", 10)
-        assert "Should have implemented this" == str(excinfo.value)
+        assert (
+            "Can't instantiate abstract class AbstractDistanceComparer "
+            "with abstract methods distance"
+        ) == str(excinfo.value)
 
     def test_comparer_match_ref(self, get_comparer, get_strings):
         comparer, expected = get_comparer

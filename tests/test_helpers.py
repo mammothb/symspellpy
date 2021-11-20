@@ -1,11 +1,10 @@
-import unittest
-
 import pytest
+
 from symspellpy.helpers import (
+    case_transfer_matching,
+    case_transfer_similar,
     is_acronym,
     to_similarity,
-    transfer_casing_for_matching_text,
-    transfer_casing_for_similar_text,
 )
 
 
@@ -35,6 +34,8 @@ def get_similar_texts():
         ("Efthr in New Yoork", "weather in new york", "WEather in New York"),
         ("efthr in New Yoork", "weather in new york", "weather in New York"),
         ("eTr in New Yoork", "weather in new york", "weaTHEr in New York"),
+        ("hoW", "Haaaw", "haaaW"),
+        ("hOW", "Haaaw", "hAAAW"),
     ]
 
 
@@ -50,42 +51,35 @@ class TestHelpers:
             assert expected["default"] == is_acronym(word)
             assert expected["digits"] == is_acronym(word, True)
 
-    def test_transfer_casing_for_matching_text_diff_lengths(self):
+    def test_case_transfer_matching_diff_lengths(self):
         with pytest.raises(ValueError) as excinfo:
-            transfer_casing_for_matching_text("abc", "abcd")
+            case_transfer_matching("abc", "abcd")
         assert (
-            "The 'text_w_casing' and 'text_wo_casing' don't have the same "
-            "length, so you can't use them with this method, you should be "
-            "using the more general transfer_casing_similar_text() method."
+            "'cased_text' and 'uncased_text' don't have the same length. Use "
+            "case_transfer_similar() instead."
         ) == str(excinfo.value)
 
-    def test_transfer_casing_for_matching_text(self):
-        text_w_casing = "Haw is the eeather in New York?"
-        text_wo_casing = "how is the weather in new york?"
+    def test_case_transfer_matching(self):
+        cased_text = "Haw is the eeather in New York?"
+        uncased_text = "how is the weather in new york?"
 
-        # the text_wo_casing text with the casing transferred from
-        # the text_w_casing text
-        assert "How is the weather in New York?" == transfer_casing_for_matching_text(
-            text_w_casing, text_wo_casing
+        # the uncased_text text with the casing transferred from
+        # the cased_text text
+        assert "How is the weather in New York?" == case_transfer_matching(
+            cased_text, uncased_text
         )
 
-    def test_transfer_casing_for_similar_text_empty_wo_casing(self):
-        text_w_casing = "Haw is the eeather in New York?"
-        text_wo_casing = ""
+    def test_case_transfer_similar_empty_wo_casing(self):
+        cased_text = "Haw is the eeather in New York?"
+        uncased_text = ""
 
-        assert text_wo_casing == transfer_casing_for_similar_text(
-            text_w_casing, text_wo_casing
-        )
+        assert uncased_text == case_transfer_similar(cased_text, uncased_text)
 
-    def test_transfer_casing_for_similar_text_empty_w_casing(self):
+    def test_case_transfer_similar_empty_w_casing(self):
         with pytest.raises(ValueError) as excinfo:
-            transfer_casing_for_similar_text("", "abcd")
-        assert "We need 'text_w_casing' to know what casing to transfer!" == str(
-            excinfo.value
-        )
+            case_transfer_similar("", "abcd")
+        assert "'cased_text' cannot be empty!" == str(excinfo.value)
 
-    def test_transfer_casing_for_similar_text(self, get_similar_texts):
-        for text_w_casing, text_wo_casing, expected in get_similar_texts:
-            assert expected == transfer_casing_for_similar_text(
-                text_w_casing, text_wo_casing
-            )
+    def test_case_transfer_similar(self, get_similar_texts):
+        for cased_text, uncased_text, expected in get_similar_texts:
+            assert expected == case_transfer_similar(cased_text, uncased_text)

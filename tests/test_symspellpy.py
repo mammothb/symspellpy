@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pkg_resources
 import pytest
+
 from symspellpy import SymSpell, Verbosity
 from symspellpy.helpers import DictIO
 from symspellpy.symspellpy import SuggestItem
@@ -479,7 +480,7 @@ class TestSymSpellPy:
             typo,
             2,
             True,
-            split_phrase_by_space=True,
+            split_by_space=True,
             ignore_term_with_digits=True,
         )
         assert 1 == len(results)
