@@ -7,6 +7,7 @@ import pytest
 from symspellpy.editdistance import (
     AbstractDistanceComparer,
     DamerauOsa,
+    DistanceAlgorithm,
     EditDistance,
     Levenshtein,
 )
@@ -73,6 +74,23 @@ def get_comparer(request):
     ]
 
 
+@pytest.fixture(params=["damerau_osa", "levenshtein"])
+def get_edit_distance(request):
+    comparer_dict = {
+        "damerau_osa": {
+            "actual": EditDistance(DistanceAlgorithm.DAMERUAUOSA),
+            "expected": DamerauOsa,
+        },
+        "levenshtein": {
+            "actual": EditDistance(DistanceAlgorithm.LEVENSHTEIN),
+            "expected": Levenshtein,
+        },
+    }
+    yield comparer_dict[request.param]["actual"], comparer_dict[request.param][
+        "expected"
+    ]
+
+
 @pytest.fixture
 def get_short_and_long_strings():
     return [
@@ -109,6 +127,10 @@ class TestEditDistance:
             "Can't instantiate abstract class AbstractDistanceComparer "
             "with abstract methods distance"
         ) == str(excinfo.value)
+
+    def test_internal_distance_comparer(self, get_edit_distance):
+        edit_distance, expected = get_edit_distance
+        assert isinstance(edit_distance._distance_comparer, expected)
 
     def test_comparer_match_ref(self, get_comparer, get_strings):
         comparer, expected = get_comparer

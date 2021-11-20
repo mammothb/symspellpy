@@ -34,8 +34,8 @@ def get_similar_texts():
         ("Efthr in New Yoork", "weather in new york", "WEather in New York"),
         ("efthr in New Yoork", "weather in new york", "weather in New York"),
         ("eTr in New Yoork", "weather in new york", "weaTHEr in New York"),
-        ("hoW", "Haaaw", "haaaW"),
-        ("hOW", "Haaaw", "hAAAW"),
+        ("hoW eqr", "Haaaw er", "haaaW er"),
+        ("hOW eqr", "Haaaw er", "hAAAW er"),
     ]
 
 

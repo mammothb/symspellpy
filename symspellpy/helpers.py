@@ -104,7 +104,7 @@ def case_transfer_similar(cased_text: str, uncased_text: str) -> str:
             # Transfer the text from the cased_text, as anyhow they are equal
             # (without the casing)
             result += cased_text[ia1:ia2]
-        elif tag == "replace":
+        else:
             cased_seq = cased_text[ia1:ia2]
             uncased_seq = uncased_text[ib1:ib2]
 
