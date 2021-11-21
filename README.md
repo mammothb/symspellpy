@@ -1,6 +1,6 @@
 symspellpy <br>
 [![PyPI version](https://badge.fury.io/py/symspellpy.svg)](https://badge.fury.io/py/symspellpy)
-[![Build Status](https://travis-ci.com/mammothb/symspellpy.svg?branch=master)](https://travis-ci.com/mammothb/symspellpy)
+[![Tests](https://github.com/mammothb/symspellpy/actions/workflows/tests.yml/badge.svg)](https://github.com/mammothb/symspellpy/actions/workflows/tests.yml)
 [![Documentation Status](https://readthedocs.org/projects/symspellpy/badge/?version=latest)](https://symspellpy.readthedocs.io/en/latest/?badge=latest)
 [![codecov](https://codecov.io/gh/mammothb/symspellpy/branch/master/graph/badge.svg)](https://codecov.io/gh/mammothb/symspellpy)
 ========
