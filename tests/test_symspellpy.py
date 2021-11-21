@@ -1,15 +1,11 @@
-import json
 import os
 import pickle
-import sys
 from pathlib import Path
 
-import pkg_resources
 import pytest
 
 from symspellpy import SymSpell, Verbosity
 from symspellpy.helpers import DictIO
-from symspellpy.symspellpy import SuggestItem
 
 FORTESTS_DIR = Path(__file__).resolve().parent / "fortests"
 BAD_DICT_PATH = FORTESTS_DIR / "bad_dict.txt"
@@ -17,15 +13,8 @@ BIG_MODIFIED_PATH = FORTESTS_DIR / "big_modified.txt"
 BIG_WORDS_PATH = FORTESTS_DIR / "big_words.txt"
 NON_EN_DICT_PATH = FORTESTS_DIR / "non_en_dict.txt"
 PICKLE_PATH = FORTESTS_DIR / "dictionary.pickle"
-QUERY_PATH = FORTESTS_DIR / "noisy_query_en_1000.txt"
 SEPARATOR_DICT_PATH = FORTESTS_DIR / "separator_dict.txt"
 
-DICTIONARY_PATH = pkg_resources.resource_filename(
-    "symspellpy", "frequency_dictionary_en_82_765.txt"
-)
-BIGRAM_PATH = pkg_resources.resource_filename(
-    "symspellpy", "frequency_bigramdictionary_en_243_342.txt"
-)
 INVALID_PATH = "invalid/dictionary/path.txt"
 SEPARATOR = "$"
 
@@ -44,64 +33,6 @@ def get_dictionary_stream(request):
     else:
         dict_stream = DictIO(dictionary, request.param)
     yield dict_stream, request.param
-
-
-@pytest.fixture
-def get_lookup_compound_data(request):
-    with open(FORTESTS_DIR / request.param) as infile:
-        return json.load(infile)["data"]
-
-
-@pytest.fixture
-def get_same_word_and_count():
-    word = "hello"
-    return [(word, 11), (word, 3)]
-
-
-@pytest.fixture
-def symspell_default():
-    return SymSpell()
-
-
-@pytest.fixture
-def symspell_default_entry(symspell_default, request):
-    for entry in request.param:
-        symspell_default.create_dictionary_entry(entry[0], entry[1])
-    return symspell_default
-
-
-@pytest.fixture
-def symspell_default_load(symspell_default, request):
-    symspell_default.load_dictionary(DICTIONARY_PATH, 0, 1)
-    if request.param == "bigram":
-        symspell_default.load_bigram_dictionary(BIGRAM_PATH, 0, 2)
-    return symspell_default, request.param
-
-
-@pytest.fixture
-def symspell_edit_distance_load(request):
-    sym_spell = SymSpell(request.param)
-    sym_spell.load_dictionary(DICTIONARY_PATH, 0, 1)
-    return sym_spell, request.param
-
-
-@pytest.fixture
-def symspell_high_thres():
-    return SymSpell(2, 7, 10)
-
-
-@pytest.fixture
-def symspell_high_thres_flame(symspell_high_thres):
-    symspell_high_thres.create_dictionary_entry("flame", 20)
-    symspell_high_thres.create_dictionary_entry("flam", 1)
-    return symspell_high_thres
-
-
-@pytest.fixture
-def symspell_short(request):
-    if request.param is None:
-        return SymSpell(1, 3)
-    return SymSpell(1, 3, count_threshold=request.param)
 
 
 class TestSymSpellPy:
@@ -152,44 +83,6 @@ class TestSymSpellPy:
         symspell_short.create_dictionary_entry("pipe", 4)
         assert 0 == len(symspell_short.below_threshold_words)
 
-    @pytest.mark.parametrize(
-        "symspell_default_entry",
-        [[("steama", 4), ("steamb", 6), ("steamc", 2)]],
-        indirect=True,
-    )
-    def test_deletes(self, symspell_default_entry):
-        result = symspell_default_entry.lookup("stream", Verbosity.TOP, 2)
-        assert 1 == len(result)
-        assert "steamb" == result[0].term
-        assert 6 == result[0].count
-        assert symspell_default_entry.deletes
-
-    @pytest.mark.parametrize("symspell_short", [None], indirect=True)
-    def test_words_with_shared_prefix_should_retain_counts(self, symspell_short):
-        symspell_short.create_dictionary_entry("pipe", 5)
-        symspell_short.create_dictionary_entry("pips", 10)
-
-        result = symspell_short.lookup("pipe", Verbosity.ALL, 1)
-        assert 2 == len(result)
-        assert "pipe" == result[0].term
-        assert 5 == result[0].count
-        assert "pips" == result[1].term
-        assert 10 == result[1].count
-
-        result = symspell_short.lookup("pips", Verbosity.ALL, 1)
-        assert 2 == len(result)
-        assert "pips" == result[0].term
-        assert 10 == result[0].count
-        assert "pipe" == result[1].term
-        assert 5 == result[1].count
-
-        result = symspell_short.lookup("pip", Verbosity.ALL, 1)
-        assert 2 == len(result)
-        assert "pips" == result[0].term
-        assert 10 == result[0].count
-        assert "pipe" == result[1].term
-        assert 5 == result[1].count
-
     def test_add_additional_counts_should_not_add_word_again(
         self, symspell_default, get_same_word_and_count
     ):
@@ -206,85 +99,6 @@ class TestSymSpellPy:
             symspell_default.create_dictionary_entry(word, count)
             result = symspell_default.lookup(word, Verbosity.TOP)
             assert expected_count == result[0].count
-
-    def test_add_additional_counts_should_not_overflow(
-        self, symspell_default, get_same_word_and_count
-    ):
-        for i, (word, count) in enumerate(get_same_word_and_count):
-            symspell_default.create_dictionary_entry(
-                word, sys.maxsize - 1 if i == 0 else count
-            )
-            result = symspell_default.lookup(word, Verbosity.TOP)
-            assert (sys.maxsize - 1 if i == 0 else sys.maxsize) == result[0].count
-
-    @pytest.mark.parametrize(
-        "verbosity, num_results",
-        [(Verbosity.TOP, 1), (Verbosity.CLOSEST, 2), (Verbosity.ALL, 3)],
-    )
-    def test_verbosity_should_control_lookup_results(
-        self, symspell_default, verbosity, num_results
-    ):
-        symspell_default.create_dictionary_entry("steam", 1)
-        symspell_default.create_dictionary_entry("steams", 2)
-        symspell_default.create_dictionary_entry("steem", 3)
-
-        result = symspell_default.lookup("steems", verbosity, 2)
-        assert num_results == len(result)
-
-    @pytest.mark.parametrize(
-        "symspell_default_entry",
-        [[("steama", 4), ("steamb", 6), ("steamc", 2)]],
-        indirect=True,
-    )
-    def test_lookup_should_return_most_frequent(self, symspell_default_entry):
-        result = symspell_default_entry.lookup("stream", Verbosity.TOP, 2)
-        assert 1 == len(result)
-        assert "steamb" == result[0].term
-        assert 6 == result[0].count
-
-    @pytest.mark.parametrize(
-        "symspell_default_entry",
-        [[("steama", 4), ("steamb", 6), ("steamc", 2)]],
-        indirect=True,
-    )
-    def test_lookup_should_find_exact_match(self, symspell_default_entry):
-        result = symspell_default_entry.lookup("streama", Verbosity.TOP, 2)
-        assert 1 == len(result)
-        assert "steama" == result[0].term
-
-    @pytest.mark.parametrize("term", ["paw", "awn"])
-    def test_lookup_should_not_return_non_word_delete(self, symspell_high_thres, term):
-        symspell_high_thres.create_dictionary_entry("pawn", 10)
-        result = symspell_high_thres.lookup(term, Verbosity.TOP, 0)
-        assert not result
-
-    def test_lookup_should_not_return_low_count_word(self, symspell_high_thres):
-        symspell_high_thres.create_dictionary_entry("pawn", 1)
-        result = symspell_high_thres.lookup("pawn", Verbosity.TOP, 0)
-        assert not result
-
-    def test_lookup_should_not_return_low_count_word_that_are_also_delete_word(
-        self, symspell_high_thres_flame
-    ):
-        result = symspell_high_thres_flame.lookup("flam", Verbosity.TOP, 0)
-        assert not result
-
-    def test_lookup_max_edit_distance_too_large(self, symspell_high_thres_flame):
-        with pytest.raises(ValueError) as excinfo:
-            _ = symspell_high_thres_flame.lookup("flam", Verbosity.TOP, 3)
-        assert "Distance too large" == str(excinfo.value)
-
-    def test_lookup_include_unknown(self, symspell_high_thres_flame):
-        result = symspell_high_thres_flame.lookup("flam", Verbosity.TOP, 0, True)
-        assert 1 == len(result)
-        assert "flam" == result[0].term
-
-    def test_lookup_avoid_exact_match_early_exit(self, symspell_high_thres_flame):
-        result = symspell_high_thres_flame.lookup(
-            "24th", Verbosity.ALL, 2, ignore_token=r"\d{2}\w*\b"
-        )
-        assert 1 == len(result)
-        assert "24th" == result[0].term
 
     def test_load_bigram_dictionary_invalid_path(self, symspell_default):
         assert not symspell_default.load_bigram_dictionary(INVALID_PATH, 0, 2)
@@ -377,196 +191,12 @@ class TestSymSpellPy:
         assert 10721728 == symspell_default.words["aaron and"]
         assert 12997637966 == symspell_default.words["and"]
 
-    def test_lookup_should_replicate_noisy_results(self, symspell_default):
-        symspell_default.load_dictionary(DICTIONARY_PATH, 0, 1)
-
-        with open(QUERY_PATH, "r") as infile:
-            test_phrases = [
-                parts[0]
-                for parts in map(lambda x: x.strip().split(), infile.readlines())
-                if len(parts) >= 2
-            ]
-
-        result_sum = 0
-        for phrase in test_phrases:
-            result_sum += len(symspell_default.lookup(phrase, Verbosity.CLOSEST, 2))
-        assert 4945 == result_sum
-
-    @pytest.mark.parametrize(
-        "symspell_default_load, get_lookup_compound_data",
-        [
-            ("bigram", "lookup_compound_data.json"),
-            ("unigram", "lookup_compound_data.json"),
-        ],
-        indirect=True,
-    )
-    def test_lookup_compound(self, symspell_default_load, get_lookup_compound_data):
-        sym_spell, dictionary = symspell_default_load
-        for entry in get_lookup_compound_data:
-            results = sym_spell.lookup_compound(entry["typo"], 2)
-            assert entry[dictionary]["num_results"] == len(results)
-            assert entry[dictionary]["term"] == results[0].term
-            assert entry[dictionary]["distance"] == results[0].distance
-            assert entry[dictionary]["count"] == results[0].count
-
-    @pytest.mark.parametrize(
-        "symspell_default_entry", [[("steam", 1), ("machine", 1)]], indirect=True
-    )
-    def test_lookup_compound_only_combi(self, symspell_default_entry):
-        typo = "ste am machie"
-        correction = "steam machine"
-        results = symspell_default_entry.lookup_compound(typo, 2)
-        assert 1 == len(results)
-        assert correction == results[0].term
-
-    @pytest.mark.parametrize(
-        "symspell_default_entry", [[("steam", 1), ("machine", 1)]], indirect=True
-    )
-    def test_lookup_compound_no_suggestion(self, symspell_default_entry):
-        typo = "qwer erty ytui a"
-        results = symspell_default_entry.lookup_compound(typo, 2)
-        assert 1 == len(results)
-        assert typo == results[0].term
-
-    @pytest.mark.parametrize(
-        "symspell_default_load, get_lookup_compound_data",
-        [
-            ("bigram", "lookup_compound_replaced_words_data.json"),
-            ("unigram", "lookup_compound_replaced_words_data.json"),
-        ],
-        indirect=True,
-    )
-    def test_lookup_compound_replaced_words(
-        self, symspell_default_load, get_lookup_compound_data
-    ):
-        sym_spell, dictionary = symspell_default_load
-        num_replaced_words = 0
-        for entry in get_lookup_compound_data:
-            num_replaced_words += len(entry[dictionary]["replacement"])
-            results = sym_spell.lookup_compound(entry["typo"], 2)
-            assert num_replaced_words == len(sym_spell.replaced_words)
-            assert entry[dictionary]["term"] == results[0].term
-            for k, v in entry[dictionary]["replacement"].items():
-                assert v == sym_spell.replaced_words[k].term
-
-    @pytest.mark.parametrize(
-        "symspell_default_load, get_lookup_compound_data",
-        [
-            ("bigram", "lookup_compound_replaced_words_data.json"),
-            ("unigram", "lookup_compound_replaced_words_data.json"),
-        ],
-        indirect=True,
-    )
-    def test_lookup_compound_ignore_non_words(
-        self, symspell_default_load, get_lookup_compound_data
-    ):
-        sym_spell, dictionary = symspell_default_load
-        for entry in get_lookup_compound_data:
-            results = sym_spell.lookup_compound(entry["typo"], 2, True)
-            assert 1 == len(results)
-            assert entry[dictionary]["term"] == results[0].term
-
-    @pytest.mark.parametrize(
-        "symspell_default_load", ["bigram", "unigram"], indirect=True
-    )
-    def test_lookup_compound_ignore_non_words_ignore_digits(
-        self, symspell_default_load
-    ):
-        sym_spell, _ = symspell_default_load
-
-        typo = "is the officeon 1st floor oepn 24/7"
-        correction = "is the office on 1st floor open 24/7"
-        results = sym_spell.lookup_compound(
-            typo,
-            2,
-            True,
-            split_by_space=True,
-            ignore_term_with_digits=True,
-        )
-        assert 1 == len(results)
-        assert correction == results[0].term
-        assert 2 == results[0].distance
-        assert 0 == results[0].count
-
     def test_load_dictionary_encoding(self, symspell_default):
         symspell_default.load_dictionary(NON_EN_DICT_PATH, 0, 1, encoding="utf-8")
 
         result = symspell_default.lookup("АБ", Verbosity.TOP, 2)
         assert 1 == len(result)
         assert "АБИ" == result[0].term
-
-    @pytest.mark.parametrize("symspell_default_load", ["unigram"], indirect=True)
-    def test_word_segmentation_ignore_token(self, symspell_default_load):
-        sym_spell, _ = symspell_default_load
-        typo = "24th december"
-        result = sym_spell.word_segmentation(typo, ignore_token=r"\d{2}\w*\b")
-        assert typo == result.corrected_string
-
-    @pytest.mark.parametrize(
-        "symspell_edit_distance_load, get_lookup_compound_data, with_arguments, capitalize",
-        [
-            (0, "word_segmentation_data.json", False, False),
-            (0, "word_segmentation_data.json", True, False),
-            (0, "word_segmentation_data.json", False, True),
-        ],
-        indirect=["symspell_edit_distance_load", "get_lookup_compound_data"],
-    )
-    def test_word_segmentation(
-        self,
-        symspell_edit_distance_load,
-        get_lookup_compound_data,
-        with_arguments,
-        capitalize,
-    ):
-        sym_spell, edit_distance = symspell_edit_distance_load
-        for entry in get_lookup_compound_data:
-            if capitalize:
-                typo = entry["typo"].capitalize()
-                correction = entry[str(edit_distance)]["term"].capitalize()
-            else:
-                typo = entry["typo"]
-                correction = entry[str(edit_distance)]["term"]
-            if with_arguments:
-                result = sym_spell.word_segmentation(typo, edit_distance, 11)
-            else:
-                result = sym_spell.word_segmentation(typo)
-            assert correction == result.corrected_string
-
-    @pytest.mark.parametrize("symspell_edit_distance_load", [0], indirect=True)
-    def test_word_segmentation_apostrophe(self, symspell_edit_distance_load):
-        sym_spell, _ = symspell_edit_distance_load
-
-        typo = "There'resomewords"
-        correction = "There' re some words"
-        result = sym_spell.word_segmentation(typo)
-        assert correction == result[1]
-
-    @pytest.mark.parametrize("symspell_edit_distance_load", [0], indirect=True)
-    def test_word_segmentation_ligature(self, symspell_edit_distance_load):
-        sym_spell, _ = symspell_edit_distance_load
-
-        typo = "Therearesomescientiﬁcwords"
-        correction = "There are some scientific words"
-        result = sym_spell.word_segmentation(typo)
-        assert correction == result[1]
-
-    def test_suggest_item(self):
-        si_1 = SuggestItem("asdf", 12, 34)
-        si_2 = SuggestItem("sdfg", 12, 34)
-        si_3 = SuggestItem("dfgh", 56, 78)
-
-        assert si_1 == si_2
-        assert si_2 != si_3
-
-        assert "asdf" == si_1.term
-        si_1.term = "qwer"
-        assert "qwer" == si_1.term
-
-        assert 34 == si_1.count
-        si_1.count = 78
-        assert 78 == si_1.count
-
-        assert "qwer, 12, 78" == str(si_1)
 
     def test_create_dictionary_invalid_path(self, symspell_default):
         assert not symspell_default.create_dictionary(INVALID_PATH)
@@ -653,51 +283,3 @@ class TestSymSpellPy:
         assert 1 == len(result)
         assert "steama" == result[0].term
         assert len("steama") == symspell_default_entry._max_length
-
-    @pytest.mark.parametrize(
-        "symspell_default_entry, typo, correction",
-        [
-            ([("steam", 4)], "Stream", "Steam"),
-            ([("steam", 4)], "StreaM", "SteaM"),
-            ([("steam", 4)], "STREAM", "STEAM"),
-            ([("i", 4)], "I", "I"),
-        ],
-        indirect=["symspell_default_entry"],
-    )
-    def test_lookup_transfer_casing(self, symspell_default_entry, typo, correction):
-        result = symspell_default_entry.lookup(
-            typo, Verbosity.TOP, 2, transfer_casing=True
-        )
-        assert correction == result[0].term
-
-    @pytest.mark.parametrize(
-        "symspell_default_load, get_lookup_compound_data",
-        [
-            ("bigram", "lookup_compound_transfer_casing_data.json"),
-            ("unigram", "lookup_compound_transfer_casing_data.json"),
-        ],
-        indirect=True,
-    )
-    def test_lookup_compound_transfer_casing(
-        self, symspell_default_load, get_lookup_compound_data
-    ):
-        sym_spell, dictionary = symspell_default_load
-        for entry in get_lookup_compound_data:
-            results = sym_spell.lookup_compound(entry["typo"], 2, transfer_casing=True)
-            assert entry[dictionary]["term"] == results[0].term
-
-    @pytest.mark.parametrize(
-        "symspell_default_load, get_lookup_compound_data",
-        [
-            ("bigram", "lookup_compound_transfer_casing_ignore_nonwords_data.json"),
-            ("unigram", "lookup_compound_transfer_casing_ignore_nonwords_data.json"),
-        ],
-        indirect=True,
-    )
-    def test_lookup_compound_transfer_casing_ignore_nonwords(
-        self, symspell_default_load, get_lookup_compound_data
-    ):
-        sym_spell, dictionary = symspell_default_load
-        for entry in get_lookup_compound_data:
-            results = sym_spell.lookup_compound(entry["typo"], 2, True, True)
-            assert entry[dictionary]["term"] == results[0].term

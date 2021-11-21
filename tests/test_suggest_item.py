@@ -20,3 +20,21 @@ class TestSuggestItem:
         assert "'<' not supported between instances of 'SuggestItem' and 'int'" == str(
             excinfo.value
         )
+
+    def test_suggest_item(self):
+        si_1 = SuggestItem("asdf", 12, 34)
+        si_2 = SuggestItem("sdfg", 12, 34)
+        si_3 = SuggestItem("dfgh", 56, 78)
+
+        assert si_1 == si_2
+        assert si_2 != si_3
+
+        assert "asdf" == si_1.term
+        si_1.term = "qwer"
+        assert "qwer" == si_1.term
+
+        assert 34 == si_1.count
+        si_1.count = 78
+        assert 78 == si_1.count
+
+        assert "qwer, 12, 78" == str(si_1)
