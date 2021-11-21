@@ -294,48 +294,9 @@ class SymSpell:
         if not corpus.exists():
             return False
         with open(corpus, "r", encoding=encoding) as infile:
-            return self.load_bigram_dictionary_stream(
+            return self._load_bigram_dictionary_stream(
                 infile, term_index, count_index, separator
             )
-
-    def load_bigram_dictionary_stream(
-        self,
-        corpus_stream: IO[str],
-        term_index: int,
-        count_index: int,
-        separator: Optional[str] = None,
-    ):
-        """Loads multiple dictionary entries from a stream of word/frequency
-        count pairs.
-
-        **NOTE**: Merges with any dictionary data already loaded.
-
-        Args:
-            corpus_stream: A file object of the dictionary.
-            term_index: The column position of the word.
-            count_index: The column position of the frequency count.
-            separator: Separator characters between term(s) and count.
-
-        Returns:
-            ``True`` after file object is loaded.
-        """
-        min_parts = 3 if separator is None else 2
-        for line in corpus_stream:
-            parts = line.rstrip().split(separator)
-            if len(parts) < min_parts:
-                continue
-            count = helpers.try_parse_int64(parts[count_index])
-            if count is None:
-                continue
-            key = (
-                f"{parts[term_index]} {parts[term_index + 1]}"
-                if separator is None
-                else parts[term_index]
-            )
-            self._bigrams[key] = count
-            if count < self.bigram_count_min:
-                self.bigram_count_min = count
-        return True
 
     def load_dictionary(
         self,
@@ -364,41 +325,9 @@ class SymSpell:
         if not corpus.exists():
             return False
         with open(corpus, "r", encoding=encoding) as infile:
-            return self.load_dictionary_stream(
+            return self._load_dictionary_stream(
                 infile, term_index, count_index, separator
             )
-
-    def load_dictionary_stream(
-        self,
-        corpus_stream: IO[str],
-        term_index: int,
-        count_index: int,
-        separator: str = " ",
-    ) -> bool:
-        """Loads multiple dictionary entries from a stream of word/frequency
-        count pairs.
-
-        **NOTE**: Merges with any dictionary data already loaded.
-
-        Args:
-            corpus_stream: A file object of the dictionary.
-            term_index: The column position of the word.
-            count_index: The column position of the frequency count.
-            separator: Separator characters between term(s) and count.
-
-        Returns:
-            ``True`` after file object is loaded.
-        """
-        for line in corpus_stream:
-            parts = line.rstrip().split(separator)
-            if len(parts) < 2:
-                continue
-            count = helpers.try_parse_int64(parts[count_index])
-            if count is None:
-                continue
-            key = parts[term_index]
-            self.create_dictionary_entry(key, count)
-        return True
 
     def load_pickle(self, filename: Path, compressed: bool = True) -> bool:
         """Loads delete combination from file as pickle. This will reduce the
@@ -414,43 +343,10 @@ class SymSpell:
         """
         if compressed:
             with gzip.open(filename, "rb") as gzip_infile:
-                return self.load_pickle_stream(cast(IO[bytes], gzip_infile))
+                return self._load_pickle_stream(cast(IO[bytes], gzip_infile))
         else:
             with open(filename, "rb") as infile:
-                return self.load_pickle_stream(infile)
-
-    def load_pickle_stream(self, stream: IO[bytes]) -> bool:
-        """Loads delete combination from stream as pickle. This will reduce the
-        loading time compared to running :meth:`load_dictionary` again.
-
-        Args:
-            stream: The stream from which the pickle data is loaded.
-
-        Returns:
-            ``True`` if delete combinations are successfully loaded.
-        """
-        pickle_data = pickle.load(stream)  # nosec
-        if pickle_data.get("data_version", None) != self.data_version:
-            return False
-        self._deletes = pickle_data["deletes"]
-        self._words = pickle_data["words"]
-        self._max_length = pickle_data["max_length"]
-        return True
-
-    def save_pickle_stream(self, stream: IO[bytes]) -> None:
-        """Pickle :attr:`_deletes`, :attr:`_words`, and :attr:`_max_length` into
-        a stream for quicker loading later.
-
-        Args:
-            stream: The stream to store the pickle data.
-        """
-        pickle_data = {
-            "deletes": self._deletes,
-            "words": self._words,
-            "max_length": self._max_length,
-            "data_version": self.data_version,
-        }
-        pickle.dump(pickle_data, stream)
+                return self._load_pickle_stream(infile)
 
     def save_pickle(self, filename: Path, compressed: bool = True) -> None:
         """Pickles :attr:`_deletes`, :attr:`_words`, and :attr:`_max_length` into
@@ -462,10 +358,10 @@ class SymSpell:
         """
         if compressed:
             with gzip.open(filename, "wb") as gzip_outfile:
-                self.save_pickle_stream(cast(IO[bytes], gzip_outfile))
+                self._save_pickle_stream(cast(IO[bytes], gzip_outfile))
         else:
             with open(filename, "wb") as outfile:
-                self.save_pickle_stream(outfile)
+                self._save_pickle_stream(outfile)
 
     def lookup(
         self,
@@ -550,6 +446,7 @@ class SymSpell:
         considered_suggestions.add(phrase)
 
         max_edit_distance_2 = max_edit_distance
+        candidate_pointer = 0
         candidates = []
 
         # add original prefix
@@ -560,7 +457,9 @@ class SymSpell:
         else:
             candidates.append(phrase)
         distance_comparer = EditDistance(self._distance_algorithm)
-        for candidate in candidates:
+        while candidate_pointer < len(candidates):
+            candidate = candidates[candidate_pointer]
+            candidate_pointer += 1
             candidate_len = len(candidate)
             len_diff = phrase_prefix_len - candidate_len
 
@@ -1117,6 +1016,8 @@ class SymSpell:
     ) -> bool:  # pragma: no cover
         """Checks whether all delete chars are present in the suggestion prefix
         in correct order, otherwise this is just a hash collision.
+
+        **NOTE**: No longer used in the Python port.
         """
         if delete_len == 0:
             return True
@@ -1163,6 +1064,110 @@ class SymSpell:
             key = key[: self._prefix_length]
         hash_set.add(key)
         return self._edits(key, 0, hash_set)
+
+    def _load_bigram_dictionary_stream(
+        self,
+        corpus_stream: IO[str],
+        term_index: int,
+        count_index: int,
+        separator: Optional[str] = None,
+    ):
+        """Loads multiple dictionary entries from a stream of word/frequency
+        count pairs.
+
+        **NOTE**: Merges with any dictionary data already loaded.
+
+        Args:
+            corpus_stream: A file object of the dictionary.
+            term_index: The column position of the word.
+            count_index: The column position of the frequency count.
+            separator: Separator characters between term(s) and count.
+
+        Returns:
+            ``True`` after file object is loaded.
+        """
+        min_parts = 3 if separator is None else 2
+        for line in corpus_stream:
+            parts = line.rstrip().split(separator)
+            if len(parts) < min_parts:
+                continue
+            count = helpers.try_parse_int64(parts[count_index])
+            if count is None:
+                continue
+            key = (
+                f"{parts[term_index]} {parts[term_index + 1]}"
+                if separator is None
+                else parts[term_index]
+            )
+            self._bigrams[key] = count
+            if count < self.bigram_count_min:
+                self.bigram_count_min = count
+        return True
+
+    def _load_dictionary_stream(
+        self,
+        corpus_stream: IO[str],
+        term_index: int,
+        count_index: int,
+        separator: str = " ",
+    ) -> bool:
+        """Loads multiple dictionary entries from a stream of word/frequency
+        count pairs.
+
+        **NOTE**: Merges with any dictionary data already loaded.
+
+        Args:
+            corpus_stream: A file object of the dictionary.
+            term_index: The column position of the word.
+            count_index: The column position of the frequency count.
+            separator: Separator characters between term(s) and count.
+
+        Returns:
+            ``True`` after file object is loaded.
+        """
+        for line in corpus_stream:
+            parts = line.rstrip().split(separator)
+            if len(parts) < 2:
+                continue
+            count = helpers.try_parse_int64(parts[count_index])
+            if count is None:
+                continue
+            key = parts[term_index]
+            self.create_dictionary_entry(key, count)
+        return True
+
+    def _load_pickle_stream(self, stream: IO[bytes]) -> bool:
+        """Loads delete combination from stream as pickle. This will reduce the
+        loading time compared to running :meth:`load_dictionary` again.
+
+        Args:
+            stream: The stream from which the pickle data is loaded.
+
+        Returns:
+            ``True`` if delete combinations are successfully loaded.
+        """
+        pickle_data = pickle.load(stream)  # nosec
+        if pickle_data.get("data_version", None) != self.data_version:
+            return False
+        self._deletes = pickle_data["deletes"]
+        self._words = pickle_data["words"]
+        self._max_length = pickle_data["max_length"]
+        return True
+
+    def _save_pickle_stream(self, stream: IO[bytes]) -> None:
+        """Pickle :attr:`_deletes`, :attr:`_words`, and :attr:`_max_length` into
+        a stream for quicker loading later.
+
+        Args:
+            stream: The stream to store the pickle data.
+        """
+        pickle_data = {
+            "deletes": self._deletes,
+            "words": self._words,
+            "max_length": self._max_length,
+            "data_version": self.data_version,
+        }
+        pickle.dump(pickle_data, stream)
 
     @staticmethod
     def _parse_words(text: str) -> List[str]:

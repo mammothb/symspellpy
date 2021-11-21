@@ -24,3 +24,4 @@ SymSpell
 
 .. autoclass:: symspellpy.symspellpy.SymSpell
    :members:
+   :private-members:

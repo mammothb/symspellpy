@@ -129,7 +129,7 @@ class TestSymSpellPy:
         self, symspell_default, get_dictionary_stream
     ):
         dict_stream, _ = get_dictionary_stream
-        assert symspell_default.load_bigram_dictionary_stream(dict_stream, 0, 2)
+        assert symspell_default._load_bigram_dictionary_stream(dict_stream, 0, 2)
         assert 2 == len(symspell_default.bigrams)
         assert 10956800 == symspell_default.bigrams["abcs of"]
         assert 10721728 == symspell_default.bigrams["aaron and"]
@@ -139,7 +139,7 @@ class TestSymSpellPy:
         self, symspell_default, get_dictionary_stream
     ):
         dict_stream, separator = get_dictionary_stream
-        assert symspell_default.load_bigram_dictionary_stream(
+        assert symspell_default._load_bigram_dictionary_stream(
             dict_stream, 0, 1, separator
         )
         assert 5 == len(symspell_default.bigrams)
@@ -178,7 +178,7 @@ class TestSymSpellPy:
         # keys with space in them don't get parsed properly when using
         # the default separator=" "
         dict_stream, _ = get_dictionary_stream
-        assert symspell_default.load_dictionary_stream(dict_stream, 0, 1)
+        assert symspell_default._load_dictionary_stream(dict_stream, 0, 1)
         assert 3 == symspell_default.word_count
         assert 23135851162 == symspell_default.words["the"]
         assert 13151942776 == symspell_default.words["of"]
@@ -189,7 +189,7 @@ class TestSymSpellPy:
         self, symspell_default, get_dictionary_stream
     ):
         dict_stream, separator = get_dictionary_stream
-        assert symspell_default.load_dictionary_stream(dict_stream, 0, 1, separator)
+        assert symspell_default._load_dictionary_stream(dict_stream, 0, 1, separator)
         assert 5 == symspell_default.word_count
         assert 23135851162 == symspell_default.words["the"]
         assert 13151942776 == symspell_default.words["of"]
