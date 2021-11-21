@@ -19,6 +19,7 @@
 """
 
 import gzip
+import logging
 import math
 import pickle
 import re
@@ -27,6 +28,7 @@ import sys
 import unicodedata
 from collections import defaultdict
 from itertools import cycle
+from operator import itemgetter
 from pathlib import Path
 from typing import IO, Dict, List, Optional, Pattern, Set, Union, cast
 
@@ -35,6 +37,8 @@ from symspellpy.composition import Composition
 from symspellpy.editdistance import DistanceAlgorithm, EditDistance
 from symspellpy.suggest_item import SuggestItem
 from symspellpy.verbosity import Verbosity
+
+logger = logging.getLogger(__name__)
 
 
 class SymSpell:
@@ -1136,6 +1140,10 @@ class SymSpell:
         """Loads delete combination from stream as pickle. This will reduce the
         loading time compared to running :meth:`load_dictionary` again.
 
+        **NOTE**: Prints warning if the current settings `count_threshold`,
+        `max_dictionary_edit_distance`, and `prefix_length` are different from
+        the loaded settings. Overwrite current settings with loaded settings.
+
         Args:
             stream: The stream from which the pickle data is loaded.
 
@@ -1145,6 +1153,16 @@ class SymSpell:
         pickle_data = pickle.load(stream)  # nosec
         if pickle_data.get("data_version", None) != self.data_version:
             return False
+        settings = ("count_threshold", "max_dictionary_edit_distance", "prefix_length")
+        if itemgetter(*settings)(pickle_data) != (
+            self._count_threshold,
+            self._max_dictionary_edit_distance,
+            self._prefix_length,
+        ):
+            logger.warning(
+                f"Loading data which was created using different {settings} settings. "
+                "Overwriting current SymSpell instance with loaded settings ..."
+            )
         self._deletes = pickle_data["deletes"]
         self._words = pickle_data["words"]
         self._max_length = pickle_data["max_length"]

@@ -1,10 +1,10 @@
 import os
 import pickle
 from pathlib import Path
+from unittest import TestCase
 
 import pytest
 
-import symspellpy
 from symspellpy import SymSpell, Verbosity
 from symspellpy.helpers import DictIO
 
@@ -28,6 +28,7 @@ def get_dictionary_stream(request):
         "abcs of": 10956800,
         "aaron and": 10721728,
         "and": 12997637966,
+        "large count": 92233720368547758081,
     }
     if request.param is None:
         dict_stream = DictIO(dictionary)
@@ -134,6 +135,7 @@ class TestSymSpellPy:
         assert 2 == len(symspell_default.bigrams)
         assert 10956800 == symspell_default.bigrams["abcs of"]
         assert 10721728 == symspell_default.bigrams["aaron and"]
+        assert "large count" not in symspell_default.bigrams
 
     @pytest.mark.parametrize("get_dictionary_stream", [SEPARATOR], indirect=True)
     def test_load_bigram_dictionary_stream_separator(
@@ -237,7 +239,38 @@ class TestSymSpellPy:
         )
         assert sym_spell._prefix_length != sym_spell_2._prefix_length
 
+        with TestCase.assertLogs("symspellpy.symspellpy.logger", level="WARNING") as cm:
+            sym_spell_2.load_pickle(PICKLE_PATH, is_compressed)
+        assert (
+            "Loading data which was created using different ('count_threshold', "
+            "'max_dictionary_edit_distance', 'prefix_length') settings. Overwriting "
+            "current SymSpell instance with loaded settings ..."
+        ) == cm.records[0].getMessage()
+        assert sym_spell.below_threshold_words == sym_spell_2.below_threshold_words
+        assert sym_spell.bigrams == sym_spell_2.bigrams
+        assert sym_spell.deletes == sym_spell_2.deletes
+        assert sym_spell.words == sym_spell_2.words
+        assert sym_spell._max_length == sym_spell_2._max_length
+        assert sym_spell._count_threshold == sym_spell_2._count_threshold
+        assert (
+            sym_spell._max_dictionary_edit_distance
+            == sym_spell_2._max_dictionary_edit_distance
+        )
+        assert sym_spell._prefix_length == sym_spell_2._prefix_length
+        os.remove(PICKLE_PATH)
+
+    @pytest.mark.parametrize(
+        "symspell_default_load, is_compressed",
+        [("unigram", True), ("bigram", True), ("unigram", False), ("bigram", False)],
+        indirect=["symspell_default_load"],
+    )
+    def test_pickle_same_settings(self, symspell_default_load, is_compressed):
+        sym_spell, _ = symspell_default_load
+        sym_spell.save_pickle(PICKLE_PATH, is_compressed)
+
+        sym_spell_2 = SymSpell()
         sym_spell_2.load_pickle(PICKLE_PATH, is_compressed)
+
         assert sym_spell.below_threshold_words == sym_spell_2.below_threshold_words
         assert sym_spell.bigrams == sym_spell_2.bigrams
         assert sym_spell.deletes == sym_spell_2.deletes

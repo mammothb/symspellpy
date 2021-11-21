@@ -8,6 +8,7 @@ profile = "black"
 [tool.pylint]
     [tool.pylint.'MESSAGES CONTROL']
         disable = [
+            "logging-fstring-interpolation",
             "too-many-arguments",
             "too-many-branches",
             "too-many-instance-attributes",
