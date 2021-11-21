@@ -21,6 +21,14 @@
 
 __version__ = "6.7.0.dev1"
 
+import logging
+import os
+
 from . import editdistance, helpers
 from .symspellpy import SymSpell
 from .verbosity import Verbosity
+
+logging.basicConfig(
+    level=os.environ.get("LOGLEVEL", "WARNING"),
+    format="%(asctime)s %(levelname)s:%(message)s",
+)

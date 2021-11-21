@@ -18,9 +18,7 @@
    :synopsis: Module for Symmetric Delete spelling correction algorithm.
 """
 
-import gzip
 import math
-import pickle
 import re
 import string
 import sys
@@ -28,16 +26,17 @@ import unicodedata
 from collections import defaultdict
 from itertools import cycle
 from pathlib import Path
-from typing import IO, Dict, List, Optional, Pattern, Set, Union, cast
+from typing import IO, Dict, List, Optional, Pattern, Set, Union
 
 from symspellpy import helpers
 from symspellpy.composition import Composition
 from symspellpy.editdistance import DistanceAlgorithm, EditDistance
+from symspellpy.pickle_mixin import PickleMixin
 from symspellpy.suggest_item import SuggestItem
 from symspellpy.verbosity import Verbosity
 
 
-class SymSpell:
+class SymSpell(PickleMixin):
     """Symmetric Delete spelling correction algorithm.
 
     `initial_capacity` from the original code is omitted since python cannot
@@ -67,7 +66,7 @@ class SymSpell:
         ValueError: If `count_threshold` is negative.
     """
 
-    data_version = 2
+    data_version = 3
     # Number of all words in the corpus used to generate the frequency
     # dictionary. This is used to calculate the word occurrence probability p
     # from word counts c : p=c/N. N equals the sum of all counts c in the
@@ -328,40 +327,6 @@ class SymSpell:
             return self._load_dictionary_stream(
                 infile, term_index, count_index, separator
             )
-
-    def load_pickle(self, filename: Path, compressed: bool = True) -> bool:
-        """Loads delete combination from file as pickle. This will reduce the
-        loading time compared to running :meth:`load_dictionary` again.
-
-        Args:
-            filename: The path+filename of the pickle file.
-            compressed: A flag to determine whether to read the pickled data as
-                compressed data.
-
-        Returns:
-            ``True`` if delete combinations are successfully loaded.
-        """
-        if compressed:
-            with gzip.open(filename, "rb") as gzip_infile:
-                return self._load_pickle_stream(cast(IO[bytes], gzip_infile))
-        else:
-            with open(filename, "rb") as infile:
-                return self._load_pickle_stream(infile)
-
-    def save_pickle(self, filename: Path, compressed: bool = True) -> None:
-        """Pickles :attr:`_deletes`, :attr:`_words`, and :attr:`_max_length` into
-        a stream for quicker loading later.
-
-        Args:
-            filename: The path+filename of the pickle file.
-            compressed: A flag to determine whether to compress the pickled data.
-        """
-        if compressed:
-            with gzip.open(filename, "wb") as gzip_outfile:
-                self._save_pickle_stream(cast(IO[bytes], gzip_outfile))
-        else:
-            with open(filename, "wb") as outfile:
-                self._save_pickle_stream(outfile)
 
     def lookup(
         self,
@@ -1131,39 +1096,6 @@ class SymSpell:
             key = parts[term_index]
             self.create_dictionary_entry(key, count)
         return True
-
-    def _load_pickle_stream(self, stream: IO[bytes]) -> bool:
-        """Loads delete combination from stream as pickle. This will reduce the
-        loading time compared to running :meth:`load_dictionary` again.
-
-        Args:
-            stream: The stream from which the pickle data is loaded.
-
-        Returns:
-            ``True`` if delete combinations are successfully loaded.
-        """
-        pickle_data = pickle.load(stream)  # nosec
-        if pickle_data.get("data_version", None) != self.data_version:
-            return False
-        self._deletes = pickle_data["deletes"]
-        self._words = pickle_data["words"]
-        self._max_length = pickle_data["max_length"]
-        return True
-
-    def _save_pickle_stream(self, stream: IO[bytes]) -> None:
-        """Pickle :attr:`_deletes`, :attr:`_words`, and :attr:`_max_length` into
-        a stream for quicker loading later.
-
-        Args:
-            stream: The stream to store the pickle data.
-        """
-        pickle_data = {
-            "deletes": self._deletes,
-            "words": self._words,
-            "max_length": self._max_length,
-            "data_version": self.data_version,
-        }
-        pickle.dump(pickle_data, stream)
 
     @staticmethod
     def _parse_words(text: str) -> List[str]:

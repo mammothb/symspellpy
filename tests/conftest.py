@@ -26,6 +26,11 @@ def dictionary_path():
 
 
 @pytest.fixture
+def pickle_path():
+    return FORTESTS_DIR / "dictionary.pickle"
+
+
+@pytest.fixture
 def query_path():
     return FORTESTS_DIR / "noisy_query_en_1000.txt"
 
