@@ -43,12 +43,15 @@ class PickleMixin:
     """Implements saving and loading pickle functionality for SymSpell."""
 
     data_version: int
-    _count_threshold: int
+    _below_threshold_words: Dict[str, int]
+    _bigrams: Dict[str, int]
     _deletes: Dict[str, List[str]]
+    _words: Dict[str, int]
+
+    _count_threshold: int
     _max_dictionary_edit_distance: int
     _max_length: int
     _prefix_length: int
-    _words: Dict[str, int]
 
     def load_pickle(
         self,
@@ -62,7 +65,7 @@ class PickleMixin:
         Args:
             data: Either bytes string to be used with ``from_bytes=True`` or the
                 path+filename of the pickle file to be used with
-                `from_bytes=False``.
+                ``from_bytes=False``.
             compressed: A flag to determine whether to read the pickled data as
                 compressed data.
             from_bytes: Flag to determine if we are loading from bytes or file.
@@ -96,7 +99,7 @@ class PickleMixin:
                 instead of wrting to file.
 
         Returns:
-            A byte string of the pickled data if ``to_bytes`` is ``True``.
+            A byte string of the pickled data if ``to_bytes=True``.
         """
         if to_bytes:
             return self._save_pickle_stream(to_bytes=to_bytes)
@@ -175,7 +178,7 @@ class PickleMixin:
                 instead of wrting to file.
 
         Returns:
-            A byte string of the pickled data if ``to_bytes`` is ``True``.
+            A byte string of the pickled data if ``to_bytes=True``.
         """
         pickle_data = {
             # Dictionary entries related variables
