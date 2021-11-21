@@ -1,7 +1,4 @@
-import os
-import pickle
 from pathlib import Path
-from unittest import TestCase
 
 import pytest
 
@@ -13,7 +10,6 @@ BAD_DICT_PATH = FORTESTS_DIR / "bad_dict.txt"
 BIG_MODIFIED_PATH = FORTESTS_DIR / "big_modified.txt"
 BIG_WORDS_PATH = FORTESTS_DIR / "big_words.txt"
 NON_EN_DICT_PATH = FORTESTS_DIR / "non_en_dict.txt"
-PICKLE_PATH = FORTESTS_DIR / "dictionary.pickle"
 SEPARATOR_DICT_PATH = FORTESTS_DIR / "separator_dict.txt"
 
 INVALID_PATH = "invalid/dictionary/path.txt"
@@ -220,82 +216,6 @@ class TestSymSpellPy:
                 assert int(count) == symspell_default.words[key]
                 num_lines += 1
         assert num_lines == symspell_default.word_count
-
-    @pytest.mark.parametrize(
-        "symspell_default_load, is_compressed",
-        [("unigram", True), ("bigram", True), ("unigram", False), ("bigram", False)],
-        indirect=["symspell_default_load"],
-    )
-    def test_pickle(self, symspell_default_load, is_compressed):
-        sym_spell, _ = symspell_default_load
-        sym_spell.save_pickle(PICKLE_PATH, is_compressed)
-
-        sym_spell_2 = SymSpell(123, 456, 789)
-
-        assert sym_spell._count_threshold != sym_spell_2._count_threshold
-        assert (
-            sym_spell._max_dictionary_edit_distance
-            != sym_spell_2._max_dictionary_edit_distance
-        )
-        assert sym_spell._prefix_length != sym_spell_2._prefix_length
-
-        with TestCase.assertLogs("symspellpy.symspellpy.logger", level="WARNING") as cm:
-            sym_spell_2.load_pickle(PICKLE_PATH, is_compressed)
-        assert (
-            "Loading data which was created using different ('count_threshold', "
-            "'max_dictionary_edit_distance', 'prefix_length') settings. Overwriting "
-            "current SymSpell instance with loaded settings ..."
-        ) == cm.records[0].getMessage()
-        assert sym_spell.below_threshold_words == sym_spell_2.below_threshold_words
-        assert sym_spell.bigrams == sym_spell_2.bigrams
-        assert sym_spell.deletes == sym_spell_2.deletes
-        assert sym_spell.words == sym_spell_2.words
-        assert sym_spell._max_length == sym_spell_2._max_length
-        assert sym_spell._count_threshold == sym_spell_2._count_threshold
-        assert (
-            sym_spell._max_dictionary_edit_distance
-            == sym_spell_2._max_dictionary_edit_distance
-        )
-        assert sym_spell._prefix_length == sym_spell_2._prefix_length
-        os.remove(PICKLE_PATH)
-
-    @pytest.mark.parametrize(
-        "symspell_default_load, is_compressed",
-        [("unigram", True), ("bigram", True), ("unigram", False), ("bigram", False)],
-        indirect=["symspell_default_load"],
-    )
-    def test_pickle_same_settings(self, symspell_default_load, is_compressed):
-        sym_spell, _ = symspell_default_load
-        sym_spell.save_pickle(PICKLE_PATH, is_compressed)
-
-        sym_spell_2 = SymSpell()
-        sym_spell_2.load_pickle(PICKLE_PATH, is_compressed)
-
-        assert sym_spell.below_threshold_words == sym_spell_2.below_threshold_words
-        assert sym_spell.bigrams == sym_spell_2.bigrams
-        assert sym_spell.deletes == sym_spell_2.deletes
-        assert sym_spell.words == sym_spell_2.words
-        assert sym_spell._max_length == sym_spell_2._max_length
-        assert sym_spell._count_threshold == sym_spell_2._count_threshold
-        assert (
-            sym_spell._max_dictionary_edit_distance
-            == sym_spell_2._max_dictionary_edit_distance
-        )
-        assert sym_spell._prefix_length == sym_spell_2._prefix_length
-        os.remove(PICKLE_PATH)
-
-    def test_pickle_invalid(self, symspell_default):
-        pickle_data = {"deletes": {}, "words": {}, "max_length": 0, "data_version": -1}
-        with open(PICKLE_PATH, "wb") as f:
-            pickle.dump(pickle_data, f)
-        assert not symspell_default.load_pickle(PICKLE_PATH, False)
-        os.remove(PICKLE_PATH)
-
-        pickle_data = {"deletes": {}, "words": {}, "max_length": 0}
-        with open(PICKLE_PATH, "wb") as f:
-            pickle.dump(pickle_data, f)
-        assert not symspell_default.load_pickle(PICKLE_PATH, False)
-        os.remove(PICKLE_PATH)
 
     @pytest.mark.parametrize(
         "symspell_default_entry",

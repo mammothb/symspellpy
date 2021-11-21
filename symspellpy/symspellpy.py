@@ -18,30 +18,25 @@
    :synopsis: Module for Symmetric Delete spelling correction algorithm.
 """
 
-import gzip
-import logging
 import math
-import pickle
 import re
 import string
 import sys
 import unicodedata
 from collections import defaultdict
 from itertools import cycle
-from operator import itemgetter
 from pathlib import Path
-from typing import IO, Dict, List, Optional, Pattern, Set, Union, cast
+from typing import IO, Dict, List, Optional, Pattern, Set, Union
 
 from symspellpy import helpers
 from symspellpy.composition import Composition
 from symspellpy.editdistance import DistanceAlgorithm, EditDistance
+from symspellpy.pickle_mixin import PickleMixin
 from symspellpy.suggest_item import SuggestItem
 from symspellpy.verbosity import Verbosity
 
-logger = logging.getLogger(__name__)
 
-
-class SymSpell:
+class SymSpell(PickleMixin):
     """Symmetric Delete spelling correction algorithm.
 
     `initial_capacity` from the original code is omitted since python cannot
@@ -332,40 +327,6 @@ class SymSpell:
             return self._load_dictionary_stream(
                 infile, term_index, count_index, separator
             )
-
-    def load_pickle(self, filename: Path, compressed: bool = True) -> bool:
-        """Loads delete combination from file as pickle. This will reduce the
-        loading time compared to running :meth:`load_dictionary` again.
-
-        Args:
-            filename: The path+filename of the pickle file.
-            compressed: A flag to determine whether to read the pickled data as
-                compressed data.
-
-        Returns:
-            ``True`` if delete combinations are successfully loaded.
-        """
-        if compressed:
-            with gzip.open(filename, "rb") as gzip_infile:
-                return self._load_pickle_stream(cast(IO[bytes], gzip_infile))
-        else:
-            with open(filename, "rb") as infile:
-                return self._load_pickle_stream(infile)
-
-    def save_pickle(self, filename: Path, compressed: bool = True) -> None:
-        """Pickles :attr:`_deletes`, :attr:`_words`, and :attr:`_max_length` into
-        a stream for quicker loading later.
-
-        Args:
-            filename: The path+filename of the pickle file.
-            compressed: A flag to determine whether to compress the pickled data.
-        """
-        if compressed:
-            with gzip.open(filename, "wb") as gzip_outfile:
-                self._save_pickle_stream(cast(IO[bytes], gzip_outfile))
-        else:
-            with open(filename, "wb") as outfile:
-                self._save_pickle_stream(outfile)
 
     def lookup(
         self,
@@ -1135,75 +1096,6 @@ class SymSpell:
             key = parts[term_index]
             self.create_dictionary_entry(key, count)
         return True
-
-    def _load_pickle_stream(self, stream: IO[bytes]) -> bool:
-        """Loads delete combination from stream as pickle. This will reduce the
-        loading time compared to running :meth:`load_dictionary` again.
-
-        **NOTE**: Prints warning if the current settings `count_threshold`,
-        `max_dictionary_edit_distance`, and `prefix_length` are different from
-        the loaded settings. Overwrite current settings with loaded settings.
-
-        Args:
-            stream: The stream from which the pickle data is loaded.
-
-        Returns:
-            ``True`` if delete combinations are successfully loaded.
-        """
-        pickle_data = pickle.load(stream)  # nosec
-        if pickle_data.get("data_version", None) != self.data_version:
-            return False
-        settings = ("count_threshold", "max_dictionary_edit_distance", "prefix_length")
-        if itemgetter(*settings)(pickle_data) != (
-            self._count_threshold,
-            self._max_dictionary_edit_distance,
-            self._prefix_length,
-        ):
-            logger.warning(
-                f"Loading data which was created using different {settings} settings. "
-                "Overwriting current SymSpell instance with loaded settings ..."
-            )
-        self._deletes = pickle_data["deletes"]
-        self._words = pickle_data["words"]
-        self._max_length = pickle_data["max_length"]
-        # Dictionary entries related variables
-        self._below_threshold_words = pickle_data["below_threshold_words"]
-        self._bigrams = pickle_data["bigrams"]
-        self._deletes = pickle_data["deletes"]
-        self._words = pickle_data["words"]
-        self._max_length = pickle_data["max_length"]
-        # SymSpell settings used to generate the above
-        self._count_threshold = pickle_data["count_threshold"]
-        self._max_dictionary_edit_distance = pickle_data["max_dictionary_edit_distance"]
-        self._prefix_length = pickle_data["prefix_length"]
-        return True
-
-    def _save_pickle_stream(self, stream: IO[bytes]) -> None:
-        """Pickles :attr:`_below_threshold_words`, :attr:`_bigrams`,
-        :attr:`_deletes`, :attr:`_words`, and :attr:`_max_length` into
-        a stream for quicker loading later.
-
-        Pickles :attr:`_count_threshold`, :attr:`_max_dictionary_edit_distance`,
-        and :attr:`_prefix_length` to ensure consistent behavior.
-
-        Args:
-            stream: The stream to store the pickle data.
-        """
-        pickle_data = {
-            # Dictionary entries related variables
-            "below_threshold_words": self._below_threshold_words,
-            "bigrams": self._bigrams,
-            "deletes": self._deletes,
-            "words": self._words,
-            "max_length": self._max_length,
-            # SymSpell settings used to generate the above
-            "count_threshold": self._count_threshold,
-            "max_dictionary_edit_distance": self._max_dictionary_edit_distance,
-            "prefix_length": self._prefix_length,
-            # Version to ensure compatibility
-            "data_version": self.data_version,
-        }
-        pickle.dump(pickle_data, stream)
 
     @staticmethod
     def _parse_words(text: str) -> List[str]:
