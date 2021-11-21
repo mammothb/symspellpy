@@ -67,7 +67,7 @@ class SymSpell:
         ValueError: If `count_threshold` is negative.
     """
 
-    data_version = 2
+    data_version = 3
     # Number of all words in the corpus used to generate the frequency
     # dictionary. This is used to calculate the word occurrence probability p
     # from word counts c : p=c/N. N equals the sum of all counts c in the
@@ -1148,19 +1148,41 @@ class SymSpell:
         self._deletes = pickle_data["deletes"]
         self._words = pickle_data["words"]
         self._max_length = pickle_data["max_length"]
+        # Dictionary entries related variables
+        self._below_threshold_words = pickle_data["below_threshold_words"]
+        self._bigrams = pickle_data["bigrams"]
+        self._deletes = pickle_data["deletes"]
+        self._words = pickle_data["words"]
+        self._max_length = pickle_data["max_length"]
+        # SymSpell settings used to generate the above
+        self._count_threshold = pickle_data["count_threshold"]
+        self._max_dictionary_edit_distance = pickle_data["max_dictionary_edit_distance"]
+        self._prefix_length = pickle_data["prefix_length"]
         return True
 
     def _save_pickle_stream(self, stream: IO[bytes]) -> None:
-        """Pickle :attr:`_deletes`, :attr:`_words`, and :attr:`_max_length` into
+        """Pickles :attr:`_below_threshold_words`, :attr:`_bigrams`,
+        :attr:`_deletes`, :attr:`_words`, and :attr:`_max_length` into
         a stream for quicker loading later.
+
+        Pickles :attr:`_count_threshold`, :attr:`_max_dictionary_edit_distance`,
+        and :attr:`_prefix_length` to ensure consistent behavior.
 
         Args:
             stream: The stream to store the pickle data.
         """
         pickle_data = {
+            # Dictionary entries related variables
+            "below_threshold_words": self._below_threshold_words,
+            "bigrams": self._bigrams,
             "deletes": self._deletes,
             "words": self._words,
             "max_length": self._max_length,
+            # SymSpell settings used to generate the above
+            "count_threshold": self._count_threshold,
+            "max_dictionary_edit_distance": self._max_dictionary_edit_distance,
+            "prefix_length": self._prefix_length,
+            # Version to ensure compatibility
             "data_version": self.data_version,
         }
         pickle.dump(pickle_data, stream)
