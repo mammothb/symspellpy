@@ -1,6 +1,14 @@
 CHANGELOG <br>
 ==============
 
+## 6.7.0 (In progress)
+----------------------
+- Updated `frequency_dictionary_en_82_765.txt` dictionary with common contractions
+- Added `_below_threshold_words`, `_bigrams`, `_count_threshold`, `_max_dictionary_edit_distance`, and `_prefix_length` when saving to pickle. (closes [#93](https://github.com/mammothb/symspellpy/issues/93))
+- Implemented `to_bytes` and `from_bytes` options to save and load pickle with bytes string
+- Updated data_version to 3
+- Removed Python 3.4 and Python 3.5 support
+
 ## 6.7.0 (2020-08-28)
 ---------------------
 - Removed numpy dependency

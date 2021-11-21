@@ -19,7 +19,7 @@
 .. moduleauthor:: Wolf Garbe <wolf.garbe@faroo.com>
 """
 
-__version__ = "6.7.0.dev1"
+__version__ = "6.7.1rc1"
 
 import logging
 import os
