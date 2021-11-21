@@ -1,4 +1,5 @@
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -150,7 +151,8 @@ class TestSymSpellPyLookup:
         result_sum = 0
         for phrase in test_phrases:
             result_sum += len(symspell_default.lookup(phrase, Verbosity.CLOSEST, 2))
-        assert 4945 == result_sum
+
+        assert 4955 == result_sum
 
     @pytest.mark.parametrize(
         "symspell_default_entry, typo, correction",

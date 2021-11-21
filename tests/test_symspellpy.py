@@ -158,6 +158,12 @@ class TestSymSpellPy:
         assert 10 == symspell_default.words["asdf"]
         assert 12 == symspell_default.words["sdfg"]
 
+    def test_load_dictionary_count(self, symspell_default, dictionary_path):
+        symspell_default.load_dictionary(dictionary_path, 0, 1)
+
+        assert 82834 == symspell_default.word_count
+        assert 676094 == symspell_default.entry_count
+
     def test_load_dictionary_separator(self, symspell_default):
         assert symspell_default.load_dictionary(SEPARATOR_DICT_PATH, 0, 1, SEPARATOR)
         assert 5 == symspell_default.word_count

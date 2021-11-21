@@ -127,6 +127,11 @@ class SymSpell:
         return self._deletes
 
     @property
+    def entry_count(self) -> int:
+        """Number of unique correct spelling words."""
+        return len(self._deletes)
+
+    @property
     def replaced_words(self) -> Dict[str, SuggestItem]:
         """Dictionary corrected/modified words."""
         return self._replaced_words
