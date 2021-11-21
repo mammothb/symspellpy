@@ -1,7 +1,7 @@
 CHANGELOG <br>
 ==============
 
-## 6.7.0 (In progress)
+## 6.7.1 (In progress)
 ----------------------
 - Updated `frequency_dictionary_en_82_765.txt` dictionary with common contractions
 - Added `_below_threshold_words`, `_bigrams`, `_count_threshold`, `_max_dictionary_edit_distance`, and `_prefix_length` when saving to pickle. (closes [#93](https://github.com/mammothb/symspellpy/issues/93))
