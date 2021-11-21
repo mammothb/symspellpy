@@ -18,8 +18,6 @@
    :synopsis: Data class for :meth:`symspellpy.symspellpy.lookup`.
 """
 
-from typing import Union
-
 
 class SuggestItem:
     """Spelling suggestion returned from :meth:`lookup`.
@@ -31,7 +29,7 @@ class SuggestItem:
             of the individual suggestion parts.
     """
 
-    def __init__(self, term: str, distance: int, count: Union[float, int]) -> None:
+    def __init__(self, term: str, distance: int, count: int) -> None:
         self._term = term
         self._distance = distance
         self._count = count
@@ -67,7 +65,7 @@ class SuggestItem:
         return f"{self._term}, {self._distance}, {self._count}"
 
     @property
-    def count(self) -> Union[float, int]:
+    def count(self) -> int:
         """Frequency of suggestion in the dictionary (a measure of how common the
         word is) or Naive Bayes probability of the individual suggestion parts in
         :meth:`lookup_compound`.
@@ -75,7 +73,7 @@ class SuggestItem:
         return self._count
 
     @count.setter
-    def count(self, count: Union[float, int]) -> None:
+    def count(self, count: int) -> None:
         self._count = count
 
     @property

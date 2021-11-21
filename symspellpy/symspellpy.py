@@ -675,9 +675,7 @@ class SymSpell:
         # Second list of single terms with preserved cases so we can ignore
         # acronyms (all cap words)
         if ignore_non_words:
-            terms_2 = helpers.parse_words(
-                phrase, preserve_case=True, split_by_space=split_by_space
-            )
+            terms_2 = helpers.parse_words(phrase, True, split_by_space)
         suggestions = []
         suggestion_parts = []
         distance_comparer = EditDistance(self._distance_algorithm)
@@ -783,8 +781,6 @@ class SymSpell:
                                     # make count bigger than count of single
                                     # term correction
                                     tmp_count = max(tmp_count, best_si.count + 2)
-                                    # suggestions_1[0].term == best_si.term
-                                    # or suggestions_2[0].term == best_si.term
                                 elif best_si.term in (
                                     suggestions_1[0].term,
                                     suggestions_2[0].term,
@@ -847,7 +843,7 @@ class SymSpell:
                     suggestion_parts.append(item)
                     self._replaced_words[terms_1[i]] = item
         joined_term = ""
-        joined_count = self.N
+        joined_count: float = self.N
         for item in suggestion_parts:
             joined_term += item.term + " "
             joined_count *= item.count / self.N
