@@ -18,7 +18,7 @@ VERY_LONG_STRING = "very_long_string"
 
 
 def expected_levenshtein(string_1, string_2, max_distance):
-    max_distance = max_distance = int(min(2 ** 31 - 1, max_distance))
+    max_distance = int(min(2 ** 31 - 1, max_distance))
     len_1 = len(string_1)
     len_2 = len(string_2)
     d = np.zeros((len_1 + 1, len_2 + 1))
@@ -40,7 +40,7 @@ def expected_levenshtein(string_1, string_2, max_distance):
 
 
 def expected_damerau_osa(string_1, string_2, max_distance):
-    max_distance = max_distance = int(min(2 ** 31 - 1, max_distance))
+    max_distance = int(min(2 ** 31 - 1, max_distance))
     len_1 = len(string_1)
     len_2 = len(string_2)
     d = np.zeros((len_1 + 1, len_2 + 1))
