@@ -101,6 +101,7 @@ class SymSpell(PickleMixin):
         self._prefix_length = prefix_length
         self._count_threshold = count_threshold
         self._distance_algorithm = DistanceAlgorithm.DAMERUAUOSA
+        # self._distance_algorithm = DistanceAlgorithm.DAMERUAUOSA_FAST
         self._max_length = 0
 
     @property
