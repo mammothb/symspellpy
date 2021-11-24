@@ -464,7 +464,7 @@ class LevenshteinFast(AbstractDistanceComparer):
 
 
 class DamerauOsaFast(AbstractDistanceComparer):
-    """Provides and interface for computing edit distance metric between two
+    """Provides an interface for computing edit distance metric between two
     strings using the fast Damerau-Levenshtein Optimal String Alignment (OSA)
     algorithm.
     """
