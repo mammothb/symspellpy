@@ -2,18 +2,6 @@ import pytest
 
 
 class TestSymSpellPyLookupCompound:
-    # @pytest.mark.parametrize(
-    #     "symspell_default_load", ["bigram", "unigram"], indirect=True
-    # )
-    # def test_lookup_compound_ignore_non_words(self, symspell_default_load):
-    #     sym_spell, dictionary = symspell_default_load
-
-    #     input_term = "Can yu readtHIS messa ge despite thehorible 1234 sppelingmsitakes"
-    #     results = sym_spell.lookup_compound(input_term, 2, True)
-
-    #     # assert 1 == len(results)
-    #     # assert entry[dictionary]["term"] == results[0].term
-
     @pytest.mark.parametrize(
         "symspell_default_load, get_fortests_data",
         [

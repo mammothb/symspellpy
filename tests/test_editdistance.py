@@ -7,9 +7,11 @@ import pytest
 from symspellpy.editdistance import (
     AbstractDistanceComparer,
     DamerauOsa,
+    DamerauOsaFast,
     DistanceAlgorithm,
     EditDistance,
     Levenshtein,
+    LevenshteinFast,
 )
 
 SHORT_STRING = "string"
@@ -63,27 +65,47 @@ def expected_damerau_osa(string_1, string_2, max_distance):
     return distance if distance <= max_distance else -1
 
 
-@pytest.fixture(params=["damerau_osa", "levenshtein"])
+@pytest.fixture(
+    params=["damerau_osa", "levenshtein", "damerau_osa_fast", "levenshtein_fast"]
+)
 def get_comparer(request):
     comparer_dict = {
         "damerau_osa": {"actual": DamerauOsa(), "expected": expected_damerau_osa},
         "levenshtein": {"actual": Levenshtein(), "expected": expected_levenshtein},
+        "damerau_osa_fast": {
+            "actual": DamerauOsaFast(),
+            "expected": expected_damerau_osa,
+        },
+        "levenshtein_fast": {
+            "actual": LevenshteinFast(),
+            "expected": expected_levenshtein,
+        },
     }
     yield comparer_dict[request.param]["actual"], comparer_dict[request.param][
         "expected"
     ]
 
 
-@pytest.fixture(params=["damerau_osa", "levenshtein"])
+@pytest.fixture(
+    params=["damerau_osa", "levenshtein", "damerau_osa_fast", "levenshtein_fast"]
+)
 def get_edit_distance(request):
     comparer_dict = {
         "damerau_osa": {
-            "actual": EditDistance(DistanceAlgorithm.DAMERUAUOSA),
+            "actual": EditDistance(DistanceAlgorithm.DAMERAU_OSA),
             "expected": DamerauOsa,
         },
         "levenshtein": {
             "actual": EditDistance(DistanceAlgorithm.LEVENSHTEIN),
             "expected": Levenshtein,
+        },
+        "damerau_osa_fast": {
+            "actual": EditDistance(DistanceAlgorithm.DAMERAU_OSA_FAST),
+            "expected": DamerauOsaFast,
+        },
+        "levenshtein_fast": {
+            "actual": EditDistance(DistanceAlgorithm.LEVENSHTEIN_FAST),
+            "expected": LevenshteinFast,
         },
     }
     yield comparer_dict[request.param]["actual"], comparer_dict[request.param][

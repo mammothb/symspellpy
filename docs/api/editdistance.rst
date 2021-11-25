@@ -25,3 +25,9 @@ Distance comparer classes
 
 .. autoclass:: symspellpy.editdistance.Levenshtein
    :members:
+
+.. autoclass:: symspellpy.editdistance.DamerauOsaFast
+   :members:
+
+.. autoclass:: symspellpy.editdistance.LevenshteinFast
+   :members:

@@ -22,6 +22,8 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from typing import List
 
+from editdistpy import damerau_osa, levenshtein
+
 from symspellpy import helpers
 
 
@@ -29,7 +31,9 @@ class DistanceAlgorithm(Enum):
     """Supported edit distance algorithms."""
 
     LEVENSHTEIN = 0  #: Levenshtein algorithm.
-    DAMERUAUOSA = 1  #: Damerau optimal string alignment algorithm
+    DAMERAU_OSA = 1  #: Damerau optimal string alignment algorithm
+    LEVENSHTEIN_FAST = 2  #: Fast Levenshtein algorithm.
+    DAMERAU_OSA_FAST = 3  #: Fast Damerau optimal string alignment algorithm
 
 
 class EditDistance:
@@ -54,8 +58,12 @@ class EditDistance:
         self._algorithm = algorithm
         if algorithm == DistanceAlgorithm.LEVENSHTEIN:
             self._distance_comparer = Levenshtein()
-        elif algorithm == DistanceAlgorithm.DAMERUAUOSA:
+        elif algorithm == DistanceAlgorithm.DAMERAU_OSA:
             self._distance_comparer = DamerauOsa()
+        elif algorithm == DistanceAlgorithm.LEVENSHTEIN_FAST:
+            self._distance_comparer = LevenshteinFast()
+        elif algorithm == DistanceAlgorithm.DAMERAU_OSA_FAST:
+            self._distance_comparer = DamerauOsaFast()
         else:
             raise ValueError("Unknown distance algorithm")
 
@@ -113,7 +121,7 @@ class Levenshtein(AbstractDistanceComparer):
             max_distance: The maximum distance that is of interest.
 
         Returns:
-            -1 if the distance is greater than the maxDistance, 0 if the strings
+            -1 if the distance is greater than the max_distance, 0 if the strings
                 are equivalent, otherwise a positive number whose magnitude
                 increases as difference between the strings increases.
         """
@@ -253,7 +261,7 @@ class DamerauOsa(AbstractDistanceComparer):
             max_distance: The maximum distance that is of interest.
 
         Returns:
-            -1 if the distance is greater than the maxDistance, 0 if the strings
+            -1 if the distance is greater than the max_distance, 0 if the strings
                 are equivalent, otherwise a positive number whose magnitude
                 increases as difference between the strings increases.
         """
@@ -417,3 +425,77 @@ class DamerauOsa(AbstractDistanceComparer):
             if char_1_costs[i + len_diff] > max_distance:
                 return -1
         return current_cost if current_cost <= max_distance else -1
+
+
+class LevenshteinFast(AbstractDistanceComparer):
+    """Provides an interface for computing edit distance metric between two
+    strings using the fast Levenshtein algorithm.
+    """
+
+    def distance(self, string_1: str, string_2: str, max_distance: int) -> int:
+        """Computes the Levenshtein edit distance between two strings.
+
+        Args:
+            string_1: One of the strings to compare.
+            string_2: The other string to compare.
+            max_distance: The maximum distance that is of interest.
+
+        Returns:
+            -1 if the distance is greater than the max_distance, 0 if the strings
+                are equivalent, otherwise a positive number whose magnitude
+                increases as difference between the strings increases.
+        """
+        if string_1 is None or string_2 is None:
+            return helpers.null_distance_results(string_1, string_2, max_distance)
+        if max_distance <= 0:
+            return 0 if string_1 == string_2 else -1
+        max_distance = int(min(2 ** 31 - 1, max_distance))
+        # if strings of different lengths, ensure shorter string is in string_1.
+        # This can result in a little faster speed by spending more time spinning
+        # just the inner loop during the main processing.
+        len_1 = len(string_1)
+        len_2 = len(string_2)
+        if len_1 > len_2:
+            string_2, string_1 = string_1, string_2
+            len_2, len_1 = len_1, len_2
+        if len_2 - len_1 > max_distance:
+            return -1
+        return levenshtein.distance(string_1, string_2, max_distance)
+
+
+class DamerauOsaFast(AbstractDistanceComparer):
+    """Provides an interface for computing edit distance metric between two
+    strings using the fast Damerau-Levenshtein Optimal String Alignment (OSA)
+    algorithm.
+    """
+
+    def distance(self, string_1: str, string_2: str, max_distance: int) -> int:
+        """Computes the Damerau-Levenshtein optimal string alignment edit
+        distance between two strings.
+
+        Args:
+            string_1: One of the strings to compare.
+            string_2: The other string to compare.
+            max_distance: The maximum distance that is of interest.
+
+        Returns:
+            -1 if the distance is greater than the max_distance, 0 if the strings
+                are equivalent, otherwise a positive number whose magnitude
+                increases as difference between the strings increases.
+        """
+        if string_1 is None or string_2 is None:
+            return helpers.null_distance_results(string_1, string_2, max_distance)
+        if max_distance <= 0:
+            return 0 if string_1 == string_2 else -1
+        max_distance = int(min(2 ** 31 - 1, max_distance))
+        # if strings of different lengths, ensure shorter string is in string_1.
+        # This can result in a little faster speed by spending more time spinning
+        # just the inner loop during the main processing.
+        len_1 = len(string_1)
+        len_2 = len(string_2)
+        if len_1 > len_2:
+            string_2, string_1 = string_1, string_2
+            len_2, len_1 = len_1, len_2
+        if len_2 - len_1 > max_distance:
+            return -1
+        return damerau_osa.distance(string_1, string_2, max_distance)

@@ -1,3 +1,5 @@
+editdistpy==0.1.1
+
 # For testing
 codecov==2.1.12
 coverage==6.1.2
