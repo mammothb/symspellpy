@@ -31,9 +31,9 @@ class DistanceAlgorithm(Enum):
     """Supported edit distance algorithms."""
 
     LEVENSHTEIN = 0  #: Levenshtein algorithm.
-    DAMERUAUOSA = 1  #: Damerau optimal string alignment algorithm
+    DAMERAU_OSA = 1  #: Damerau optimal string alignment algorithm
     LEVENSHTEIN_FAST = 2  #: Fast Levenshtein algorithm.
-    DAMERUAUOSA_FAST = 3  #: Fast Damerau optimal string alignment algorithm
+    DAMERAU_OSA_FAST = 3  #: Fast Damerau optimal string alignment algorithm
 
 
 class EditDistance:
@@ -58,11 +58,11 @@ class EditDistance:
         self._algorithm = algorithm
         if algorithm == DistanceAlgorithm.LEVENSHTEIN:
             self._distance_comparer = Levenshtein()
-        elif algorithm == DistanceAlgorithm.DAMERUAUOSA:
+        elif algorithm == DistanceAlgorithm.DAMERAU_OSA:
             self._distance_comparer = DamerauOsa()
         elif algorithm == DistanceAlgorithm.LEVENSHTEIN_FAST:
             self._distance_comparer = LevenshteinFast()
-        elif algorithm == DistanceAlgorithm.DAMERUAUOSA_FAST:
+        elif algorithm == DistanceAlgorithm.DAMERAU_OSA_FAST:
             self._distance_comparer = DamerauOsaFast()
         else:
             raise ValueError("Unknown distance algorithm")

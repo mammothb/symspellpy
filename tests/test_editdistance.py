@@ -92,7 +92,7 @@ def get_comparer(request):
 def get_edit_distance(request):
     comparer_dict = {
         "damerau_osa": {
-            "actual": EditDistance(DistanceAlgorithm.DAMERUAUOSA),
+            "actual": EditDistance(DistanceAlgorithm.DAMERAU_OSA),
             "expected": DamerauOsa,
         },
         "levenshtein": {
@@ -100,7 +100,7 @@ def get_edit_distance(request):
             "expected": Levenshtein,
         },
         "damerau_osa_fast": {
-            "actual": EditDistance(DistanceAlgorithm.DAMERUAUOSA_FAST),
+            "actual": EditDistance(DistanceAlgorithm.DAMERAU_OSA_FAST),
             "expected": DamerauOsaFast,
         },
         "levenshtein_fast": {
