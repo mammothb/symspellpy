@@ -10,6 +10,10 @@ from the original project are implemented to ensure the accuracy of the port.
 
 Please note that the port has not been optimized for speed.
 
+Notable Changes
+===============
+v6.7.2: Implemented fast distance comparer with [editdistpy](https://github.com/mammothb/editdistpy). Approximately 2x speed up for usage under default settings, benchmarks found [here](https://github.com/mammothb/symspellpy/blob/master/tests/benchmarks.ipynb).
+
 Install
 =======
 For installation instructions, see the `INSTALL.rst` file or the [install](https://symspellpy.readthedocs.io/en/latest/users/installing.html) documentation.

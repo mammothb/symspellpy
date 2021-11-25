@@ -1,8 +1,14 @@
 CHANGELOG <br>
 ==============
 
+## 6.7.2 (2021-11-25)
+---------------------
+- Fix typo of Dameruau to Damerau in various places. Can potentially break some setups that explicitly `_distance_algorithm`
+- Implement fast distance comparers with [editdistpy](https://github.com/mammothb/editdistpy)
+- Set `DamerauOsaFast` as the default distance comparer
+
 ## 6.7.1 (2021-11-21)
-----------------------
+---------------------
 - Updated `frequency_dictionary_en_82_765.txt` dictionary with common contractions
 - Added `_below_threshold_words`, `_bigrams`, `_count_threshold`, `_max_dictionary_edit_distance`, and `_prefix_length` when saving to pickle. (closes [#93](https://github.com/mammothb/symspellpy/issues/93))
 - Implemented `to_bytes` and `from_bytes` options to save and load pickle with bytes string
