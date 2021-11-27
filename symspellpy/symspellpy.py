@@ -629,7 +629,8 @@ class SymSpell(PickleMixin):
                 uppercase vs lowercase --- should be carried over from `phrase`.
             split_by_space: Splits the phrase into words simply based on space.
             ignore_any_term_with_digits: A flag to determine whether any term
-                with digits is left alone during the spell checking process.
+                with digits is left alone during the spell checking process. Only
+                works when ``ignore_non_words` is also ``True``.
 
         Returns:
             A list of :class:`SuggestItem` objects representing suggested correct

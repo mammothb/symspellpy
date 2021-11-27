@@ -1,6 +1,10 @@
 CHANGELOG <br>
 ==============
 
+## 6.7.3 (2021-11-27)
+---------------------
+- Update `editdistpy` dependency version
+
 ## 6.7.2 (2021-11-25)
 ---------------------
 - Fix typo of Dameruau to Damerau in various places. Can potentially break some setups that explicitly `_distance_algorithm`

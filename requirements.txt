@@ -1,4 +1,4 @@
-editdistpy==0.1.2rc3
+editdistpy==0.1.2
 
 # For testing
 codecov==2.1.12
