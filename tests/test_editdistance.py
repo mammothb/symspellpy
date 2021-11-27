@@ -146,8 +146,8 @@ class TestEditDistance:
             comparer = AbstractDistanceComparer()
             _ = comparer.distance("string_1", "string_2", 10)
         assert (
-            "Can't instantiate abstract class AbstractDistanceComparer "
-            "with abstract methods distance"
+            "Can't instantiate abstract class AbstractDistanceComparer with "
+            f"abstract method{'s' if sys.version_info[1] < 9 else ''} distance"
         ) == str(excinfo.value)
 
     def test_internal_distance_comparer(self, get_edit_distance):
