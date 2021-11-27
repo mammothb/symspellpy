@@ -1,7 +1,7 @@
 name: Weekly Tests
 
 on:
-  workflow_dispatch
+  workflow_dispatch:
   schedule:
     # Runs every friday
     - cron: "0 0 * * 5"
