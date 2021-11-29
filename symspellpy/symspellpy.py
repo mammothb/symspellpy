@@ -429,7 +429,7 @@ class SymSpell(PickleMixin):
             len_diff = phrase_prefix_len - candidate_len
 
             # early termination: if candidate distance is already higher than
-            # suggestion distance, than there are no better suggestions to be
+            # suggestion distance, then there are no better suggestions to be
             # expected
             if len_diff > max_edit_distance_2:
                 # skip to next candidate if Verbosity.ALL, look no

@@ -217,6 +217,15 @@ class TestSymSpellPy:
                 num_lines += 1
         assert num_lines == symspell_default.word_count
 
+    def test_empty_string_has_all_short_deletes(self, symspell_default):
+        entries = ["a", "ab", "c", "", "abc"]
+        for entry in entries:
+            symspell_default.create_dictionary_entry(entry, 2)
+
+        assert len(entries[:-1]) == len(symspell_default.deletes[""])
+        assert all(entry in symspell_default.deletes[""] for entry in entries[:-1])
+        assert "abc" not in symspell_default.deletes[""]
+
     @pytest.mark.parametrize(
         "symspell_default_entry",
         [[("stea", 1), ("steama", 2), ("steem", 3)]],
