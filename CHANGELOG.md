@@ -1,6 +1,11 @@
 CHANGELOG <br>
 ==============
 
+## 6.7.4 (2021-11-29)
+---------------------
+- Update `editdistpy` dependency version
+- Update `LevenshteinFast` and `DamerauOsaFast` to match the functionality of the `editdistpy` library
+
 ## 6.7.3 (2021-11-27)
 ---------------------
 - Update `editdistpy` dependency version

@@ -445,21 +445,6 @@ class LevenshteinFast(AbstractDistanceComparer):
                 are equivalent, otherwise a positive number whose magnitude
                 increases as difference between the strings increases.
         """
-        if string_1 is None or string_2 is None:
-            return helpers.null_distance_results(string_1, string_2, max_distance)
-        if max_distance <= 0:
-            return 0 if string_1 == string_2 else -1
-        max_distance = int(min(2 ** 31 - 1, max_distance))
-        # if strings of different lengths, ensure shorter string is in string_1.
-        # This can result in a little faster speed by spending more time spinning
-        # just the inner loop during the main processing.
-        len_1 = len(string_1)
-        len_2 = len(string_2)
-        if len_1 > len_2:
-            string_2, string_1 = string_1, string_2
-            len_2, len_1 = len_1, len_2
-        if len_2 - len_1 > max_distance:
-            return -1
         return levenshtein.distance(string_1, string_2, max_distance)
 
 
@@ -483,19 +468,4 @@ class DamerauOsaFast(AbstractDistanceComparer):
                 are equivalent, otherwise a positive number whose magnitude
                 increases as difference between the strings increases.
         """
-        if string_1 is None or string_2 is None:
-            return helpers.null_distance_results(string_1, string_2, max_distance)
-        if max_distance <= 0:
-            return 0 if string_1 == string_2 else -1
-        max_distance = int(min(2 ** 31 - 1, max_distance))
-        # if strings of different lengths, ensure shorter string is in string_1.
-        # This can result in a little faster speed by spending more time spinning
-        # just the inner loop during the main processing.
-        len_1 = len(string_1)
-        len_2 = len(string_2)
-        if len_1 > len_2:
-            string_2, string_1 = string_1, string_2
-            len_2, len_1 = len_1, len_2
-        if len_2 - len_1 > max_distance:
-            return -1
         return damerau_osa.distance(string_1, string_2, max_distance)
