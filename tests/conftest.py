@@ -74,6 +74,18 @@ def symspell_default_load(symspell_default, dictionary_path, bigram_path, reques
 
 
 @pytest.fixture
+def symspell_long():
+    return SymSpell(5)
+
+
+@pytest.fixture
+def symspell_long_entry(symspell_long, request):
+    for entry in request.param:
+        symspell_long.create_dictionary_entry(entry, 2)
+    return symspell_long, request.param
+
+
+@pytest.fixture
 def symspell_short(request):
     if request.param is None:
         return SymSpell(1, 3)
