@@ -40,7 +40,6 @@ class SuggestItem:
             ``True`` if both distance and frequency count are the same.
         """
         if not isinstance(other, SuggestItem):
-            print("called")
             return NotImplemented
         if self._distance == other.distance:
             return self._count == other.count
