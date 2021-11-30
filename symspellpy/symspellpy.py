@@ -438,7 +438,7 @@ class SymSpell(PickleMixin):
                 # current)
                 if verbosity == Verbosity.ALL:
                     continue
-                break
+                break  # pragma: no cover, "peephole" optimization, http://bugs.python.org/issue2506
 
             if candidate in self._deletes:
                 dict_suggestions = self._deletes[candidate]
@@ -457,7 +457,7 @@ class SymSpell(PickleMixin):
                         # delete or is in same bin only because of hash collision
                         or (suggestion_len == candidate_len and suggestion != candidate)
                     ):
-                        continue
+                        continue  # pragma: no cover, "peephole" optimization, http://bugs.python.org/issue2506
                     suggestion_prefix_len = min(suggestion_len, self._prefix_length)
                     if (
                         suggestion_prefix_len > phrase_prefix_len
