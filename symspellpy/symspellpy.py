@@ -515,7 +515,7 @@ class SymSpell(PickleMixin):
                             )
                         else:
                             min_distance = 0
-                        # pylint: disable=C0301,R0916
+                        # pylint: disable=too-many-boolean-expressions
                         if (
                             self._prefix_length - max_edit_distance == candidate_len
                             and (
