@@ -690,6 +690,7 @@ class SymSpell(PickleMixin):
                     ):
                         suggestions_combi[0].distance += 1
                         suggestion_parts[-1] = suggestions_combi[0]
+                        self._replaced_words[terms_1[i - 1]] = suggestions_combi[0]
                         is_last_combi = True
                         continue
             is_last_combi = False
