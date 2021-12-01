@@ -436,7 +436,11 @@ class SymSpell(PickleMixin):
                 # further if Verbosity.TOP or CLOSEST (candidates are
                 # ordered by delete distance, so none are closer than
                 # current)
-                if verbosity == Verbosity.ALL:
+                if verbosity == Verbosity.ALL:  # pragma: no cover
+                    # `max_edit_distance_2`` only updated when
+                    # verbosity != ALL. New candidates are generated from
+                    # deletes so it keeps getting shorter. This should never
+                    # be reached.
                     continue
                 break  # pragma: no cover, "peephole" optimization, http://bugs.python.org/issue2506
 
@@ -491,15 +495,23 @@ class SymSpell(PickleMixin):
                         ):
                             continue
                     elif suggestion_len == 1:
+                        # This should always be phrase_len - 1? Since
+                        # suggestions are generated from deletes of the input
+                        # phrase
                         distance = (
                             phrase_len
                             if phrase.index(suggestion[0]) < 0
                             else phrase_len - 1
                         )
+                        # `suggestion` only gets added to
+                        # `considered_suggestions` when `suggestion_len>1`.
+                        # Given the max_dictionary_edit_distance and
+                        # prefix_length restrictions, `distance`` should never
+                        # be >max_edit_distance_2
                         if (
                             distance > max_edit_distance_2
                             or suggestion in considered_suggestions
-                        ):
+                        ):  # pragma: no cover
                             continue
                     # number of edits in prefix ==maxeditdistance AND no
                     # identical suffix, then editdistance>max_edit_distance and
