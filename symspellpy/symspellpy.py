@@ -429,16 +429,20 @@ class SymSpell(PickleMixin):
             len_diff = phrase_prefix_len - candidate_len
 
             # early termination: if candidate distance is already higher than
-            # suggestion distance, than there are no better suggestions to be
+            # suggestion distance, then there are no better suggestions to be
             # expected
             if len_diff > max_edit_distance_2:
                 # skip to next candidate if Verbosity.ALL, look no
                 # further if Verbosity.TOP or CLOSEST (candidates are
                 # ordered by delete distance, so none are closer than
                 # current)
-                if verbosity == Verbosity.ALL:
+                if verbosity == Verbosity.ALL:  # pragma: no cover
+                    # `max_edit_distance_2`` only updated when
+                    # verbosity != ALL. New candidates are generated from
+                    # deletes so it keeps getting shorter. This should never
+                    # be reached.
                     continue
-                break
+                break  # pragma: no cover, "peephole" optimization, http://bugs.python.org/issue2506
 
             if candidate in self._deletes:
                 dict_suggestions = self._deletes[candidate]
@@ -457,7 +461,7 @@ class SymSpell(PickleMixin):
                         # delete or is in same bin only because of hash collision
                         or (suggestion_len == candidate_len and suggestion != candidate)
                     ):
-                        continue
+                        continue  # pragma: no cover, "peephole" optimization, http://bugs.python.org/issue2506
                     suggestion_prefix_len = min(suggestion_len, self._prefix_length)
                     if (
                         suggestion_prefix_len > phrase_prefix_len
@@ -491,15 +495,23 @@ class SymSpell(PickleMixin):
                         ):
                             continue
                     elif suggestion_len == 1:
+                        # This should always be phrase_len - 1? Since
+                        # suggestions are generated from deletes of the input
+                        # phrase
                         distance = (
                             phrase_len
                             if phrase.index(suggestion[0]) < 0
                             else phrase_len - 1
                         )
+                        # `suggestion` only gets added to
+                        # `considered_suggestions` when `suggestion_len>1`.
+                        # Given the max_dictionary_edit_distance and
+                        # prefix_length restrictions, `distance`` should never
+                        # be >max_edit_distance_2
                         if (
                             distance > max_edit_distance_2
                             or suggestion in considered_suggestions
-                        ):
+                        ):  # pragma: no cover
                             continue
                     # number of edits in prefix ==maxeditdistance AND no
                     # identical suffix, then editdistance>max_edit_distance and
@@ -515,7 +527,7 @@ class SymSpell(PickleMixin):
                             )
                         else:
                             min_distance = 0
-                        # pylint: disable=C0301,R0916
+                        # pylint: disable=too-many-boolean-expressions
                         if (
                             self._prefix_length - max_edit_distance == candidate_len
                             and (
@@ -549,7 +561,7 @@ class SymSpell(PickleMixin):
                     # do not process higher distances than those already found,
                     # if verbosity<ALL (note: max_edit_distance_2 will always
                     # equal max_edit_distance when Verbosity.ALL)
-                    if distance <= max_edit_distance_2:
+                    if distance <= max_edit_distance_2:  # pragma: no branch
                         suggestion_count = self._words[suggestion]
                         item = SuggestItem(suggestion, distance, suggestion_count)
                         if suggestions:
@@ -559,7 +571,7 @@ class SymSpell(PickleMixin):
                                 if distance < max_edit_distance_2:
                                     suggestions = []
                             elif verbosity == Verbosity.TOP:
-                                if (
+                                if (  # pragma: no branch, "peephole" optimization, http://bugs.python.org/issue2506
                                     distance < max_edit_distance_2
                                     or suggestion_count > suggestions[0].count
                                 ):
