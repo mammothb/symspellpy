@@ -561,7 +561,7 @@ class SymSpell(PickleMixin):
                     # do not process higher distances than those already found,
                     # if verbosity<ALL (note: max_edit_distance_2 will always
                     # equal max_edit_distance when Verbosity.ALL)
-                    if distance <= max_edit_distance_2:
+                    if distance <= max_edit_distance_2:  # pragma: no branch
                         suggestion_count = self._words[suggestion]
                         item = SuggestItem(suggestion, distance, suggestion_count)
                         if suggestions:
@@ -571,7 +571,7 @@ class SymSpell(PickleMixin):
                                 if distance < max_edit_distance_2:
                                     suggestions = []
                             elif verbosity == Verbosity.TOP:
-                                if (
+                                if (  # pragma: no branch, "peephole" optimization, http://bugs.python.org/issue2506
                                     distance < max_edit_distance_2
                                     or suggestion_count > suggestions[0].count
                                 ):
