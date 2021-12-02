@@ -139,7 +139,7 @@ class TestEditDistance:
     def test_unknown_distance_algorithm(self):
         with pytest.raises(ValueError) as excinfo:
             _ = EditDistance(2)
-        assert "Unknown distance algorithm" == str(excinfo.value)
+        assert "unknown distance algorithm" == str(excinfo.value)
 
     def test_abstract_distance_comparer(self):
         with pytest.raises(TypeError) as excinfo:

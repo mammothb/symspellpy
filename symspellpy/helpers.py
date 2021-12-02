@@ -40,8 +40,8 @@ def case_transfer_matching(cased_text: str, uncased_text: str) -> str:
     """
     if len(cased_text) != len(uncased_text):
         raise ValueError(
-            "'cased_text' and 'uncased_text' don't have the same length. Use "
-            "case_transfer_similar() instead."
+            "'cased_text' and 'uncased_text' don't have the same length, use "
+            "case_transfer_similar() instead"
         )
 
     return "".join(
@@ -84,7 +84,7 @@ def case_transfer_similar(cased_text: str, uncased_text: str) -> str:
         return uncased_text
 
     if not cased_text:
-        raise ValueError("'cased_text' cannot be empty!")
+        raise ValueError("'cased_text' cannot be empty")
 
     matcher = SequenceMatcher(a=cased_text.lower(), b=uncased_text)
     result = ""

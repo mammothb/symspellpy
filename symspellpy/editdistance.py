@@ -65,7 +65,7 @@ class EditDistance:
         elif algorithm == DistanceAlgorithm.DAMERAU_OSA_FAST:
             self._distance_comparer = DamerauOsaFast()
         else:
-            raise ValueError("Unknown distance algorithm")
+            raise ValueError("unknown distance algorithm")
 
     def compare(self, string_1: str, string_2: str, max_distance: int) -> int:
         """Compares a string to the base string to determine the edit distance,
