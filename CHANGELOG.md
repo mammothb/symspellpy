@@ -1,6 +1,11 @@
 CHANGELOG <br>
 ==============
 
+## 6.7.5 (2021-12-02)
+---------------------
+- Fix `replaced_words` not being updated when best match is a combi (closes [#103](https://github.com/mammothb/symspellpy/issues/103))
+- Implement a way to change the edit distance comparer algorightm via `distance_algorithm` property. Available values are found in [`DistanceAlgorithm`](https://symspellpy.readthedocs.io/en/latest/api/editdistance.html#symspellpy.editdistance.DistanceAlgorithm)
+
 ## 6.7.4 (2021-11-29)
 ---------------------
 - Update `editdistpy` dependency version
