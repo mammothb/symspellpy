@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 
 from symspellpy import SymSpell, Verbosity
+from symspellpy.editdistance import DistanceAlgorithm
 from symspellpy.helpers import DictIO
 
 FORTESTS_DIR = Path(__file__).resolve().parent / "fortests"
@@ -60,6 +61,27 @@ class TestSymSpellPy:
         with pytest.raises(ValueError) as excinfo:
             _ = SymSpell(1, 3, -1)
         assert "count_threshold cannot be negative" == str(excinfo.value)
+
+    @pytest.mark.parametrize(
+        "algorithm",
+        [
+            DistanceAlgorithm.LEVENSHTEIN,
+            DistanceAlgorithm.DAMERAU_OSA,
+            DistanceAlgorithm.LEVENSHTEIN_FAST,
+            DistanceAlgorithm.DAMERAU_OSA_FAST,
+        ],
+    )
+    def test_set_distance_algorithm(self, symspell_default, algorithm):
+        symspell_default.distance_algorithm = algorithm
+        assert algorithm == symspell_default.distance_algorithm
+
+    def test_set_invalid_distance_algorithm(self, symspell_default):
+        with pytest.raises(TypeError) as excinfo:
+            symspell_default.distance_algorithm = 1
+        assert (
+            "can only assign DistanceAlgorithm type values to distance_algorithm"
+            == str(excinfo.value)
+        )
 
     @pytest.mark.parametrize("symspell_short", [None, 0], indirect=True)
     def test_create_dictionary_entry_negative_count(self, symspell_short):

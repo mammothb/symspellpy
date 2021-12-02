@@ -126,6 +126,19 @@ class SymSpell(PickleMixin):
         return self._deletes
 
     @property
+    def distance_algorithm(self) -> DistanceAlgorithm:
+        """The current distance algorithm."""
+        return self._distance_algorithm
+
+    @distance_algorithm.setter
+    def distance_algorithm(self, value: DistanceAlgorithm) -> None:
+        if not isinstance(value, DistanceAlgorithm):
+            raise TypeError(
+                "can only assign DistanceAlgorithm type values to distance_algorithm"
+            )
+        self._distance_algorithm = value
+
+    @property
     def entry_count(self) -> int:
         """Number of unique correct spelling words."""
         return len(self._deletes)
