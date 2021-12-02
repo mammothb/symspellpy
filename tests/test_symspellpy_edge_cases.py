@@ -1,5 +1,7 @@
 import pytest
 
+from symspellpy import Verbosity
+
 ENTRIES = ["baked", "ax", "lake", "", "slaked"]
 
 
@@ -22,3 +24,14 @@ class TestSymSpellPyEdgeCases:
         assert "where is" == suggestions[0].term
         assert 2 == suggestions[0].distance
         assert 10 == suggestions[0].count
+
+    @pytest.mark.parametrize("symspell_long_entry", [["bank", "bink"]], indirect=True)
+    def test_no_common_char_with_phrase(self, symspell_long_entry):
+        sym_spell, _ = symspell_long_entry
+        results = sym_spell.lookup("knab", Verbosity.ALL, 4)
+
+        assert 2 == len(results)
+        assert "bank" == results[0].term
+        assert 3 == results[0].distance
+        assert "bink" == results[1].term
+        assert 4 == results[1].distance
