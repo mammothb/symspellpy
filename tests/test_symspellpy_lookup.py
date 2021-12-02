@@ -121,7 +121,7 @@ class TestSymSpellPyLookup:
     def test_max_edit_distance_too_large(self, symspell_high_thres_flame):
         with pytest.raises(ValueError) as excinfo:
             _ = symspell_high_thres_flame.lookup("flam", Verbosity.TOP, 3)
-        assert "Distance too large" == str(excinfo.value)
+        assert "distance too large" == str(excinfo.value)
 
     def test_include_unknown(self, symspell_high_thres_flame):
         result = symspell_high_thres_flame.lookup("flam", Verbosity.TOP, 0, True)

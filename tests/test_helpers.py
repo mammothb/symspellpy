@@ -55,8 +55,8 @@ class TestHelpers:
         with pytest.raises(ValueError) as excinfo:
             case_transfer_matching("abc", "abcd")
         assert (
-            "'cased_text' and 'uncased_text' don't have the same length. Use "
-            "case_transfer_similar() instead."
+            "'cased_text' and 'uncased_text' don't have the same length, use "
+            "case_transfer_similar() instead"
         ) == str(excinfo.value)
 
     def test_case_transfer_matching(self):
@@ -78,7 +78,7 @@ class TestHelpers:
     def test_case_transfer_similar_empty_w_casing(self):
         with pytest.raises(ValueError) as excinfo:
             case_transfer_similar("", "abcd")
-        assert "'cased_text' cannot be empty!" == str(excinfo.value)
+        assert "'cased_text' cannot be empty" == str(excinfo.value)
 
     def test_case_transfer_similar(self, get_similar_texts):
         for cased_text, uncased_text, expected in get_similar_texts:

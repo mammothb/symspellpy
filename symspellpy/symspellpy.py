@@ -365,7 +365,7 @@ class SymSpell(PickleMixin):
         if max_edit_distance is None:
             max_edit_distance = self._max_dictionary_edit_distance
         if max_edit_distance > self._max_dictionary_edit_distance:
-            raise ValueError("Distance too large")
+            raise ValueError("distance too large")
         suggestions: List[SuggestItem] = []
         phrase_len = len(phrase)
 
