@@ -1,4 +1,5 @@
 from pathlib import Path
+from unittest import TestCase
 
 import pytest
 
@@ -121,7 +122,12 @@ class TestSymSpellPy:
             assert expected_count == result[0].count
 
     def test_load_bigram_dictionary_invalid_path(self, symspell_default):
-        assert not symspell_default.load_bigram_dictionary(INVALID_PATH, 0, 2)
+        with TestCase.assertLogs("symspellpy.symspellpy.logger", level="ERROR") as cm:
+            assert not symspell_default.load_bigram_dictionary(INVALID_PATH, 0, 2)
+        assert (
+            f"Bigram dictionary file not found at {Path(INVALID_PATH)}."
+            == cm.records[0].getMessage()
+        )
 
     def test_loading_dictionary_from_fileobject(self, symspell_default):
         with open(BIG_WORDS_PATH, "r", encoding="utf8") as infile:
@@ -171,7 +177,12 @@ class TestSymSpellPy:
         assert 12997637966 == symspell_default.bigrams["and"]
 
     def test_load_dictionary_invalid_path(self, symspell_default):
-        assert not symspell_default.load_dictionary(INVALID_PATH, 0, 1)
+        with TestCase.assertLogs("symspellpy.symspellpy.logger", level="ERROR") as cm:
+            assert not symspell_default.load_dictionary(INVALID_PATH, 0, 1)
+        assert (
+            f"Dictionary file not found at {Path(INVALID_PATH)}."
+            == cm.records[0].getMessage()
+        )
 
     def test_load_dictionary_bad_dictionary(self, symspell_default):
         assert symspell_default.load_dictionary(BAD_DICT_PATH, 0, 1)
@@ -226,7 +237,11 @@ class TestSymSpellPy:
         assert "АБИ" == result[0].term
 
     def test_create_dictionary_invalid_path(self, symspell_default):
-        assert not symspell_default.create_dictionary(INVALID_PATH)
+        with TestCase.assertLogs("symspellpy.symspellpy.logger", level="ERROR") as cm:
+            assert not symspell_default.create_dictionary(INVALID_PATH)
+        assert (
+            f"Corpus not found at {Path(INVALID_PATH)}." == cm.records[0].getMessage()
+        )
 
     def test_create_dictionary(self, symspell_default):
         symspell_default.create_dictionary(BIG_MODIFIED_PATH, encoding="utf-8")
