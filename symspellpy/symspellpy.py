@@ -18,6 +18,7 @@
    :synopsis: Module for Symmetric Delete spelling correction algorithm.
 """
 
+import logging
 import math
 import re
 import string
@@ -34,6 +35,8 @@ from symspellpy.editdistance import DistanceAlgorithm, EditDistance
 from symspellpy.pickle_mixin import PickleMixin
 from symspellpy.suggest_item import SuggestItem
 from symspellpy.verbosity import Verbosity
+
+logger = logging.getLogger(__name__)
 
 
 class SymSpell(PickleMixin):
@@ -178,6 +181,7 @@ class SymSpell(PickleMixin):
         if isinstance(corpus, (Path, str)):
             corpus = Path(corpus)
             if not corpus.exists():
+                logger.error(f"Corpus not found at {corpus}.")
                 return False
             with open(corpus, "r", encoding=encoding) as infile:
                 for line in infile:
@@ -304,6 +308,7 @@ class SymSpell(PickleMixin):
         """
         corpus = Path(corpus)
         if not corpus.exists():
+            logger.error(f"Bigram dictionary file not found at {corpus}.")
             return False
         with open(corpus, "r", encoding=encoding) as infile:
             return self._load_bigram_dictionary_stream(
@@ -335,6 +340,7 @@ class SymSpell(PickleMixin):
         """
         corpus = Path(corpus)
         if not corpus.exists():
+            logger.error(f"Dictionary file not found at {corpus}.")
             return False
         with open(corpus, "r", encoding=encoding) as infile:
             return self._load_dictionary_stream(
