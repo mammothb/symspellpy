@@ -677,10 +677,10 @@ class SymSpell(PickleMixin):
         for i, _ in enumerate(terms_1):
             if ignore_non_words:
                 if helpers.try_parse_int64(terms_1[i]) is not None:
-                    suggestion_parts.append(SuggestItem(terms_1[i], 0, 0))
+                    suggestion_parts.append(SuggestItem(terms_1[i], 0, self.N))
                     continue
                 if helpers.is_acronym(terms_2[i], ignore_term_with_digits):
-                    suggestion_parts.append(SuggestItem(terms_2[i], 0, 0))
+                    suggestion_parts.append(SuggestItem(terms_2[i], 0, self.N))
                     continue
             suggestions = self.lookup(terms_1[i], Verbosity.TOP, max_edit_distance)
             # combi check, always before split
