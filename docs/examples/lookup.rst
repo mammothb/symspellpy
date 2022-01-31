@@ -24,7 +24,7 @@ Basic usage
   # max edit distance per lookup
   # (max_edit_distance_lookup <= max_dictionary_edit_distance)
   suggestions = sym_spell.lookup(input_term, Verbosity.CLOSEST, max_edit_distance=2)
-  # display suggestion term, term frequency, and edit distance
+  # display suggestion term, edit distance, and term frequency
   for suggestion in suggestions:
       print(suggestion)
 
@@ -56,7 +56,7 @@ Return original word if no correction within edit distance is found
   suggestions = sym_spell.lookup(
       input_term, Verbosity.CLOSEST, max_edit_distance=2, include_unknown=True
   )
-  # display suggestion term, term frequency, and edit distance
+  # display suggestion term, edit distance, and term frequency
   for suggestion in suggestions:
       print(suggestion)
 
@@ -91,7 +91,7 @@ Avoid correcting phrases matching regex
   suggestions = sym_spell.lookup(
       input_term, Verbosity.CLOSEST, max_edit_distance=2, ignore_token=r"\w+\d"
   )
-  # display suggestion term, term frequency, and edit distance
+  # display suggestion term, edit distance, and term frequency
   for suggestion in suggestions:
       print(suggestion)
 
@@ -126,7 +126,7 @@ Keep original casing
   suggestions = sym_spell.lookup(
       input_term, Verbosity.CLOSEST, max_edit_distance=2, transfer_casing=True
   )
-  # display suggestion term, term frequency, and edit distance
+  # display suggestion term, edit distance, and term frequency
   for suggestion in suggestions:
       print(suggestion)
 
