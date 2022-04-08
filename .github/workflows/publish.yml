@@ -10,7 +10,7 @@ jobs:
     name: Build and publish to TestPyPI
     runs-on: ubuntu-18.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Set up Python 3.8
         uses: actions/setup-python@v3.1.1
