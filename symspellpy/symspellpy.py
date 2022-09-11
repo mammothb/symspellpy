@@ -37,6 +37,7 @@ from symspellpy.suggest_item import SuggestItem
 from symspellpy.verbosity import Verbosity
 
 logger = logging.getLogger(__name__)
+_rec = re.compile(r"(([^\W_]|['’])+)")
 
 
 class SymSpell(PickleMixin):
@@ -183,10 +184,8 @@ class SymSpell(PickleMixin):
             if not corpus.exists():
                 logger.error(f"Corpus not found at {corpus}.")
                 return False
-            with open(corpus, "r", encoding=encoding) as infile:
-                for line in infile:
-                    for key in self._parse_words(line):
-                        self.create_dictionary_entry(key, 1)
+            for key in self._parse_words(corpus.read_text(encoding=encoding)):
+                self.create_dictionary_entry(key, 1)
         else:
             for line in corpus:
                 for key in self._parse_words(line):
@@ -1042,9 +1041,8 @@ class SymSpell(PickleMixin):
             return delete_words
         for i in range(current_distance, len(word)):
             delete = word[:i] + word[i + 1 :]
-            if delete in delete_words:
-                continue
-            delete_words.add(delete)
+            if delete not in delete_words:
+                delete_words.add(delete)
             # recursion, if maximum edit distance not yet reached
             if edit_distance < self._max_dictionary_edit_distance:
                 self._edits(delete, edit_distance, delete_words, current_distance=i)
@@ -1140,7 +1138,7 @@ class SymSpell(PickleMixin):
         # excluding "_". Compatible with non-latin characters, does not split
         # words at apostrophes. Uses capturing groups to combine a negated set
         # with a character set.
-        matches = re.findall(r"(([^\W_]|['’])+)", text.lower())
+        matches = _rec.findall(text.lower())
         # The above regex returns ("ghi'jkl", "l") for "ghi'jkl", so we extract
         # the first element
         matches = [match[0] for match in matches]
