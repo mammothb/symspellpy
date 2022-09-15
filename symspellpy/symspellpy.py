@@ -37,7 +37,7 @@ from symspellpy.suggest_item import SuggestItem
 from symspellpy.verbosity import Verbosity
 
 logger = logging.getLogger(__name__)
-_rec = re.compile(r"(([^\W_]|['’])+)")
+WORD_PATTERN = re.compile(r"(([^\W_]|['’])+)")
 
 
 class SymSpell(PickleMixin):
@@ -1138,7 +1138,7 @@ class SymSpell(PickleMixin):
         # excluding "_". Compatible with non-latin characters, does not split
         # words at apostrophes. Uses capturing groups to combine a negated set
         # with a character set.
-        matches = _rec.findall(text.lower())
+        matches = WORD_PATTERN.findall(text.lower())
         # The above regex returns ("ghi'jkl", "l") for "ghi'jkl", so we extract
         # the first element
         matches = [match[0] for match in matches]
