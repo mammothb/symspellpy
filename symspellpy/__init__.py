@@ -21,9 +21,6 @@
 
 __version__ = "6.7.6"
 
-import logging
-import os
-
-from . import editdistance, helpers
+from . import editdistance, helpers, logging
 from .symspellpy import SymSpell
 from .verbosity import Verbosity
