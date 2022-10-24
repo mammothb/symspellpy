@@ -1,6 +1,11 @@
 CHANGELOG <br>
 ==============
 
+## 6.7.7 (2022-10-24)
+- Remove support for Python 3.6
+- Use compiled regex expression in `create_dictionary()` ([#129](https://github.com/mammothb/symspellpy/pull/129))
+- Configure module logger instead of modifying root logger ([#132](https://github.com/mammothb/symspellpy/pull/132), [#133](https://github.com/mammothb/symspellpy/pull/133))
+
 ## 6.7.6 (2021-12-19)
 - Fix suggestion `count` in `lookup_compound` when `ignore_words=True` ([#108](https://github.com/mammothb/symspellpy/pull/108))
 - Log error message when loading dictionary fails ([#109](https://github.com/mammothb/symspellpy/pull/109))

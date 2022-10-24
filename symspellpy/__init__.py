@@ -19,7 +19,7 @@
 .. moduleauthor:: Wolf Garbe <wolf.garbe@faroo.com>
 """
 
-__version__ = "6.7.6"
+__version__ = "6.7.7"
 
 from . import editdistance, helpers, logging
 from .symspellpy import SymSpell
