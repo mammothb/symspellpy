@@ -1,6 +1,6 @@
 # MIT License
 #
-# Copyright (c) 2021 mmb L (Python port)
+# Copyright (c) 2022 mmb L (Python port)
 # Copyright (c) 2021 Wolf Garbe (Original C# implementation)
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,9 +21,6 @@
 
 __version__ = "6.7.6"
 
-import logging
-import os
-
-from . import editdistance, helpers
+from . import editdistance, helpers, logging
 from .symspellpy import SymSpell
 from .verbosity import Verbosity
