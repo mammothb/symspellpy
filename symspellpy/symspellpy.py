@@ -165,7 +165,7 @@ class SymSpell(PickleMixin):
         return len(self._words)
 
     def create_dictionary(
-        self, corpus: Union[Path, str, IO[str]], encoding: Optional[str] = None
+        self, corpus: Union[Path, str, IO[str]], encoding: Optional[str] = None, errors[str] = None
     ) -> bool:
         """Loads multiple dictionary words from a file containing plain text.
 
@@ -174,7 +174,8 @@ class SymSpell(PickleMixin):
         Args:
             corpus: The path+filename of the file or afile object of the
                 dictionary.
-            encoding: Text encoding of the corpus file.
+            encoding: Text encoding of the corpus file. Default None.
+            errors: Determines how decoding errors are handled. Default None.
 
         Returns:
             ``True`` if file loaded, or ``False`` if file not found.
@@ -184,7 +185,7 @@ class SymSpell(PickleMixin):
             if not corpus.exists():
                 logger.error(f"Corpus not found at {corpus}.")
                 return False
-            for key in self._parse_words(corpus.read_text(encoding=encoding)):
+            for key in self._parse_words(corpus.read_text(encoding=encoding, errors=errors))):
                 self.create_dictionary_entry(key, 1)
         else:
             for line in corpus:
