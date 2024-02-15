@@ -185,7 +185,7 @@ class SymSpell(PickleMixin):
             if not corpus.exists():
                 logger.error(f"Corpus not found at {corpus}.")
                 return False
-            for key in self._parse_words(corpus.read_text(encoding=encoding, errors=errors))):
+            for key in self._parse_words(corpus.read_text(encoding=encoding, errors=errors)):
                 self.create_dictionary_entry(key, 1)
         else:
             for line in corpus:
