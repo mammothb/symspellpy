@@ -165,7 +165,7 @@ class SymSpell(PickleMixin):
         return len(self._words)
 
     def create_dictionary(
-        self, corpus: Union[Path, str, IO[str]], encoding: Optional[str] = None, errors[str] = None
+        self, corpus: Union[Path, str, IO[str]], encoding: Optional[str] = None, errors: Optional[str] = None
     ) -> bool:
         """Loads multiple dictionary words from a file containing plain text.
 
