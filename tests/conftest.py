@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-import pkg_resources
+import importlib_resources
 import pytest
 
 from symspellpy import SymSpell
@@ -13,17 +13,15 @@ FORTESTS_DIR = Path(__file__).resolve().parent / "fortests"
 #######################################################################
 @pytest.fixture
 def bigram_path():
-    return pkg_resources.resource_filename(
-        "symspellpy", "frequency_bigramdictionary_en_243_342.txt"
-    )
-
+    ref = importlib_resources.files("symspellpy") / "frequency_bigramdictionary_en_243_342.txt"
+    with importlib_resources.as_file(ref) as path:
+        yield path
 
 @pytest.fixture
 def dictionary_path():
-    return pkg_resources.resource_filename(
-        "symspellpy", "frequency_dictionary_en_82_765.txt"
-    )
-
+    ref = importlib_resources.files("symspellpy") / "frequency_dictionary_en_82_765.txt"
+    with importlib_resources.as_file(ref) as path:
+        yield path
 
 @pytest.fixture
 def pickle_path():
@@ -90,3 +88,4 @@ def symspell_short(request):
     if request.param is None:
         return SymSpell(1, 3)
     return SymSpell(1, 3, count_threshold=request.param)
+
