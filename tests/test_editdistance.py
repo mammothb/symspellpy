@@ -20,7 +20,7 @@ VERY_LONG_STRING = "very_long_string"
 
 
 def expected_levenshtein(string_1, string_2, max_distance):
-    max_distance = int(min(2 ** 31 - 1, max_distance))
+    max_distance = int(min(2**31 - 1, max_distance))
     len_1 = len(string_1)
     len_2 = len(string_2)
     d = np.zeros((len_1 + 1, len_2 + 1))
@@ -42,7 +42,7 @@ def expected_levenshtein(string_1, string_2, max_distance):
 
 
 def expected_damerau_osa(string_1, string_2, max_distance):
-    max_distance = int(min(2 ** 31 - 1, max_distance))
+    max_distance = int(min(2**31 - 1, max_distance))
     len_1 = len(string_1)
     len_2 = len(string_2)
     d = np.zeros((len_1 + 1, len_2 + 1))
@@ -145,10 +145,9 @@ class TestEditDistance:
         with pytest.raises(TypeError) as excinfo:
             comparer = AbstractDistanceComparer()
             _ = comparer.distance("string_1", "string_2", 10)
-        assert (
-            "Can't instantiate abstract class AbstractDistanceComparer with "
-            f"abstract method{'s' if sys.version_info[1] < 9 else ''} distance"
-        ) == str(excinfo.value)
+        assert str(excinfo.value).startswith(
+            "Can't instantiate abstract class AbstractDistanceComparer"
+        )
 
     def test_internal_distance_comparer(self, get_edit_distance):
         edit_distance, expected = get_edit_distance
