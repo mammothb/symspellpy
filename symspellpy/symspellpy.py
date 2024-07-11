@@ -28,6 +28,7 @@ from collections import defaultdict
 from itertools import cycle
 from pathlib import Path
 from typing import IO, Dict, List, Optional, Pattern, Set, Union
+import concurrent.futures
 
 from symspellpy import helpers
 from symspellpy.composition import Composition
@@ -327,10 +328,16 @@ class SymSpell(PickleMixin):
         
         # Use a dictionary to collect all deletes first
         deletes_dict = defaultdict(list)
-        for key in self._words:
+        
+        def process_key(key):
             edits = self._edits_prefix(key)
-            for delete in edits:
-                deletes_dict[delete].append(key)
+            return [(delete, key) for delete in edits]
+        
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            futures = [executor.submit(process_key, key) for key in self._words]
+            for future in concurrent.futures.as_completed(futures):
+                for delete, key in future.result():
+                    deletes_dict[delete].append(key)
         
         # Update self._deletes in one go
         self._deletes.update(deletes_dict)
