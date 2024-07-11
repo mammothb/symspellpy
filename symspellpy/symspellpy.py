@@ -323,17 +323,15 @@ class SymSpell(PickleMixin):
         """
         self._words = corpus
         self._max_length = max(map(len, self._words.keys()), default=0)
-        self._deletes.clear()
         
         # Use a dictionary to collect all deletes first
         deletes_dict = defaultdict(list)
         for key in self._words:
-            edits = self._edits_prefix(key)
-            for delete in edits:
+            for delete in self._edits_prefix(key):
                 deletes_dict[delete].append(key)
         
         # Update self._deletes in one go
-        self._deletes.update(deletes_dict)
+        self._deletes = deletes_dict
         return True
 
         
