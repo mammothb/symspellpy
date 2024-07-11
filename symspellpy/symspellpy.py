@@ -315,6 +315,9 @@ class SymSpell(PickleMixin):
                 infile, term_index, count_index, separator
             )
 
+    def load_json(self, corpus):
+        self.words = corpus
+    
     def load_dictionary(
         self,
         corpus: Union[Path, str],
