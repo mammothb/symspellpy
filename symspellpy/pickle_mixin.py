@@ -144,8 +144,7 @@ class PickleMixin:
             self._prefix_length,
         ):
             logger.warning(
-                f"Loading data which was created using different {settings} settings. "
-                "Overwriting current SymSpell instance with loaded settings ..."
+                f"Loading data which was created using different {settings} settings. Overwriting current SymSpell instance with loaded settings ..."
             )
         self._deletes = pickle_data["deletes"]
         self._words = pickle_data["words"]
@@ -163,7 +162,7 @@ class PickleMixin:
         return True
 
     def _save_pickle_stream(
-        self, stream: Optional[IO[bytes]] = None, to_bytes=False
+        self, stream: Optional[IO[bytes]] = None, to_bytes: bool = False
     ) -> Optional[bytes]:
         """Pickles :attr:`_below_threshold_words`, :attr:`_bigrams`,
         :attr:`_deletes`, :attr:`_words`, and :attr:`_max_length` into

@@ -280,7 +280,7 @@ class SymSpell(PickleMixin):
         del self._words[key]
         # look for the next longest word if we just deleted the longest word
         if len(key) == self._max_length:
-            self._max_length = max(map(len, self._words.keys()))
+            self._max_length = len(max(self._words.keys(), key=len))
 
         # create deletes
         edits = self._edits_prefix(key)
@@ -393,8 +393,8 @@ class SymSpell(PickleMixin):
         suggestions: List[SuggestItem] = []
         phrase_len = len(phrase)
 
+        original_phrase = phrase
         if transfer_casing:
-            original_phrase = phrase
             phrase = phrase.lower()
 
         def early_exit():
@@ -429,14 +429,14 @@ class SymSpell(PickleMixin):
         if max_edit_distance == 0:
             return early_exit()
 
-        considered_deletes = set()
-        considered_suggestions = set()
+        considered_deletes: Set[str] = set()
+        considered_suggestions: Set[str] = set()
         # we considered the phrase already in the 'phrase in self._words' above
         considered_suggestions.add(phrase)
 
         max_edit_distance_2 = max_edit_distance
         candidate_pointer = 0
-        candidates = []
+        candidates: List[str] = []
 
         # add original prefix
         phrase_prefix_len = phrase_len
@@ -676,10 +676,13 @@ class SymSpell(PickleMixin):
         terms_1 = helpers.parse_words(phrase, split_by_space=split_by_space)
         # Second list of single terms with preserved cases so we can ignore
         # acronyms (all cap words)
+        terms_2: List[str] = []
         if ignore_non_words:
-            terms_2 = helpers.parse_words(phrase, True, split_by_space)
+            terms_2 = helpers.parse_words(
+                phrase, preserve_case=True, split_by_space=split_by_space
+            )
         suggestions = []
-        suggestion_parts = []
+        suggestion_parts: List[SuggestItem] = []
         distance_comparer = EditDistance(self._distance_algorithm)
 
         # translate every item to its best suggestion, otherwise it remains
@@ -865,7 +868,7 @@ class SymSpell(PickleMixin):
         phrase: str,
         max_edit_distance: Optional[int] = None,
         max_segmentation_word_length: Optional[int] = None,
-        ignore_token: Optional[Pattern] = None,
+        ignore_token: Optional[Pattern[str]] = None,
     ) -> Composition:
         """`word_segmentation` divides a string into words by inserting missing
         spaces at the appropriate positions misspelled words are corrected and do
@@ -1055,7 +1058,7 @@ class SymSpell(PickleMixin):
         return delete_words
 
     def _edits_prefix(self, key: str) -> Set[str]:
-        hash_set = set()
+        hash_set: Set[str] = set()
         if len(key) <= self._max_dictionary_edit_distance:
             hash_set.add("")
         if len(key) > self._prefix_length:
@@ -1144,7 +1147,7 @@ class SymSpell(PickleMixin):
         # excluding "_". Compatible with non-latin characters, does not split
         # words at apostrophes. Uses capturing groups to combine a negated set
         # with a character set.
-        matches = WORD_PATTERN.findall(text.lower())
+        matches: List[str] = WORD_PATTERN.findall(text.lower())
         # The above regex returns ("ghi'jkl", "l") for "ghi'jkl", so we extract
         # the first element
         matches = [match[0] for match in matches]

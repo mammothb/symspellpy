@@ -40,8 +40,7 @@ def case_transfer_matching(cased_text: str, uncased_text: str) -> str:
     """
     if len(cased_text) != len(uncased_text):
         raise ValueError(
-            "'cased_text' and 'uncased_text' don't have the same length, use "
-            "case_transfer_similar() instead"
+            "'cased_text' and 'uncased_text' don't have the same length, use case_transfer_similar() instead"
         )
 
     return "".join(
