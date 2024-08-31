@@ -108,7 +108,7 @@ class SymSpell(PickleMixin):
         self._max_length = 0
 
     @property
-    def below_threshold_words(self) -> (Dict[str, int]):
+    def below_threshold_words(self) -> Dict[str, int]:
         """Dictionary of unique words that are below the count threshold for
         being considered correct spellings.
         """
@@ -165,7 +165,10 @@ class SymSpell(PickleMixin):
         return len(self._words)
 
     def create_dictionary(
-        self, corpus: Union[Path, str, IO[str]], encoding: Optional[str] = None, errors: Optional[str] = None
+        self,
+        corpus: Union[Path, str, IO[str]],
+        encoding: Optional[str] = None,
+        errors: Optional[str] = None,
     ) -> bool:
         """Loads multiple dictionary words from a file containing plain text.
 
@@ -185,7 +188,9 @@ class SymSpell(PickleMixin):
             if not corpus.exists():
                 logger.error(f"Corpus not found at {corpus}.")
                 return False
-            for key in self._parse_words(corpus.read_text(encoding=encoding, errors=errors)):
+            for key in self._parse_words(
+                corpus.read_text(encoding=encoding, errors=errors)
+            ):
                 self.create_dictionary_entry(key, 1)
         else:
             for line in corpus:
@@ -850,7 +855,7 @@ class SymSpell(PickleMixin):
             joined_term = helpers.case_transfer_similar(phrase, joined_term)
         suggestion = SuggestItem(
             joined_term,
-            distance_comparer.compare(phrase, joined_term, 2 ** 31 - 1),
+            distance_comparer.compare(phrase, joined_term, 2**31 - 1),
             int(joined_count),
         )
         return [suggestion]
@@ -894,7 +899,7 @@ class SymSpell(PickleMixin):
             measure of how common and probable the corrected segmentation is).
         """
         # normalize ligatures: scientiﬁc -> scientific
-        phrase = unicodedata.normalize("NFKC", phrase).replace("\u002D", "")
+        phrase = unicodedata.normalize("NFKC", phrase).replace("\u002d", "")
 
         if max_edit_distance is None:
             max_edit_distance = self._max_dictionary_edit_distance

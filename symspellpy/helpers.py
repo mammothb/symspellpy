@@ -260,7 +260,7 @@ def try_parse_int64(string: str) -> Optional[int]:
         ret = int(string)
     except ValueError:
         return None
-    return ret if -(2 ** 63) <= ret <= 2 ** 63 - 1 else None
+    return ret if -(2**63) <= ret <= 2**63 - 1 else None
 
 
 class DictIO:
