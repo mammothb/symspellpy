@@ -3,6 +3,7 @@ requires = ["setuptools>=58.0.4", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.basedpyright]
+ignore = ["tests"]
 pythonVersion = "3.8"
 
 reportUnusedCallResult = "none"
