@@ -3,8 +3,8 @@ from itertools import combinations, permutations
 
 import pytest
 
+from symspellpy.abstract_distance_comparer import AbstractDistanceComparer
 from symspellpy.editdistance import (
-    AbstractDistanceComparer,
     DamerauOsa,
     DamerauOsaFast,
     DistanceAlgorithm,
@@ -60,6 +60,11 @@ def expected_damerau_osa(string_1, string_2, max_distance):
                 d[i][j] = min(d[i][j], d[i - 2][j - 2] + cost)
     distance = d[len_1][len_2]
     return distance if distance <= max_distance else -1
+
+
+class CustomDistanceComparer(AbstractDistanceComparer):
+    def distance(self, string_1: str, string_2: str, max_distance: int) -> int:
+        return -2
 
 
 @pytest.fixture(
@@ -140,6 +145,11 @@ class TestEditDistance:
             _ = EditDistance(2)
         assert "unknown distance algorithm" == str(excinfo.value)
 
+    def test_missing_custom_comparer(self):
+        with pytest.raises(ValueError) as excinfo:
+            _ = EditDistance(DistanceAlgorithm.USER_PROVIDED)
+        assert "no comparer passed in" in str(excinfo.value)
+
     def test_abstract_distance_comparer(self):
         with pytest.raises(TypeError) as excinfo:
             comparer = AbstractDistanceComparer()
@@ -147,6 +157,11 @@ class TestEditDistance:
         assert str(excinfo.value).startswith(
             "Can't instantiate abstract class AbstractDistanceComparer"
         )
+
+    def test_warn_when_builtin_comparer_override_custom_comparer(self):
+        with pytest.warns(UserWarning, match="A built-in comparer will be used.$"):
+            comparer = CustomDistanceComparer()
+            edit_distance = EditDistance(DistanceAlgorithm.LEVENSHTEIN, comparer)
 
     def test_internal_distance_comparer(self, get_edit_distance):
         edit_distance, expected = get_edit_distance
@@ -161,6 +176,15 @@ class TestEditDistance:
                 assert expected(s1, s2, max_distance) == comparer.distance(
                     s1, s2, max_distance
                 )
+
+    def test_editdistance_use_custom_comparer(self, get_strings):
+        strings, max_distance = get_strings
+        comparer = CustomDistanceComparer()
+        edit_distance = EditDistance(DistanceAlgorithm.USER_PROVIDED, comparer)
+
+        for s1 in strings:
+            for s2 in strings:
+                assert -2 == comparer.distance(s1, s2, max_distance)
 
     def test_comparer_null_distance(self, get_comparer, get_short_and_long_strings):
         comparer, _ = get_comparer
