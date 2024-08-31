@@ -129,7 +129,7 @@ class Levenshtein(AbstractDistanceComparer):
             return helpers.null_distance_results(string_1, string_2, max_distance)
         if max_distance <= 0:
             return 0 if string_1 == string_2 else -1
-        max_distance = int(min(2 ** 31 - 1, max_distance))
+        max_distance = int(min(2**31 - 1, max_distance))
         # if strings of different lengths, ensure shorter string is in string_1.
         # This can result in a little faster speed by spending more time spinning
         # just the inner loop during the main processing.
@@ -269,7 +269,7 @@ class DamerauOsa(AbstractDistanceComparer):
             return helpers.null_distance_results(string_1, string_2, max_distance)
         if max_distance <= 0:
             return 0 if string_1 == string_2 else -1
-        max_distance = int(min(2 ** 31 - 1, max_distance))
+        max_distance = int(min(2**31 - 1, max_distance))
         # if strings of different lengths, ensure shorter string is in string_1.
         # This can result in a little faster speed by spending more time spinning
         # just the inner loop during the main processing.

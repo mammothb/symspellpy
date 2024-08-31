@@ -2,17 +2,18 @@
 requires = ["setuptools>=58.0.4", "wheel"]
 build-backend = "setuptools.build_meta"
 
-[tool.isort]
-profile = "black"
+[tool.basedpyright]
+pythonVersion = "3.8"
 
-[tool.pylint]
-    [tool.pylint.'MESSAGES CONTROL']
-        disable = [
-            "logging-fstring-interpolation",
-            "too-many-arguments",
-            "too-many-branches",
-            "too-many-instance-attributes",
-            "too-many-locals",
-            "too-many-nested-blocks",
-            "too-many-statements",
-        ]
+reportUnusedCallResult = "none"
+
+[tool.ruff]
+line-length = 88
+indent-width = 4
+
+[tool.ruff.format]
+docstring-code-format = false
+indent-style = "space"
+line-ending = "auto"
+quote-style = "double"
+skip-magic-trailing-comma = false

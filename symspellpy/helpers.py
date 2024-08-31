@@ -40,8 +40,7 @@ def case_transfer_matching(cased_text: str, uncased_text: str) -> str:
     """
     if len(cased_text) != len(uncased_text):
         raise ValueError(
-            "'cased_text' and 'uncased_text' don't have the same length, use "
-            "case_transfer_similar() instead"
+            "'cased_text' and 'uncased_text' don't have the same length, use case_transfer_similar() instead"
         )
 
     return "".join(
@@ -260,7 +259,7 @@ def try_parse_int64(string: str) -> Optional[int]:
         ret = int(string)
     except ValueError:
         return None
-    return ret if -(2 ** 63) <= ret <= 2 ** 63 - 1 else None
+    return ret if -(2**63) <= ret <= 2**63 - 1 else None
 
 
 class DictIO:
