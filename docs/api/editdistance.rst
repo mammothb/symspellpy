@@ -17,9 +17,6 @@ EditDistance class
 Distance comparer classes
 =========================
 
-.. autoclass:: symspellpy.editdistance.AbstractDistanceComparer
-   :members:
-
 .. autoclass:: symspellpy.editdistance.DamerauOsa
    :members:
 
