@@ -1,6 +1,40 @@
 [build-system]
-requires = ["setuptools>=58.0.4", "wheel"]
+requires = ["setuptools>=61.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "symspellpy"
+dynamic = ["version"]
+dependencies = [
+    "editdistpy>=0.1.3",
+]
+requires-python = ">=3.8"
+authors = [
+    {name = "mmb L"},
+]
+description = "Python SymSpell"
+readme = "README.md"
+license = {file = "LICENSE"}
+keywords = ["spellchecker", "symspell", "word segmentation"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Education",
+    "Natural Language :: English",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+[project.urls]
+Repository = "https://github.com/mammothb/symspellpy"
+Documentation = "https://symspellpy.readthedocs.io/en/latest"
+Changelog = "https://github.com/mammothb/symspellpy/blob/master/CHANGELOG.md"
 
 [tool.basedpyright]
 ignore = ["tests"]
@@ -18,3 +52,13 @@ indent-style = "space"
 line-ending = "auto"
 quote-style = "double"
 skip-magic-trailing-comma = false
+
+[tool.setuptools.dynamic]
+version = {attr = "symspellpy.__version__"}
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["symspellpy"]
+
+[tool.setuptools.package-data]
+symspellpy = ["frequency_*.txt"]
