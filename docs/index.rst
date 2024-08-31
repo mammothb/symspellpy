@@ -18,7 +18,7 @@
 symspellpy
 **********
 
-symspellpy is a Python port of SymSpell_ v6.7, a Symmetric Delete
+symspellpy is a Python port of SymSpell_ v6.7.2, a Symmetric Delete
 spelling correction algorithm which provides much higher speed and lower
 memory consumption.
 

@@ -1,6 +1,6 @@
 # MIT License
 #
-# Copyright (c) 2022 mmb L (Python port)
+# Copyright (c) 2024 mmb L (Python port)
 # Copyright (c) 2021 Wolf Garbe (Original C# implementation)
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -84,6 +84,7 @@ class SymSpell(PickleMixin):
         max_dictionary_edit_distance: int = 2,
         prefix_length: int = 7,
         count_threshold: int = 1,
+        distance_comparer: Optional[EditDistance] = None,
     ) -> None:
         if max_dictionary_edit_distance < 0:
             raise ValueError("max_dictionary_edit_distance cannot be negative")
@@ -95,6 +96,10 @@ class SymSpell(PickleMixin):
             )
         if count_threshold < 0:
             raise ValueError("count_threshold cannot be negative")
+        if distance_comparer is None:
+            self.distance_comparer = EditDistance(DistanceAlgorithm.DAMERAU_OSA_FAST)
+        else:
+            self.distance_comparer = distance_comparer
         self._words: Dict[str, int] = {}
         self._below_threshold_words: Dict[str, int] = {}
         self._bigrams: Dict[str, int] = {}
@@ -104,7 +109,7 @@ class SymSpell(PickleMixin):
         self._max_dictionary_edit_distance = max_dictionary_edit_distance
         self._prefix_length = prefix_length
         self._count_threshold = count_threshold
-        self._distance_algorithm = DistanceAlgorithm.DAMERAU_OSA_FAST
+        #  self._distance_algorithm = DistanceAlgorithm.DAMERAU_OSA_FAST
         self._max_length = 0
 
     @property
@@ -128,19 +133,6 @@ class SymSpell(PickleMixin):
         suggestions might have a single suggestion, or multiple suggestions.
         """
         return self._deletes
-
-    @property
-    def distance_algorithm(self) -> DistanceAlgorithm:
-        """The current distance algorithm."""
-        return self._distance_algorithm
-
-    @distance_algorithm.setter
-    def distance_algorithm(self, value: DistanceAlgorithm) -> None:
-        if not isinstance(value, DistanceAlgorithm):
-            raise TypeError(
-                "can only assign DistanceAlgorithm type values to distance_algorithm"
-            )
-        self._distance_algorithm = value
 
     @property
     def entry_count(self) -> int:
@@ -445,7 +437,6 @@ class SymSpell(PickleMixin):
             candidates.append(phrase[:phrase_prefix_len])
         else:
             candidates.append(phrase)
-        distance_comparer = EditDistance(self._distance_algorithm)
         while candidate_pointer < len(candidates):
             candidate = candidates[candidate_pointer]
             candidate_pointer += 1
@@ -577,7 +568,7 @@ class SymSpell(PickleMixin):
                         if suggestion in considered_suggestions:
                             continue
                         considered_suggestions.add(suggestion)
-                        distance = distance_comparer.compare(
+                        distance = self.distance_comparer.compare(
                             phrase, suggestion, max_edit_distance_2
                         )
                         if distance < 0:
@@ -683,7 +674,6 @@ class SymSpell(PickleMixin):
             )
         suggestions = []
         suggestion_parts: List[SuggestItem] = []
-        distance_comparer = EditDistance(self._distance_algorithm)
 
         # translate every item to its best suggestion, otherwise it remains
         # unchanged
@@ -761,7 +751,7 @@ class SymSpell(PickleMixin):
                             continue
                         # select best suggestion for split pair
                         tmp_term = f"{suggestions_1[0].term} {suggestions_2[0].term}"
-                        tmp_distance = distance_comparer.compare(
+                        tmp_distance = self.distance_comparer.compare(
                             terms_1[i], tmp_term, max_edit_distance
                         )
                         if tmp_distance < 0:
@@ -858,7 +848,7 @@ class SymSpell(PickleMixin):
             joined_term = helpers.case_transfer_similar(phrase, joined_term)
         suggestion = SuggestItem(
             joined_term,
-            distance_comparer.compare(phrase, joined_term, 2**31 - 1),
+            self.distance_comparer.compare(phrase, joined_term, 2**31 - 1),
             int(joined_count),
         )
         return [suggestion]

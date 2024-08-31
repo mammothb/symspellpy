@@ -4,11 +4,13 @@ from unittest import TestCase
 import pytest
 
 from symspellpy import SymSpell, Verbosity
-from symspellpy.editdistance import DistanceAlgorithm
+from symspellpy.abstract_distance_comparer import AbstractDistanceComparer
+from symspellpy.editdistance import DistanceAlgorithm, EditDistance
 from symspellpy.helpers import DictIO
 
 FORTESTS_DIR = Path(__file__).resolve().parent / "fortests"
 BAD_DICT_PATH = FORTESTS_DIR / "bad_dict.txt"
+BELOW_THRESHOLD_DICT_PATH = FORTESTS_DIR / "below_threshold_dict.txt"
 BIG_MODIFIED_PATH = FORTESTS_DIR / "big_modified.txt"
 BIG_WORDS_PATH = FORTESTS_DIR / "big_words.txt"
 NON_EN_DICT_PATH = FORTESTS_DIR / "non_en_dict.txt"
@@ -33,6 +35,11 @@ def get_dictionary_stream(request):
     else:
         dict_stream = DictIO(dictionary, request.param)
     yield dict_stream, request.param
+
+
+class CustomDistanceComparer(AbstractDistanceComparer):
+    def distance(self, string_1: str, string_2: str, max_distance: int) -> int:
+        return 0
 
 
 class TestSymSpellPy:
@@ -63,26 +70,13 @@ class TestSymSpellPy:
             _ = SymSpell(1, 3, -1)
         assert "count_threshold cannot be negative" == str(excinfo.value)
 
-    @pytest.mark.parametrize(
-        "algorithm",
-        [
-            DistanceAlgorithm.LEVENSHTEIN,
-            DistanceAlgorithm.DAMERAU_OSA,
-            DistanceAlgorithm.LEVENSHTEIN_FAST,
-            DistanceAlgorithm.DAMERAU_OSA_FAST,
-        ],
-    )
-    def test_set_distance_algorithm(self, symspell_default, algorithm):
-        symspell_default.distance_algorithm = algorithm
-        assert algorithm == symspell_default.distance_algorithm
-
-    def test_set_invalid_distance_algorithm(self, symspell_default):
-        with pytest.raises(TypeError) as excinfo:
-            symspell_default.distance_algorithm = 1
-        assert (
-            "can only assign DistanceAlgorithm type values to distance_algorithm"
-            == str(excinfo.value)
+    def test_set_distance_comparer(self):
+        distance_comparer = EditDistance(
+            DistanceAlgorithm.USER_PROVIDED, CustomDistanceComparer()
         )
+        sym_spell = SymSpell(distance_comparer=distance_comparer)
+
+        assert distance_comparer == sym_spell.distance_comparer
 
     @pytest.mark.parametrize("symspell_short", [None, 0], indirect=True)
     def test_create_dictionary_entry_negative_count(self, symspell_short):
@@ -195,6 +189,15 @@ class TestSymSpellPy:
 
         assert 82834 == symspell_default.word_count
         assert 676094 == symspell_default.entry_count
+
+    @pytest.mark.parametrize("symspell_short", [10], indirect=True)
+    def test_load_dictionary_below_threshold(self, symspell_short):
+        symspell_short.load_dictionary(BELOW_THRESHOLD_DICT_PATH, 0, 1)
+
+        assert 1 == len(symspell_short.below_threshold_words)
+        assert 8 == symspell_short.below_threshold_words["below"]
+
+        assert 2 == symspell_short.word_count
 
     def test_load_dictionary_separator(self, symspell_default):
         assert symspell_default.load_dictionary(SEPARATOR_DICT_PATH, 0, 1, SEPARATOR)

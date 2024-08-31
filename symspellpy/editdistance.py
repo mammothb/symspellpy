@@ -1,6 +1,6 @@
 # MIT License
 #
-# Copyright (c) 2022 mmb L (Python port)
+# Copyright (c) 2024 mmb L (Python port)
 # Copyright (c) 2021 Wolf Garbe (Original C# implementation)
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -18,13 +18,14 @@
    :synopsis: Module for edit distance algorithms.
 """
 
-from abc import ABC, abstractmethod
+import warnings
 from enum import Enum
-from typing import List
+from typing import List, Optional
 
 from editdistpy import damerau_osa, levenshtein
 
 from symspellpy import helpers
+from symspellpy.abstract_distance_comparer import AbstractDistanceComparer
 
 
 class DistanceAlgorithm(Enum):
@@ -34,6 +35,7 @@ class DistanceAlgorithm(Enum):
     DAMERAU_OSA = 1  #: Damerau optimal string alignment algorithm
     LEVENSHTEIN_FAST = 2  #: Fast Levenshtein algorithm.
     DAMERAU_OSA_FAST = 3  #: Fast Damerau optimal string alignment algorithm
+    USER_PROVIDED = 4  #: User provided custom edit distance algorithm
 
 
 class EditDistance:
@@ -53,7 +55,16 @@ class EditDistance:
         ValueError: If `algorithm` specifies an invalid distance algorithm.
     """
 
-    def __init__(self, algorithm: DistanceAlgorithm) -> None:
+    def __init__(
+        self,
+        algorithm: DistanceAlgorithm,
+        comparer: Optional[AbstractDistanceComparer] = None,
+    ) -> None:
+        if algorithm != DistanceAlgorithm.USER_PROVIDED and comparer is not None:
+            warnings.warn(
+                f"A comparer is passed in but algorithm is not {DistanceAlgorithm.USER_PROVIDED.value}. A built-in comparer will be used."
+            )
+
         self._distance_comparer: AbstractDistanceComparer
         self._algorithm = algorithm
         if algorithm == DistanceAlgorithm.LEVENSHTEIN:
@@ -64,6 +75,12 @@ class EditDistance:
             self._distance_comparer = LevenshteinFast()
         elif algorithm == DistanceAlgorithm.DAMERAU_OSA_FAST:
             self._distance_comparer = DamerauOsaFast()
+        elif algorithm == DistanceAlgorithm.USER_PROVIDED:
+            if not isinstance(comparer, AbstractDistanceComparer):
+                raise ValueError(
+                    f"{algorithm.value} selected but no comparer passed in."
+                )
+            self._distance_comparer = comparer
         else:
             raise ValueError("unknown distance algorithm")
 
@@ -80,25 +97,6 @@ class EditDistance:
             The edit distance (or -1 if `max_distance` exceeded).
         """
         return self._distance_comparer.distance(string_1, string_2, max_distance)
-
-
-class AbstractDistanceComparer(ABC):
-    """An interface to compute relative distance between two strings."""
-
-    @abstractmethod
-    def distance(self, string_1: str, string_2: str, max_distance: int) -> int:
-        """Returns a measure of the distance between two strings.
-
-        Args:
-            string_1: One of the strings to compare.
-            string_2: The other string to compare.
-            max_distance: The maximum distance that is of interest.
-
-        Returns:
-            -1 if the distance is greater than the max_distance, 0 if the strings
-                are equivalent, otherwise a positive number whose magnitude
-                increases as difference between the strings increases.
-        """
 
 
 class Levenshtein(AbstractDistanceComparer):

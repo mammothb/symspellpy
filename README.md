@@ -5,7 +5,7 @@ symspellpy <br>
 [![codecov](https://codecov.io/gh/mammothb/symspellpy/branch/master/graph/badge.svg)](https://codecov.io/gh/mammothb/symspellpy)
 ========
 
-symspellpy is a Python port of [SymSpell](https://github.com/wolfgarbe/SymSpell) v6.7.1, which provides much higher speed and lower memory consumption. Unit tests
+symspellpy is a Python port of [SymSpell](https://github.com/wolfgarbe/SymSpell) v6.7.2, which provides much higher speed and lower memory consumption. Unit tests
 from the original project are implemented to ensure the accuracy of the port.
 
 Please note that the port has not been optimized for speed.
