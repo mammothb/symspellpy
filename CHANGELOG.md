@@ -1,6 +1,12 @@
 CHANGELOG <br>
 ==============
 
+## 6.7.8 (2024-08-31)
+- Handle encoding errors [#149](https://github.com/mammothb/symspellpy/pull/149)
+- Bump supported Python version to 3.8 - 3.12 [#151](https://github.com/mammothb/symspellpy/pull/151)
+- Remove numpy dependency [#156](https://github.com/mammothb/symspellpy/pull/156)
+- Feature: distance comparer interface [#159](https://github.com/mammothb/symspellpy/pull/159)
+
 ## 6.7.7 (2022-10-24)
 - Remove support for Python 3.6
 - Use compiled regex expression in `create_dictionary()` ([#129](https://github.com/mammothb/symspellpy/pull/129))
