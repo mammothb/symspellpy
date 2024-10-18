@@ -1,3 +1,4 @@
+from io import StringIO
 from pathlib import Path
 from unittest import TestCase
 
@@ -238,6 +239,18 @@ class TestSymSpellPy:
         result = symspell_default.lookup("АБ", Verbosity.TOP, 2)
         assert 1 == len(result)
         assert "АБИ" == result[0].term
+
+    def test_load_dictionary_from_string_io(self, symspell_default, dictionary_path):
+        with open(dictionary_path, "r") as f:
+            symspell_default.load_dictionary(StringIO(f.read()), 0, 1)
+            assert 82834 == symspell_default.word_count
+            assert 676094 == symspell_default.entry_count
+
+    def test_load_dictionary_from_text_io_wrapper(self, symspell_default, dictionary_path):
+        with open(dictionary_path, "r") as f:
+            symspell_default.load_dictionary(f, 0, 1)
+            assert 82834 == symspell_default.word_count
+            assert 676094 == symspell_default.entry_count
 
     def test_create_dictionary_invalid_path(self, symspell_default):
         with TestCase.assertLogs("symspellpy.symspellpy.logger", level="ERROR") as cm:
