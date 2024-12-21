@@ -29,4 +29,4 @@ jobs:
         run: python -m pytest --cov-report=xml --cov=symspellpy
 
       - name: Upload code coverage
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
