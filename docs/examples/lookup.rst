@@ -8,13 +8,12 @@ Basic usage
 .. code-block:: python
   :emphasize-lines: 16
 
-  import pkg_resources
+  import importlib.resources
+
   from symspellpy import SymSpell, Verbosity
 
   sym_spell = SymSpell(max_dictionary_edit_distance=2, prefix_length=7)
-  dictionary_path = pkg_resources.resource_filename(
-      "symspellpy", "frequency_dictionary_en_82_765.txt"
-  )
+  dictionary_path = importlib.resources("symspellpy") / "frequency_dictionary_en_82_765.txt"
   # term_index is the column of the term and count_index is the
   # column of the term frequency
   sym_spell.load_dictionary(dictionary_path, term_index=0, count_index=1)
@@ -38,13 +37,12 @@ Return original word if no correction within edit distance is found
 .. code-block:: python
   :emphasize-lines: 16,17,18
 
-  import pkg_resources
+  import importlib.resources
+
   from symspellpy import SymSpell, Verbosity
 
   sym_spell = SymSpell(max_dictionary_edit_distance=2, prefix_length=7)
-  dictionary_path = pkg_resources.resource_filename(
-      "symspellpy", "frequency_dictionary_en_82_765.txt"
-  )
+  dictionary_path = importlib.resources("symspellpy") / "frequency_dictionary_en_82_765.txt"
   # term_index is the column of the term and count_index is the
   # column of the term frequency
   sym_spell.load_dictionary(dictionary_path, term_index=0, count_index=1)
@@ -73,14 +71,12 @@ Avoid correcting phrases matching regex
 .. code-block:: python
   :emphasize-lines: 16,17,18
 
-  import pkg_resources
+  import importlib.resources
+
   from symspellpy import SymSpell, Verbosity
 
   sym_spell = SymSpell(max_dictionary_edit_distance=2, prefix_length=7)
-  dictionary_path = pkg_resources.resource_filename(
-      "symspellpy", "frequency_dictionary_en_82_765.txt"
-  )
-  # term_index is the column of the term and count_index is the
+  dictionary_path = importlib.resources("symspellpy") / "frequency_dictionary_en_82_765.txt"
   # column of the term frequency
   sym_spell.load_dictionary(dictionary_path, term_index=0, count_index=1)
 
@@ -108,13 +104,12 @@ Keep original casing
 .. code-block:: python
   :emphasize-lines: 16,17,18
 
-  import pkg_resources
+  import importlib.resources
+
   from symspellpy import SymSpell, Verbosity
 
   sym_spell = SymSpell(max_dictionary_edit_distance=2, prefix_length=7)
-  dictionary_path = pkg_resources.resource_filename(
-      "symspellpy", "frequency_dictionary_en_82_765.txt"
-  )
+  dictionary_path = importlib.resources("symspellpy") / "frequency_dictionary_en_82_765.txt"
   # term_index is the column of the term and count_index is the
   # column of the term frequency
   sym_spell.load_dictionary(dictionary_path, term_index=0, count_index=1)

@@ -8,16 +8,13 @@ Basic usage
 .. code-block:: python
   :emphasize-lines: 23
 
-  import pkg_resources
+  import importlib.resources
+
   from symspellpy import SymSpell
 
   sym_spell = SymSpell(max_dictionary_edit_distance=2, prefix_length=7)
-  dictionary_path = pkg_resources.resource_filename(
-      "symspellpy", "frequency_dictionary_en_82_765.txt"
-  )
-  bigram_path = pkg_resources.resource_filename(
-      "symspellpy", "frequency_bigramdictionary_en_243_342.txt"
-  )
+  dictionary_path = importlib.resources("symspellpy") / "frequency_dictionary_en_82_765.txt"
+  bigram_path = importlib.resources("symspellpy") / "frequency_bigramdictionary_en_243_342.txt"
   # term_index is the column of the term and count_index is the
   # column of the term frequency
   sym_spell.load_dictionary(dictionary_path, term_index=0, count_index=1)
@@ -45,16 +42,13 @@ Keep original casing
 .. code-block:: python
   :emphasize-lines: 23,24,25
 
-  import pkg_resources
+  import importlib.resources
+
   from symspellpy import SymSpell
 
   sym_spell = SymSpell(max_dictionary_edit_distance=2, prefix_length=7)
-  dictionary_path = pkg_resources.resource_filename(
-      "symspellpy", "frequency_dictionary_en_82_765.txt"
-  )
-  bigram_path = pkg_resources.resource_filename(
-      "symspellpy", "frequency_bigramdictionary_en_243_342.txt"
-  )
+  dictionary_path = importlib.resources("symspellpy") / "frequency_dictionary_en_82_765.txt"
+  bigram_path = importlib.resources("symspellpy") / "frequency_bigramdictionary_en_243_342.txt"
   # term_index is the column of the term and count_index is the
   # column of the term frequency
   sym_spell.load_dictionary(dictionary_path, term_index=0, count_index=1)

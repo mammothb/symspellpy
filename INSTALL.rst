@@ -17,10 +17,10 @@ Dictionary data
 ===============
 
 The dictionary files that are shipped with symspellpy can be accesed using
-`pkg_resources`::
+`importlib.resources`::
 
-  dictionary_path = pkg_resources.resource_filename("symspellpy", "frequency_dictionary_en_82_765.txt")
-  bigram_path = pkg_resources.resource_filename("symspellpy", "frequency_bigramdictionary_en_243_342.txt")
+  dictionary_path = importlib.resources.files("symspellpy") / "frequency_dictionary_en_82_765.txt"
+  bigram_path = importlib.resources.files("symspellpy") / "frequency_bigramdictionary_en_243_342.txt"
 
 Alternatively, you can download the dictionary files from the repository and
 add them to your project directory::

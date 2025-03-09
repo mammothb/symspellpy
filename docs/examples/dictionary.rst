@@ -20,15 +20,13 @@ We can use :meth:`~symspellpy.symspellpy.SymSpell.load_dictionary`:
 .. code-block:: python
   :emphasize-lines: 10
 
+  import importlib.resources
   from itertools import islice
 
-  import pkg_resources
   from symspellpy import SymSpell
 
   sym_spell = SymSpell()
-  dictionary_path = pkg_resources.resource_filename(
-      "symspellpy", "frequency_dictionary_en_82_765.txt"
-  )
+  dictionary_path = importlib.resources("symspellpy") / "frequency_dictionary_en_82_765.txt"
   sym_spell.load_dictionary(dictionary_path, 0, 1)
 
   # Print out first 5 elements to demonstrate that dictionary is
@@ -54,15 +52,13 @@ We can use :meth:`~symspellpy.symspellpy.SymSpell.load_bigram_dictionary`:
 .. code-block:: python
   :emphasize-lines: 10
 
+  import importlib.resources
   from itertools import islice
 
-  import pkg_resources
   from symspellpy import SymSpell
 
   sym_spell = SymSpell()
-  dictionary_path = pkg_resources.resource_filename(
-      "symspellpy", "frequency_bigramdictionary_en_243_342.txt"
-  )
+  dictionary_path = importlib.resources.files("symspellpy") / "frequency_bigramdictionary_en_243_342.txt"
   sym_spell.load_bigram_dictionary(dictionary_path, 0, 2)
 
   # Print out first 5 elements to demonstrate that dictionary is
