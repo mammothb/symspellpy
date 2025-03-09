@@ -314,19 +314,20 @@ class SymSpell(PickleMixin):
 
     def load_dictionary(
         self,
-        corpus: Union[Path, str],
+        corpus: Union[Path, str, IO[str]],
         term_index: int,
         count_index: int,
         separator: str = " ",
         encoding: Optional[str] = None,
-    ):
+    ) -> bool:
         """Loads multiple dictionary entries from a file of word/frequency count
         pairs.
 
         **NOTE**: Merges with any dictionary data already loaded.
 
         Args:
-            corpus: The path+filename of the file.
+            corpus: The path+filename of the file or a file object of the
+                dictionary.
             term_index: The column position of the word.
             count_index: The column position of the frequency count.
             separator: Separator characters between term(s) and count.
@@ -335,6 +336,11 @@ class SymSpell(PickleMixin):
         Returns:
             ``True`` if file loaded, or ``False`` if file not found.
         """
+        if not isinstance(corpus, (Path, str)):
+            return self._load_dictionary_stream(
+                corpus, term_index, count_index, separator
+            )
+
         corpus = Path(corpus)
         if not corpus.exists():
             logger.error(f"Dictionary file not found at {corpus}.")
