@@ -17,7 +17,9 @@ import sys
 
 sys.path.insert(0, os.path.abspath(".."))
 
-import importlib.metadata
+from pathlib import Path
+
+import tomllib
 
 # -- Project information -----------------------------------------------------
 
@@ -28,7 +30,9 @@ author = "mmb L, Wolf Garbe"
 # The short X.Y version
 version = ""
 # The full version, including alpha/beta/rc tags
-release = importlib.metadata.version("symspellpy")
+with open(Path(__file__).parents[1] / "pyproject.toml", "rb") as infile:
+    data = tomllib.load(infile)
+    release = data["project"]["version"]
 
 
 # -- General configuration ---------------------------------------------------
