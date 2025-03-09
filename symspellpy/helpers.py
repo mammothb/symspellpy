@@ -20,8 +20,27 @@
 
 import re
 import sys
+import warnings
 from difflib import SequenceMatcher
 from typing import Optional
+
+
+def _rename_args(kwargs_map: dict[str, str], version: str):
+    def decorator(func):
+        def wrapped(*args, **kwargs):
+            new_kwargs = {}
+            for k, v in kwargs.items():
+                if k in kwargs_map:
+                    warnings.warn(
+                        f"Keyword argument '{k}' is deprecated and will be removed in {version}. Use '{kwargs_map[k]}' instead.",
+                        DeprecationWarning,
+                    )
+                new_kwargs[kwargs_map.get(k, k)] = v
+            return func(*args, **new_kwargs)
+
+        return wrapped
+
+    return decorator
 
 
 def case_transfer_matching(cased_text: str, uncased_text: str) -> str:
@@ -150,15 +169,16 @@ def is_acronym(word: str, contain_digits: bool = False) -> bool:
     )
 
 
+@_rename_args({"string1": "string_1", "string2": "string_2"}, "v7.0.0")
 def null_distance_results(
-    string1: Optional[str], string2: Optional[str], max_distance: int
+    string_1: Optional[str], string_2: Optional[str], max_distance: int
 ) -> int:
     """Determines the proper return value of an edit distance function when one
     or both strings are null.
 
     Args:
-        string1: Base string.
-        string2: The string to compare.
+        string_1: Base string.
+        string_2: The string to compare.
         max_distance: The maximum distance allowed.
 
     Returns:
@@ -166,11 +186,11 @@ def null_distance_results(
             equivalent (both are None), otherwise a positive number whose
             magnitude is the length of the string which is not None.
     """
-    if string1 is None:
-        if string2 is None:
+    if string_1 is None:
+        if string_2 is None:
             return 0
-        return len(string2) if len(string2) <= max_distance else -1
-    return len(string1) if len(string1) <= max_distance else -1
+        return len(string_2) if len(string_2) <= max_distance else -1
+    return len(string_1) if len(string_1) <= max_distance else -1
 
 
 def parse_words(
@@ -199,35 +219,36 @@ def parse_words(
     return re.findall(r"([^\W_]+['’]*[^\W_]*)", phrase.lower())
 
 
-def prefix_suffix_prep(string1: str, string2: str) -> tuple[int, int, int]:
+@_rename_args({"string1": "string_1", "string2": "string_2"}, "v7.0.0")
+def prefix_suffix_prep(string_1: str, string_2: str) -> tuple[int, int, int]:
     """Calculates starting position and lengths of two strings such that common
     prefix and suffix substrings are excluded.
-    Expects len(string1) <= len(string2).
+    Expects len(string_1) <= len(string_2).
 
     Args:
-        string1: Base string.
-        string2: The string to compare.
+        string_1: Base string.
+        string_2: The string to compare.
 
     Returns:
         A tuple of lengths of the part excluding common prefix and suffix, and
             the starting position.
     """
     # this is also the minimun length of the two strings
-    len1 = len(string1)
-    len2 = len(string2)
+    len_1 = len(string_1)
+    len_2 = len(string_2)
     # suffix common to both strings can be ignored
-    while len1 != 0 and string1[len1 - 1] == string2[len2 - 1]:
-        len1 -= 1
-        len2 -= 1
+    while len_1 != 0 and string_1[len_1 - 1] == string_2[len_2 - 1]:
+        len_1 -= 1
+        len_2 -= 1
     # prefix common to both strings can be ignored
     start = 0
-    while start != len1 and string1[start] == string2[start]:
+    while start != len_1 and string_1[start] == string_2[start]:
         start += 1
     if start != 0:
-        len1 -= start
+        len_1 -= start
         # length of the part excluding common prefix and suffix
-        len2 -= start
-    return len1, len2, start
+        len_2 -= start
+    return len_1, len_2, start
 
 
 def to_similarity(distance: int, length: int) -> float:
