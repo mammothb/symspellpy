@@ -24,6 +24,7 @@ import re
 import string
 import sys
 import unicodedata
+import warnings
 from collections import defaultdict
 from itertools import cycle
 from pathlib import Path
@@ -291,6 +292,8 @@ class SymSpell(PickleMixin):
         """Loads multiple dictionary entries from a file of word/frequency count
         pairs.
 
+        **NOTE**: Frequency count should be an integer that fits within 64 bits.
+
         **NOTE**: Merges with any dictionary data already loaded.
 
         Args:
@@ -322,6 +325,8 @@ class SymSpell(PickleMixin):
     ) -> bool:
         """Loads multiple dictionary entries from a file of word/frequency count
         pairs.
+
+        **NOTE**: Frequency count should be an integer that fits within 64 bits.
 
         **NOTE**: Merges with any dictionary data already loaded.
 
@@ -1090,6 +1095,7 @@ class SymSpell(PickleMixin):
                 continue
             count = helpers.try_parse_int64(parts[count_index])
             if count is None:
+                warnings.warn("Failed to parse frequency count as a 64 bit integer.")
                 continue
             key = (
                 f"{parts[term_index]} {parts[term_index + 1]}"
@@ -1128,6 +1134,7 @@ class SymSpell(PickleMixin):
                 continue
             count = helpers.try_parse_int64(parts[count_index])
             if count is None:
+                warnings.warn("Failed to parse frequency count as a 64 bit integer.")
                 continue
             key = parts[term_index]
             self.create_dictionary_entry(key, count)
