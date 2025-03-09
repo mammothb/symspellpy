@@ -19,8 +19,6 @@
 .. moduleauthor:: Wolf Garbe <wolf.garbe@faroo.com>
 """
 
-__version__ = "6.7.8"
-
 from . import editdistance, helpers, logging
 from .symspellpy import SymSpell
 from .verbosity import Verbosity
