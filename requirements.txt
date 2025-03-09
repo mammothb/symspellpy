@@ -1,7 +1,6 @@
 editdistpy>=0.1.3
 
 # For testing
-coverage==7.4.4
 importlib-resources>=6.3.2
-pytest==8.1.1
-pytest-cov==4.1.0
+pytest==8.3.4
+pytest-cov==6.0.0
