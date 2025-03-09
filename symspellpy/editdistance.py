@@ -137,7 +137,7 @@ class Levenshtein(AbstractDistanceComparer):
             string_2, string_1 = string_1, string_2
         if len(string_2) - len(string_1) > max_distance:
             return -1
-        # identify common suffic and/or prefix that can be ignored
+        # identify common suffix and/or prefix that can be ignored
         len_1, len_2, start = helpers.prefix_suffix_prep(string_1, string_2)
         if len_1 == 0:
             return len_2 if len_2 <= max_distance else -1
