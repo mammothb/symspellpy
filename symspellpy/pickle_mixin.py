@@ -23,7 +23,7 @@ import logging
 import pickle
 from operator import itemgetter
 from pathlib import Path
-from typing import IO, Dict, List, Optional, Union, cast
+from typing import IO, Optional, Union, cast
 
 logger = logging.getLogger(__name__)
 
@@ -34,8 +34,8 @@ logger = logging.getLogger(__name__)
 #     _count_threshold: int
 #     _max_dictionary_edit_distance: int
 #     _prefix_length: int
-#     _deletes: Dict[str, List[str]]
-#     _words: Dict[str, int]
+#     _deletes: dict[str, list[str]]
+#     _words: dict[str, int]
 #     _max_length: int
 
 
@@ -43,10 +43,10 @@ class PickleMixin:
     """Implements saving and loading pickle functionality for SymSpell."""
 
     data_version: int
-    _below_threshold_words: Dict[str, int]
-    _bigrams: Dict[str, int]
-    _deletes: Dict[str, List[str]]
-    _words: Dict[str, int]
+    _below_threshold_words: dict[str, int]
+    _bigrams: dict[str, int]
+    _deletes: dict[str, list[str]]
+    _words: dict[str, int]
 
     _count_threshold: int
     _max_dictionary_edit_distance: int
@@ -149,7 +149,7 @@ class PickleMixin:
         self._deletes = pickle_data["deletes"]
         self._words = pickle_data["words"]
         self._max_length = pickle_data["max_length"]
-        # Dictionary entries related variables
+        # dictionary entries related variables
         self._below_threshold_words = pickle_data["below_threshold_words"]
         self._bigrams = pickle_data["bigrams"]
         self._deletes = pickle_data["deletes"]

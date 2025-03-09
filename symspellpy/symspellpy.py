@@ -27,7 +27,8 @@ import unicodedata
 from collections import defaultdict
 from itertools import cycle
 from pathlib import Path
-from typing import IO, Dict, List, Optional, Pattern, Set, Union
+from re import Pattern
+from typing import IO, Optional, Union
 
 from symspellpy import helpers
 from symspellpy.composition import Composition
@@ -100,11 +101,11 @@ class SymSpell(PickleMixin):
             self.distance_comparer = EditDistance(DistanceAlgorithm.DAMERAU_OSA_FAST)
         else:
             self.distance_comparer = distance_comparer
-        self._words: Dict[str, int] = {}
-        self._below_threshold_words: Dict[str, int] = {}
-        self._bigrams: Dict[str, int] = {}
-        self._deletes: Dict[str, List[str]] = defaultdict(list)
-        self._replaced_words: Dict[str, SuggestItem] = {}
+        self._words: dict[str, int] = {}
+        self._below_threshold_words: dict[str, int] = {}
+        self._bigrams: dict[str, int] = {}
+        self._deletes: dict[str, list[str]] = defaultdict(list)
+        self._replaced_words: dict[str, SuggestItem] = {}
 
         self._max_dictionary_edit_distance = max_dictionary_edit_distance
         self._prefix_length = prefix_length
@@ -113,22 +114,22 @@ class SymSpell(PickleMixin):
         self._max_length = 0
 
     @property
-    def below_threshold_words(self) -> Dict[str, int]:
-        """Dictionary of unique words that are below the count threshold for
+    def below_threshold_words(self) -> dict[str, int]:
+        """dictionary of unique words that are below the count threshold for
         being considered correct spellings.
         """
         return self._below_threshold_words
 
     @property
-    def bigrams(self) -> Dict[str, int]:
-        """Dictionary of unique correct spelling bigrams, and the frequency count
+    def bigrams(self) -> dict[str, int]:
+        """dictionary of unique correct spelling bigrams, and the frequency count
         for each word.
         """
         return self._bigrams
 
     @property
-    def deletes(self) -> Dict[str, List[str]]:
-        """Dictionary that contains a mapping of lists of suggested correction
+    def deletes(self) -> dict[str, list[str]]:
+        """dictionary that contains a mapping of lists of suggested correction
         words to the original words and the deletes derived from them. A list of
         suggestions might have a single suggestion, or multiple suggestions.
         """
@@ -140,13 +141,13 @@ class SymSpell(PickleMixin):
         return len(self._deletes)
 
     @property
-    def replaced_words(self) -> Dict[str, SuggestItem]:
-        """Dictionary corrected/modified words."""
+    def replaced_words(self) -> dict[str, SuggestItem]:
+        """dictionary corrected/modified words."""
         return self._replaced_words
 
     @property
-    def words(self) -> Dict[str, int]:
-        """Dictionary of unique correct spelling words, and the frequency count
+    def words(self) -> dict[str, int]:
+        """dictionary of unique correct spelling words, and the frequency count
         for each word.
         """
         return self._words
@@ -358,7 +359,7 @@ class SymSpell(PickleMixin):
         include_unknown: bool = False,
         ignore_token: Optional[Pattern[str]] = None,
         transfer_casing: bool = False,
-    ) -> List[SuggestItem]:
+    ) -> list[SuggestItem]:
         """Finds suggested spellings for a given phrase word.
 
         Args:
@@ -366,7 +367,7 @@ class SymSpell(PickleMixin):
             verbosity: The value controlling the quantity/closeness of the
                 returned suggestions.
             max_edit_distance: The maximum edit distance between phrase and
-                suggested words. Set to :attr:`_max_dictionary_edit_distance` by
+                suggested words. set to :attr:`_max_dictionary_edit_distance` by
                 default.
             include_unknown: A flag to determine whether to include phrase word
                 in suggestions, if no words within edit distance found.
@@ -388,7 +389,7 @@ class SymSpell(PickleMixin):
             max_edit_distance = self._max_dictionary_edit_distance
         if max_edit_distance > self._max_dictionary_edit_distance:
             raise ValueError("distance too large")
-        suggestions: List[SuggestItem] = []
+        suggestions: list[SuggestItem] = []
         phrase_len = len(phrase)
 
         original_phrase = phrase
@@ -427,14 +428,14 @@ class SymSpell(PickleMixin):
         if max_edit_distance == 0:
             return early_exit()
 
-        considered_deletes: Set[str] = set()
-        considered_suggestions: Set[str] = set()
+        considered_deletes: set[str] = set()
+        considered_suggestions: set[str] = set()
         # we considered the phrase already in the 'phrase in self._words' above
         considered_suggestions.add(phrase)
 
         max_edit_distance_2 = max_edit_distance
         candidate_pointer = 0
-        candidates: List[str] = []
+        candidates: list[str] = []
 
         # add original prefix
         phrase_prefix_len = phrase_len
@@ -639,7 +640,7 @@ class SymSpell(PickleMixin):
         transfer_casing: bool = False,
         split_by_space: bool = False,
         ignore_term_with_digits: bool = False,
-    ) -> List[SuggestItem]:
+    ) -> list[SuggestItem]:
         """`lookup_compound` supports compound aware automatic spelling
         correction of multi-word input strings with three cases:
 
@@ -673,13 +674,13 @@ class SymSpell(PickleMixin):
         terms_1 = helpers.parse_words(phrase, split_by_space=split_by_space)
         # Second list of single terms with preserved cases so we can ignore
         # acronyms (all cap words)
-        terms_2: List[str] = []
+        terms_2: list[str] = []
         if ignore_non_words:
             terms_2 = helpers.parse_words(
                 phrase, preserve_case=True, split_by_space=split_by_space
             )
         suggestions = []
-        suggestion_parts: List[SuggestItem] = []
+        suggestion_parts: list[SuggestItem] = []
 
         # translate every item to its best suggestion, otherwise it remains
         # unchanged
@@ -1034,9 +1035,9 @@ class SymSpell(PickleMixin):
         self,
         word: str,
         edit_distance: int,
-        delete_words: Set[str],
+        delete_words: set[str],
         current_distance: int = 0,
-    ) -> Set[str]:
+    ) -> set[str]:
         """Inexpensive and language independent: only deletes, no transposes +
         replaces + inserts replaces and inserts are expensive and language
         dependent.
@@ -1053,8 +1054,8 @@ class SymSpell(PickleMixin):
                 self._edits(delete, edit_distance, delete_words, current_distance=i)
         return delete_words
 
-    def _edits_prefix(self, key: str) -> Set[str]:
-        hash_set: Set[str] = set()
+    def _edits_prefix(self, key: str) -> set[str]:
+        hash_set: set[str] = set()
         if len(key) <= self._max_dictionary_edit_distance:
             hash_set.add("")
         if len(key) > self._prefix_length:
@@ -1134,7 +1135,7 @@ class SymSpell(PickleMixin):
         return True
 
     @staticmethod
-    def _parse_words(text: str) -> List[str]:
+    def _parse_words(text: str) -> list[str]:
         """Creates a non-unique wordlist from sample text language independent
         (e.g. works with Chinese characters).
         """
@@ -1143,7 +1144,7 @@ class SymSpell(PickleMixin):
         # excluding "_". Compatible with non-latin characters, does not split
         # words at apostrophes. Uses capturing groups to combine a negated set
         # with a character set.
-        matches: List[str] = WORD_PATTERN.findall(text.lower())
+        matches: list[str] = WORD_PATTERN.findall(text.lower())
         # The above regex returns ("ghi'jkl", "l") for "ghi'jkl", so we extract
         # the first element
         matches = [match[0] for match in matches]

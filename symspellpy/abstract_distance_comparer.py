@@ -1,11 +1,14 @@
 from abc import ABC, abstractmethod
+from typing import Optional
 
 
 class AbstractDistanceComparer(ABC):
     """An interface to compute relative distance between two strings."""
 
     @abstractmethod
-    def distance(self, string_1: str, string_2: str, max_distance: int) -> int:
+    def distance(
+        self, string_1: Optional[str], string_2: Optional[str], max_distance: int
+    ) -> int:
         """Returns a measure of the distance between two strings.
 
         Args:

@@ -21,7 +21,7 @@
 import re
 import sys
 from difflib import SequenceMatcher
-from typing import Dict, List, Optional, Tuple
+from typing import Optional
 
 
 def case_transfer_matching(cased_text: str, uncased_text: str) -> str:
@@ -150,7 +150,9 @@ def is_acronym(word: str, contain_digits: bool = False) -> bool:
     )
 
 
-def null_distance_results(string1: str, string2: str, max_distance: int) -> int:
+def null_distance_results(
+    string1: Optional[str], string2: Optional[str], max_distance: int
+) -> int:
     """Determines the proper return value of an edit distance function when one
     or both strings are null.
 
@@ -173,7 +175,7 @@ def null_distance_results(string1: str, string2: str, max_distance: int) -> int:
 
 def parse_words(
     phrase: str, preserve_case: bool = False, split_by_space: bool = False
-) -> List[str]:
+) -> list[str]:
     """Creates a non-unique wordlist from sample text. Language independent
     (e.g. works with Chinese characters)
 
@@ -197,7 +199,7 @@ def parse_words(
     return re.findall(r"([^\W_]+['’]*[^\W_]*)", phrase.lower())
 
 
-def prefix_suffix_prep(string1: str, string2: str) -> Tuple[int, int, int]:
+def prefix_suffix_prep(string1: str, string2: str) -> tuple[int, int, int]:
     """Calculates starting position and lengths of two strings such that common
     prefix and suffix substrings are excluded.
     Expects len(string1) <= len(string2).
@@ -267,7 +269,7 @@ class DictIO:
     by :meth:`load_dictionary_stream` and :meth:`load_dictionary_bigram_stream`.
 
     Args:
-        dictionary: Dictionary with words as keys and frequency count as values.
+        dictionary: dictionary with words as keys and frequency count as values.
         separator: Separator characters between term(s) and count.
 
     Attributes:
@@ -275,7 +277,7 @@ class DictIO:
         separator: Separator characters between term(s) and count.
     """
 
-    def __init__(self, dictionary: Dict[str, int], separator: str = " ") -> None:
+    def __init__(self, dictionary: dict[str, int], separator: str = " ") -> None:
         self.iteritems = iter(dictionary.items())
         self.separator = separator
 
