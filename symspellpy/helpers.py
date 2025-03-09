@@ -157,8 +157,8 @@ def null_distance_results(
     or both strings are null.
 
     Args:
-        string_1: Base string.
-        string_2: The string to compare.
+        string1: Base string.
+        string2: The string to compare.
         max_distance: The maximum distance allowed.
 
     Returns:
@@ -205,8 +205,8 @@ def prefix_suffix_prep(string1: str, string2: str) -> tuple[int, int, int]:
     Expects len(string1) <= len(string2).
 
     Args:
-        string_1: Base string.
-        string_2: The string to compare.
+        string1: Base string.
+        string2: The string to compare.
 
     Returns:
         A tuple of lengths of the part excluding common prefix and suffix, and
