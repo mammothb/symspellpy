@@ -88,24 +88,24 @@ def case_transfer_similar(cased_text: str, uncased_text: str) -> str:
     matcher = SequenceMatcher(a=cased_text.lower(), b=uncased_text)
     result = ""
 
-    for tag, ia1, ia2, ib1, ib2 in matcher.get_opcodes():
+    for tag, i1, i2, j1, j2 in matcher.get_opcodes():
         if tag == "delete":
             continue
         if tag == "insert":
             # For the first character or space on the left, take the casing from
             # the following character. Else take case the prior character
-            ia_ref = ia1 if ia1 == 0 or cased_text[ia1 - 1] == " " else ia1 - 1
+            ia_ref = i1 if i1 == 0 or cased_text[i1 - 1] == " " else i1 - 1
             if cased_text[ia_ref].isupper():
-                result += uncased_text[ib1:ib2].upper()
+                result += uncased_text[j1:j2].upper()
             else:
-                result += uncased_text[ib1:ib2].lower()
+                result += uncased_text[j1:j2].lower()
         elif tag == "equal":
             # Transfer the text from the cased_text, as anyhow they are equal
             # (without the casing)
-            result += cased_text[ia1:ia2]
+            result += cased_text[i1:i2]
         else:
-            cased_seq = cased_text[ia1:ia2]
-            uncased_seq = uncased_text[ib1:ib2]
+            cased_seq = cased_text[i1:i2]
+            uncased_seq = uncased_text[j1:j2]
 
             if len(cased_seq) == len(uncased_seq):
                 result += case_transfer_matching(cased_seq, uncased_seq)
