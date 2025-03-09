@@ -1,6 +1,11 @@
 CHANGELOG <br>
 ==============
 
+## 6.9.0 (2025-03-09)
+
+- Specify that frequency count must be 64-bit int [#180](https://github.com/mammothb/symspellpy/pull/180)
+- Rename `string1` and `string2` argument names [#181](https://github.com/mammothb/symspellpy/pull/181)
+
 ## 6.8.0 (2025-03-09)
 - Allow file object as corpus of load_dictionary [#176](https://github.com/mammothb/symspellpy/pull/176)
 - Bump supported Python version to 3.9 - 3.13 [#177](https://github.com/mammothb/symspellpy/pull/177)
