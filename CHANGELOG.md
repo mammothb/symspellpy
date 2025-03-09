@@ -1,7 +1,7 @@
 CHANGELOG <br>
 ==============
 
-## 6.8.0
+## 6.8.0 (2025-03-09)
 - Allow file object as corpus of load_dictionary [#176](https://github.com/mammothb/symspellpy/pull/176)
 - Bump supported Python version to 3.9 - 3.13 [#177](https://github.com/mammothb/symspellpy/pull/177)
 
