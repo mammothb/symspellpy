@@ -6,6 +6,7 @@ jobs:
   test:
     name: "Python ${{ matrix.python-version }} on ${{ matrix.os }}"
     runs-on: ${{ matrix.os }}
+    environment: Development
 
     strategy:
       matrix:
@@ -30,3 +31,5 @@ jobs:
 
       - name: Upload code coverage
         uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
