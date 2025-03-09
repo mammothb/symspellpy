@@ -7,6 +7,7 @@ Enum class
 
 .. autoclass:: symspellpy.verbosity.Verbosity
    :members:
+   :member-order: bysource
 
 Data class
 ==========

@@ -7,6 +7,7 @@ Enum class
 
 .. autoclass:: symspellpy.editdistance.DistanceAlgorithm
    :members:
+   :member-order: bysource
 
 EditDistance class
 ==================

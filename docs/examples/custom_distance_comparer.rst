@@ -18,7 +18,7 @@ Create a comparer class which satisfies the interface specified by
    from symspellpy.editdistance import DistanceAlgorithm, EditDistance
 
    class CustomComparer(AbstractDistanceComparer):
-       def distance(self, string1, string_2, max_distance):
+       def distance(self, string_1, string_2, max_distance):
            # Compare distance between string_1 and string_2
            return -1 if distance > max_distance else distance
 

@@ -18,7 +18,7 @@ Given a dictionary file like::
 We can use :meth:`~symspellpy.symspellpy.SymSpell.load_dictionary`:
 
 .. code-block:: python
-  :emphasize-lines: 10
+  :emphasize-lines: 8
 
   import importlib.resources
   from itertools import islice
@@ -50,7 +50,7 @@ Given a bigram dictionary file like::
 We can use :meth:`~symspellpy.symspellpy.SymSpell.load_bigram_dictionary`:
 
 .. code-block:: python
-  :emphasize-lines: 10
+  :emphasize-lines: 8
 
   import importlib.resources
   from itertools import islice

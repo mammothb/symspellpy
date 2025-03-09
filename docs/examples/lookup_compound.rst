@@ -6,7 +6,7 @@ Basic usage
 ===========
 
 .. code-block:: python
-  :emphasize-lines: 23
+  :emphasize-lines: 20
 
   import importlib.resources
 
@@ -40,7 +40,7 @@ Keep original casing
 ====================
 
 .. code-block:: python
-  :emphasize-lines: 23,24,25
+  :emphasize-lines: 20,21,22
 
   import importlib.resources
 

@@ -17,18 +17,18 @@ import sys
 
 sys.path.insert(0, os.path.abspath(".."))
 
-import symspellpy
+import importlib.metadata
 
 # -- Project information -----------------------------------------------------
 
 project = "symspellpy"
-copyright = "2021, mmb L, Wolf Garbe"
+copyright = "2025, mmb L, Wolf Garbe"
 author = "mmb L, Wolf Garbe"
 
 # The short X.Y version
 version = ""
 # The full version, including alpha/beta/rc tags
-release = symspellpy.__version__
+release = importlib.metadata.version("symspellpy")
 
 
 # -- General configuration ---------------------------------------------------

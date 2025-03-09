@@ -6,7 +6,7 @@ Basic usage
 ===========
 
 .. code-block:: python
-  :emphasize-lines: 16
+  :emphasize-lines: 15
 
   import importlib.resources
 
@@ -35,7 +35,7 @@ Return original word if no correction within edit distance is found
 ===================================================================
 
 .. code-block:: python
-  :emphasize-lines: 16,17,18
+  :emphasize-lines: 15,16,17
 
   import importlib.resources
 
@@ -69,7 +69,7 @@ Avoid correcting phrases matching regex
 =======================================
 
 .. code-block:: python
-  :emphasize-lines: 16,17,18
+  :emphasize-lines: 14,15,16
 
   import importlib.resources
 
@@ -102,7 +102,7 @@ Keep original casing
 ====================
 
 .. code-block:: python
-  :emphasize-lines: 16,17,18
+  :emphasize-lines: 15,16,17
 
   import importlib.resources
 

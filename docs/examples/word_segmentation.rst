@@ -6,7 +6,7 @@ Basic usage
 ===========
 
 .. code-block:: python
-  :emphasize-lines: 15
+  :emphasize-lines: 14
 
   import importlib.resources
 
