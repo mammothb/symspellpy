@@ -315,6 +315,26 @@ class SymSpell(PickleMixin):
                 infile, term_index, count_index, separator
             )
 
+    def load_json(self, corpus: Dict[str, int]) -> None:
+        """Loads dictionary data from a JSON object.
+
+        Args:
+            corpus: A dictionary where keys are words and values are their frequencies.
+        """
+        self._words = corpus
+        self._max_length = max(map(len, self._words.keys()), default=0)
+        
+        # Use a dictionary to collect all deletes first
+        deletes_dict = defaultdict(list)
+        for key in self._words:
+            for delete in self._edits_prefix(key):
+                deletes_dict[delete].append(key)
+        
+        # Update self._deletes in one go
+        self._deletes = deletes_dict
+        return True
+
+        
     def load_dictionary(
         self,
         corpus: Union[Path, str, IO[str]],
