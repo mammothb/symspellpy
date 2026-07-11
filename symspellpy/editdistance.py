@@ -20,8 +20,10 @@
 
 import warnings
 from enum import Enum
+from typing import TYPE_CHECKING
 
-from editdistpy import damerau_osa, levenshtein
+if TYPE_CHECKING:
+    from editdistpy import damerau_osa, levenshtein
 
 from symspellpy import helpers
 from symspellpy.abstract_distance_comparer import AbstractDistanceComparer
@@ -447,7 +449,17 @@ class LevenshteinFast(AbstractDistanceComparer):
             -1 if the distance is greater than the max_distance, 0 if the strings
                 are equivalent, otherwise a positive number whose magnitude
                 increases as difference between the strings increases.
+
+        Raises:
+            ImportError: If the optional 'editdistpy' dependency is not installed.
         """
+        try:
+            from editdistpy import levenshtein
+        except ImportError:
+            raise ImportError(
+                "LevenshteinFast requires the 'editdistpy' package. "
+                "Install with: pip install symspellpy[editdistpy]"
+            ) from None
         return levenshtein.distance(string_1, string_2, max_distance)
 
 
@@ -472,5 +484,15 @@ class DamerauOsaFast(AbstractDistanceComparer):
             -1 if the distance is greater than the max_distance, 0 if the strings
                 are equivalent, otherwise a positive number whose magnitude
                 increases as difference between the strings increases.
+
+        Raises:
+            ImportError: If the optional 'editdistpy' dependency is not installed.
         """
+        try:
+            from editdistpy import damerau_osa
+        except ImportError:
+            raise ImportError(
+                "DamerauOsaFast requires the 'editdistpy' package. "
+                "Install with: pip install symspellpy[editdistpy]"
+            ) from None
         return damerau_osa.distance(string_1, string_2, max_distance)
