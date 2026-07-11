@@ -29,7 +29,7 @@ from collections import defaultdict
 from itertools import cycle
 from pathlib import Path
 from re import Pattern
-from typing import IO, Optional, Union
+from typing import IO
 
 from symspellpy import helpers
 from symspellpy.composition import Composition
@@ -86,7 +86,7 @@ class SymSpell(PickleMixin):
         max_dictionary_edit_distance: int = 2,
         prefix_length: int = 7,
         count_threshold: int = 1,
-        distance_comparer: Optional[EditDistance] = None,
+        distance_comparer: EditDistance | None = None,
     ) -> None:
         if max_dictionary_edit_distance < 0:
             raise ValueError("max_dictionary_edit_distance cannot be negative")
@@ -159,9 +159,9 @@ class SymSpell(PickleMixin):
 
     def create_dictionary(
         self,
-        corpus: Union[Path, str, IO[str]],
-        encoding: Optional[str] = None,
-        errors: Optional[str] = None,
+        corpus: Path | str | IO[str],
+        encoding: str | None = None,
+        errors: str | None = None,
     ) -> bool:
         """Loads multiple dictionary words from a file containing plain text.
 
@@ -283,11 +283,11 @@ class SymSpell(PickleMixin):
 
     def load_bigram_dictionary(
         self,
-        corpus: Union[Path, str],
+        corpus: Path | str,
         term_index: int,
         count_index: int,
-        separator: Optional[str] = None,
-        encoding: Optional[str] = None,
+        separator: str | None = None,
+        encoding: str | None = None,
     ) -> bool:
         """Loads multiple dictionary entries from a file of word/frequency count
         pairs.
@@ -317,11 +317,11 @@ class SymSpell(PickleMixin):
 
     def load_dictionary(
         self,
-        corpus: Union[Path, str, IO[str]],
+        corpus: Path | str | IO[str],
         term_index: int,
         count_index: int,
         separator: str = " ",
-        encoding: Optional[str] = None,
+        encoding: str | None = None,
     ) -> bool:
         """Loads multiple dictionary entries from a file of word/frequency count
         pairs.
@@ -359,9 +359,9 @@ class SymSpell(PickleMixin):
         self,
         phrase: str,
         verbosity: Verbosity,
-        max_edit_distance: Optional[int] = None,
+        max_edit_distance: int | None = None,
         include_unknown: bool = False,
-        ignore_token: Optional[Pattern[str]] = None,
+        ignore_token: Pattern[str] | None = None,
         transfer_casing: bool = False,
     ) -> list[SuggestItem]:
         """Finds suggested spellings for a given phrase word.
@@ -867,9 +867,9 @@ class SymSpell(PickleMixin):
     def word_segmentation(
         self,
         phrase: str,
-        max_edit_distance: Optional[int] = None,
-        max_segmentation_word_length: Optional[int] = None,
-        ignore_token: Optional[Pattern[str]] = None,
+        max_edit_distance: int | None = None,
+        max_segmentation_word_length: int | None = None,
+        ignore_token: Pattern[str] | None = None,
     ) -> Composition:
         """`word_segmentation` divides a string into words by inserting missing
         spaces at the appropriate positions misspelled words are corrected and do
@@ -1072,7 +1072,7 @@ class SymSpell(PickleMixin):
         corpus_stream: IO[str],
         term_index: int,
         count_index: int,
-        separator: Optional[str] = None,
+        separator: str | None = None,
     ):
         """Loads multiple dictionary entries from a stream of word/frequency
         count pairs.

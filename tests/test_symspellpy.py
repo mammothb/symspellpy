@@ -1,13 +1,15 @@
+from collections.abc import Generator
 from io import StringIO
 from pathlib import Path
 from unittest import TestCase
 
 import pytest
 
-from symspellpy import SymSpell, Verbosity
 from symspellpy.abstract_distance_comparer import AbstractDistanceComparer
 from symspellpy.editdistance import DistanceAlgorithm, EditDistance
 from symspellpy.helpers import DictIO
+from symspellpy.symspellpy import SymSpell
+from symspellpy.verbosity import Verbosity
 
 FORTESTS_DIR = Path(__file__).resolve().parent / "fortests"
 BAD_DICT_PATH = FORTESTS_DIR / "bad_dict.txt"
@@ -22,7 +24,9 @@ SEPARATOR = "$"
 
 
 @pytest.fixture
-def get_dictionary_stream(request):
+def get_dictionary_stream(
+    request: pytest.FixtureRequest,
+) -> Generator[tuple[DictIO, str | None]]:
     dictionary = {
         "the": 23135851162,
         "of": 13151942776,
@@ -39,7 +43,9 @@ def get_dictionary_stream(request):
 
 
 class CustomDistanceComparer(AbstractDistanceComparer):
-    def distance(self, string_1: str, string_2: str, max_distance: int) -> int:
+    def distance(
+        self, string_1: str | None, string_2: str | None, max_distance: int
+    ) -> int:
         return 0
 
 
@@ -80,14 +86,14 @@ class TestSymSpellPy:
         assert distance_comparer == sym_spell.distance_comparer
 
     @pytest.mark.parametrize("symspell_short", [None, 0], indirect=True)
-    def test_create_dictionary_entry_negative_count(self, symspell_short):
+    def test_create_dictionary_entry_negative_count(self, symspell_short: SymSpell):
         assert (
             symspell_short._count_threshold == 0
         ) == symspell_short.create_dictionary_entry("pipe", 0)
         assert not symspell_short.create_dictionary_entry("pipe", -1)
 
     @pytest.mark.parametrize("symspell_short", [10], indirect=True)
-    def test_create_dictionary_entry_below_threshold(self, symspell_short):
+    def test_create_dictionary_entry_below_threshold(self, symspell_short: SymSpell):
         symspell_short.create_dictionary_entry("pipe", 4)
         assert 1 == len(symspell_short.below_threshold_words)
         assert 4 == symspell_short.below_threshold_words["pipe"]
@@ -100,14 +106,18 @@ class TestSymSpellPy:
         assert 0 == len(symspell_short.below_threshold_words)
 
     def test_add_additional_counts_should_not_add_word_again(
-        self, symspell_default, get_same_word_and_count
+        self,
+        symspell_default: SymSpell,
+        get_same_word_and_count: list[tuple[str, int]],
     ):
         for word, count in get_same_word_and_count:
             symspell_default.create_dictionary_entry(word, count)
             assert 1 == symspell_default.word_count
 
     def test_add_additional_counts_should_increase_count(
-        self, symspell_default, get_same_word_and_count
+        self,
+        symspell_default: SymSpell,
+        get_same_word_and_count: list[tuple[str, int]],
     ):
         expected_count = 0
         for word, count in get_same_word_and_count:
@@ -116,25 +126,28 @@ class TestSymSpellPy:
             result = symspell_default.lookup(word, Verbosity.TOP)
             assert expected_count == result[0].count
 
-    def test_load_bigram_dictionary_invalid_path(self, symspell_default):
-        with TestCase.assertLogs("symspellpy.symspellpy.logger", level="ERROR") as cm:
+    def test_load_bigram_dictionary_invalid_path(self, symspell_default: SymSpell):
+        with TestCase.assertLogs(
+            "symspellpy.symspellpy.logger",  # pyright: ignore[reportArgumentType]
+            level="ERROR",
+        ) as cm:
             assert not symspell_default.load_bigram_dictionary(INVALID_PATH, 0, 2)
         assert (
             f"Bigram dictionary file not found at {Path(INVALID_PATH)}."
             == cm.records[0].getMessage()
         )
 
-    def test_loading_dictionary_from_fileobject(self, symspell_default):
+    def test_loading_dictionary_from_fileobject(self, symspell_default: SymSpell):
         with open(BIG_WORDS_PATH, "r", encoding="utf8") as infile:
             assert symspell_default.create_dictionary(infile)
 
-    def test_load_bigram_dictionary_bad_dict(self, symspell_default):
+    def test_load_bigram_dictionary_bad_dict(self, symspell_default: SymSpell):
         assert symspell_default.load_bigram_dictionary(BAD_DICT_PATH, 0, 2)
         assert 2 == len(symspell_default.bigrams)
         assert 12 == symspell_default.bigrams["rtyu tyui"]
         assert 13 == symspell_default.bigrams["yuio uiop"]
 
-    def test_load_bigram_dictionary_separator(self, symspell_default):
+    def test_load_bigram_dictionary_separator(self, symspell_default: SymSpell):
         assert symspell_default.load_bigram_dictionary(
             SEPARATOR_DICT_PATH, 0, 1, SEPARATOR
         )
@@ -147,10 +160,14 @@ class TestSymSpellPy:
 
     @pytest.mark.parametrize("get_dictionary_stream", [None], indirect=True)
     def test_load_bigram_dictionary_stream(
-        self, symspell_default, get_dictionary_stream
+        self,
+        symspell_default: SymSpell,
+        get_dictionary_stream: tuple[DictIO, str | None],
     ):
         dict_stream, _ = get_dictionary_stream
-        assert symspell_default._load_bigram_dictionary_stream(dict_stream, 0, 2)
+        assert symspell_default._load_bigram_dictionary_stream(
+            dict_stream, 0, 2  # pyright: ignore[reportArgumentType]
+        )
         assert 2 == len(symspell_default.bigrams)
         assert 10956800 == symspell_default.bigrams["abcs of"]
         assert 10721728 == symspell_default.bigrams["aaron and"]
@@ -158,11 +175,13 @@ class TestSymSpellPy:
 
     @pytest.mark.parametrize("get_dictionary_stream", [SEPARATOR], indirect=True)
     def test_load_bigram_dictionary_stream_separator(
-        self, symspell_default, get_dictionary_stream
+        self,
+        symspell_default: SymSpell,
+        get_dictionary_stream: tuple[DictIO, str | None],
     ):
         dict_stream, separator = get_dictionary_stream
         assert symspell_default._load_bigram_dictionary_stream(
-            dict_stream, 0, 1, separator
+            dict_stream, 0, 1, separator  # pyright: ignore[reportArgumentType]
         )
         assert 5 == len(symspell_default.bigrams)
         assert 23135851162 == symspell_default.bigrams["the"]
@@ -171,28 +190,33 @@ class TestSymSpellPy:
         assert 10721728 == symspell_default.bigrams["aaron and"]
         assert 12997637966 == symspell_default.bigrams["and"]
 
-    def test_load_dictionary_invalid_path(self, symspell_default):
-        with TestCase.assertLogs("symspellpy.symspellpy.logger", level="ERROR") as cm:
+    def test_load_dictionary_invalid_path(self, symspell_default: SymSpell):
+        with TestCase.assertLogs(
+            "symspellpy.symspellpy.logger",  # pyright: ignore[reportArgumentType]
+            level="ERROR",
+        ) as cm:
             assert not symspell_default.load_dictionary(INVALID_PATH, 0, 1)
         assert (
             f"Dictionary file not found at {Path(INVALID_PATH)}."
             == cm.records[0].getMessage()
         )
 
-    def test_load_dictionary_bad_dictionary(self, symspell_default):
+    def test_load_dictionary_bad_dictionary(self, symspell_default: SymSpell):
         assert symspell_default.load_dictionary(BAD_DICT_PATH, 0, 1)
         assert 2 == symspell_default.word_count
         assert 10 == symspell_default.words["asdf"]
         assert 12 == symspell_default.words["sdfg"]
 
-    def test_load_dictionary_count(self, symspell_default, dictionary_path):
+    def test_load_dictionary_count(
+        self, symspell_default: SymSpell, dictionary_path: Path
+    ):
         symspell_default.load_dictionary(dictionary_path, 0, 1)
 
         assert 82834 == symspell_default.word_count
         assert 676094 == symspell_default.entry_count
 
     @pytest.mark.parametrize("symspell_short", [10], indirect=True)
-    def test_load_dictionary_below_threshold(self, symspell_short):
+    def test_load_dictionary_below_threshold(self, symspell_short: SymSpell):
         symspell_short.load_dictionary(BELOW_THRESHOLD_DICT_PATH, 0, 1)
 
         assert 1 == len(symspell_short.below_threshold_words)
@@ -200,7 +224,7 @@ class TestSymSpellPy:
 
         assert 2 == symspell_short.word_count
 
-    def test_load_dictionary_separator(self, symspell_default):
+    def test_load_dictionary_separator(self, symspell_default: SymSpell):
         assert symspell_default.load_dictionary(SEPARATOR_DICT_PATH, 0, 1, SEPARATOR)
         assert 5 == symspell_default.word_count
         assert 23135851162 == symspell_default.words["the"]
@@ -210,11 +234,17 @@ class TestSymSpellPy:
         assert 12997637966 == symspell_default.words["and"]
 
     @pytest.mark.parametrize("get_dictionary_stream", [None], indirect=True)
-    def test_load_dictionary_stream(self, symspell_default, get_dictionary_stream):
+    def test_load_dictionary_stream(
+        self,
+        symspell_default: SymSpell,
+        get_dictionary_stream: tuple[DictIO, str | None],
+    ):
         # keys with space in them don't get parsed properly when using
         # the default separator=" "
         dict_stream, _ = get_dictionary_stream
-        assert symspell_default._load_dictionary_stream(dict_stream, 0, 1)
+        assert symspell_default._load_dictionary_stream(
+            dict_stream, 0, 1  # pyright: ignore[reportArgumentType]
+        )
         assert 3 == symspell_default.word_count
         assert 23135851162 == symspell_default.words["the"]
         assert 13151942776 == symspell_default.words["of"]
@@ -222,10 +252,14 @@ class TestSymSpellPy:
 
     @pytest.mark.parametrize("get_dictionary_stream", [SEPARATOR], indirect=True)
     def test_load_dictionary_stream_separator(
-        self, symspell_default, get_dictionary_stream
+        self,
+        symspell_default: SymSpell,
+        get_dictionary_stream: tuple[DictIO, str | None],
     ):
         dict_stream, separator = get_dictionary_stream
-        assert symspell_default._load_dictionary_stream(dict_stream, 0, 1, separator)
+        assert symspell_default._load_dictionary_stream(
+            dict_stream, 0, 1, separator  # pyright: ignore[reportArgumentType]
+        )
         assert 5 == symspell_default.word_count
         assert 23135851162 == symspell_default.words["the"]
         assert 13151942776 == symspell_default.words["of"]
@@ -233,33 +267,40 @@ class TestSymSpellPy:
         assert 10721728 == symspell_default.words["aaron and"]
         assert 12997637966 == symspell_default.words["and"]
 
-    def test_load_dictionary_encoding(self, symspell_default):
+    def test_load_dictionary_encoding(self, symspell_default: SymSpell):
         symspell_default.load_dictionary(NON_EN_DICT_PATH, 0, 1, encoding="utf-8")
 
         result = symspell_default.lookup("АБ", Verbosity.TOP, 2)
         assert 1 == len(result)
         assert "АБИ" == result[0].term
 
-    def test_load_dictionary_from_string_io(self, symspell_default, dictionary_path):
+    def test_load_dictionary_from_string_io(
+        self, symspell_default: SymSpell, dictionary_path: Path
+    ):
         with open(dictionary_path, "r") as f:
             symspell_default.load_dictionary(StringIO(f.read()), 0, 1)
             assert 82834 == symspell_default.word_count
             assert 676094 == symspell_default.entry_count
 
-    def test_load_dictionary_from_text_io_wrapper(self, symspell_default, dictionary_path):
+    def test_load_dictionary_from_text_io_wrapper(
+        self, symspell_default: SymSpell, dictionary_path: Path
+    ):
         with open(dictionary_path, "r") as f:
             symspell_default.load_dictionary(f, 0, 1)
             assert 82834 == symspell_default.word_count
             assert 676094 == symspell_default.entry_count
 
-    def test_create_dictionary_invalid_path(self, symspell_default):
-        with TestCase.assertLogs("symspellpy.symspellpy.logger", level="ERROR") as cm:
+    def test_create_dictionary_invalid_path(self, symspell_default: SymSpell):
+        with TestCase.assertLogs(
+            "symspellpy.symspellpy.logger",  # pyright: ignore[reportArgumentType]
+            level="ERROR",
+        ) as cm:
             assert not symspell_default.create_dictionary(INVALID_PATH)
         assert (
             f"Corpus not found at {Path(INVALID_PATH)}." == cm.records[0].getMessage()
         )
 
-    def test_create_dictionary(self, symspell_default):
+    def test_create_dictionary(self, symspell_default: SymSpell):
         symspell_default.create_dictionary(BIG_MODIFIED_PATH, encoding="utf-8")
 
         num_lines = 0
@@ -275,7 +316,7 @@ class TestSymSpellPy:
         [[("stea", 1), ("steama", 2), ("steem", 3)]],
         indirect=True,
     )
-    def test_delete_dictionary_entry(self, symspell_default_entry):
+    def test_delete_dictionary_entry(self, symspell_default_entry: SymSpell):
         result = symspell_default_entry.lookup("steama", Verbosity.TOP, 2)
         assert 1 == len(result)
         assert "steama" == result[0].term
@@ -302,7 +343,9 @@ class TestSymSpellPy:
         [[("stea", 1), ("steama", 2), ("steem", 3)]],
         indirect=True,
     )
-    def test_delete_dictionary_entry_invalid_word(self, symspell_default_entry):
+    def test_delete_dictionary_entry_invalid_word(
+        self, symspell_default_entry: SymSpell
+    ):
         result = symspell_default_entry.lookup("steama", Verbosity.TOP, 2)
         assert 1 == len(result)
         assert "steama" == result[0].term

@@ -22,7 +22,6 @@ import re
 import sys
 import warnings
 from difflib import SequenceMatcher
-from typing import Optional
 
 
 def _rename_args(kwargs_map: dict[str, str], version: str):
@@ -171,7 +170,7 @@ def is_acronym(word: str, contain_digits: bool = False) -> bool:
 
 @_rename_args({"string1": "string_1", "string2": "string_2"}, "v7.0.0")
 def null_distance_results(
-    string_1: Optional[str], string_2: Optional[str], max_distance: int
+    string_1: str | None, string_2: str | None, max_distance: int
 ) -> int:
     """Determines the proper return value of an edit distance function when one
     or both strings are null.
@@ -266,7 +265,7 @@ def to_similarity(distance: int, length: int) -> float:
     return -1 if distance < 0 else 1.0 - distance / length
 
 
-def try_parse_int64(string: str) -> Optional[int]:
+def try_parse_int64(string: str) -> int | None:
     """Converts the string representation of a number to its 64-bit signed
     integer equivalent.
 

@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from typing import Optional
 
 
 class AbstractDistanceComparer(ABC):
@@ -7,7 +6,7 @@ class AbstractDistanceComparer(ABC):
 
     @abstractmethod
     def distance(
-        self, string_1: Optional[str], string_2: Optional[str], max_distance: int
+        self, string_1: str | None, string_2: str | None, max_distance: int
     ) -> int:
         """Returns a measure of the distance between two strings.
 

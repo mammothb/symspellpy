@@ -23,7 +23,7 @@ import logging
 import pickle
 from operator import itemgetter
 from pathlib import Path
-from typing import IO, Optional, Union, cast
+from typing import IO, cast
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +55,7 @@ class PickleMixin:
 
     def load_pickle(
         self,
-        data: Union[bytes, Path],
+        data: bytes | Path,
         compressed: bool = True,
         from_bytes: bool = False,
     ) -> bool:
@@ -85,10 +85,10 @@ class PickleMixin:
 
     def save_pickle(
         self,
-        filename: Optional[Path] = None,
+        filename: Path | None = None,
         compressed: bool = True,
         to_bytes: bool = False,
-    ) -> Optional[bytes]:
+    ) -> bytes | None:
         """Pickles :attr:`_deletes`, :attr:`_words`, and :attr:`_max_length` into
         a stream for quicker loading later.
 
@@ -113,7 +113,7 @@ class PickleMixin:
         return None
 
     def _load_pickle_stream(
-        self, stream: Union[bytes, IO[bytes]], from_bytes: bool = False
+        self, stream: bytes | IO[bytes], from_bytes: bool = False
     ) -> bool:
         """Loads delete combination from stream as pickle. This will reduce the
         loading time compared to running :meth:`load_dictionary` again.
@@ -162,8 +162,8 @@ class PickleMixin:
         return True
 
     def _save_pickle_stream(
-        self, stream: Optional[IO[bytes]] = None, to_bytes: bool = False
-    ) -> Optional[bytes]:
+        self, stream: IO[bytes] | None = None, to_bytes: bool = False
+    ) -> bytes | None:
         """Pickles :attr:`_below_threshold_words`, :attr:`_bigrams`,
         :attr:`_deletes`, :attr:`_words`, and :attr:`_max_length` into
         a stream for quicker loading later.

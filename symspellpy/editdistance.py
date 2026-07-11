@@ -20,7 +20,6 @@
 
 import warnings
 from enum import Enum
-from typing import Optional
 
 from editdistpy import damerau_osa, levenshtein
 
@@ -58,7 +57,7 @@ class EditDistance:
     def __init__(
         self,
         algorithm: DistanceAlgorithm,
-        comparer: Optional[AbstractDistanceComparer] = None,
+        comparer: AbstractDistanceComparer | None = None,
     ) -> None:
         if algorithm != DistanceAlgorithm.USER_PROVIDED and comparer is not None:
             warnings.warn(
@@ -111,7 +110,7 @@ class Levenshtein(AbstractDistanceComparer):
         self._base_char_1_costs: list[int] = []
 
     def distance(
-        self, string_1: Optional[str], string_2: Optional[str], max_distance: int
+        self, string_1: str | None, string_2: str | None, max_distance: int
     ) -> int:
         """Computes the Levenshtein edit distance between two strings.
 
@@ -252,7 +251,7 @@ class DamerauOsa(AbstractDistanceComparer):
         self._base_prev_char_1_costs: list[int] = []
 
     def distance(
-        self, string_1: Optional[str], string_2: Optional[str], max_distance: int
+        self, string_1: str | None, string_2: str | None, max_distance: int
     ) -> int:
         """Computes the Damerau-Levenshtein optimal string alignment edit
         distance between two strings.
@@ -435,7 +434,7 @@ class LevenshteinFast(AbstractDistanceComparer):
     """
 
     def distance(
-        self, string_1: Optional[str], string_2: Optional[str], max_distance: int
+        self, string_1: str | None, string_2: str | None, max_distance: int
     ) -> int:
         """Computes the Levenshtein edit distance between two strings.
 
@@ -459,7 +458,7 @@ class DamerauOsaFast(AbstractDistanceComparer):
     """
 
     def distance(
-        self, string_1: Optional[str], string_2: Optional[str], max_distance: int
+        self, string_1: str | None, string_2: str | None, max_distance: int
     ) -> int:
         """Computes the Damerau-Levenshtein optimal string alignment edit
         distance between two strings.
