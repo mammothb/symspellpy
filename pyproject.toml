@@ -41,7 +41,11 @@ dev = [
     "importlib-resources>=6.3.2",
     "pytest==8.3.4",
     "pytest-cov==6.0.0",
+    "pytest-xdist==3.8.0",
 ]
+
+[tool.pytest.ini_options]
+addopts = "-n auto --dist loadscope"
 
 [tool.basedpyright]
 ignore = ["tests"]
