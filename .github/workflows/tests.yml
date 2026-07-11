@@ -16,18 +16,17 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v6.3.0
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.3.2
         with:
           python-version: ${{ matrix.python-version }}
+          enable-cache: true
 
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+        run: uv sync --dev
 
       - name: Run pytest
-        run: python -m pytest --cov-report=xml --cov=symspellpy
+        run: uv run pytest --cov-report=xml --cov=symspellpy
 
       - name: Upload code coverage
         uses: codecov/codecov-action@v7
