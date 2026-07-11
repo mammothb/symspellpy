@@ -99,7 +99,7 @@ class SymSpell(PickleMixin):
         if count_threshold < 0:
             raise ValueError("count_threshold cannot be negative")
         if distance_comparer is None:
-            self.distance_comparer = EditDistance(DistanceAlgorithm.DAMERAU_OSA_FAST)
+            self.distance_comparer = EditDistance(DistanceAlgorithm.DAMERAU_OSA)
         else:
             self.distance_comparer = distance_comparer
         self._words: dict[str, int] = {}

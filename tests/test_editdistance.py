@@ -1,7 +1,6 @@
 import sys
 from collections.abc import Callable, Generator
 from itertools import combinations, permutations
-from typing import TypedDict
 
 import pytest
 
@@ -14,6 +13,13 @@ from symspellpy.editdistance import (
     Levenshtein,
     LevenshteinFast,
 )
+
+try:
+    import editdistpy
+
+    EDITDISTPY_AVAILABLE = True
+except ImportError:
+    EDITDISTPY_AVAILABLE = False
 
 SHORT_STRING = "string"
 LONG_STRING = "long_string"
@@ -71,68 +77,57 @@ class CustomDistanceComparer(AbstractDistanceComparer):
         return -2
 
 
-class _ComparerEntry(TypedDict):
-    actual: AbstractDistanceComparer
-    expected: Callable[[str, str, int], int]
+_COMPARER_PARAMS = ["damerau_osa", "levenshtein"]
+if EDITDISTPY_AVAILABLE:
+    _COMPARER_PARAMS += ["damerau_osa_fast", "levenshtein_fast"]
 
 
-@pytest.fixture(
-    params=["damerau_osa", "levenshtein", "damerau_osa_fast", "levenshtein_fast"]
-)
+def _get_comparer_entry(
+    name: str,
+) -> tuple[AbstractDistanceComparer, Callable[[str, str, int], int]]:
+    """Build a comparer and its reference function, by name."""
+    match name:
+        case "damerau_osa":
+            return DamerauOsa(), expected_damerau_osa
+        case "levenshtein":
+            return Levenshtein(), expected_levenshtein
+        case "damerau_osa_fast":
+            return DamerauOsaFast(), expected_damerau_osa
+        case "levenshtein_fast":
+            return LevenshteinFast(), expected_levenshtein
+        case _:
+            raise ValueError(f"Unknown comparer: {name}")
+
+
+@pytest.fixture(params=_COMPARER_PARAMS)
 def get_comparer(
     request: pytest.FixtureRequest,
 ) -> Generator[tuple[AbstractDistanceComparer, Callable[[str, str, int], int]]]:
-    comparer_dict: dict[str, _ComparerEntry] = {
-        "damerau_osa": {"actual": DamerauOsa(), "expected": expected_damerau_osa},
-        "levenshtein": {"actual": Levenshtein(), "expected": expected_levenshtein},
-        "damerau_osa_fast": {
-            "actual": DamerauOsaFast(),
-            "expected": expected_damerau_osa,
-        },
-        "levenshtein_fast": {
-            "actual": LevenshteinFast(),
-            "expected": expected_levenshtein,
-        },
-    }
-    yield (
-        comparer_dict[request.param]["actual"],
-        comparer_dict[request.param]["expected"],
-    )
+    yield _get_comparer_entry(request.param)
 
 
-class _EditDistanceEntry(TypedDict):
-    actual: EditDistance
-    expected: type[AbstractDistanceComparer]
+def _get_edit_distance_entry(
+    name: str,
+) -> tuple[EditDistance, type[AbstractDistanceComparer]]:
+    """Build an EditDistance wrapper and its expected comparer type, by name."""
+    match name:
+        case "damerau_osa":
+            return EditDistance(DistanceAlgorithm.DAMERAU_OSA), DamerauOsa
+        case "levenshtein":
+            return EditDistance(DistanceAlgorithm.LEVENSHTEIN), Levenshtein
+        case "damerau_osa_fast":
+            return EditDistance(DistanceAlgorithm.DAMERAU_OSA_FAST), DamerauOsaFast
+        case "levenshtein_fast":
+            return EditDistance(DistanceAlgorithm.LEVENSHTEIN_FAST), LevenshteinFast
+        case _:
+            raise ValueError(f"Unknown edit distance entry: {name}")
 
 
-@pytest.fixture(
-    params=["damerau_osa", "levenshtein", "damerau_osa_fast", "levenshtein_fast"]
-)
+@pytest.fixture(params=_COMPARER_PARAMS)
 def get_edit_distance(
     request: pytest.FixtureRequest,
 ) -> Generator[tuple[EditDistance, type[AbstractDistanceComparer]]]:
-    comparer_dict: dict[str, _EditDistanceEntry] = {
-        "damerau_osa": {
-            "actual": EditDistance(DistanceAlgorithm.DAMERAU_OSA),
-            "expected": DamerauOsa,
-        },
-        "levenshtein": {
-            "actual": EditDistance(DistanceAlgorithm.LEVENSHTEIN),
-            "expected": Levenshtein,
-        },
-        "damerau_osa_fast": {
-            "actual": EditDistance(DistanceAlgorithm.DAMERAU_OSA_FAST),
-            "expected": DamerauOsaFast,
-        },
-        "levenshtein_fast": {
-            "actual": EditDistance(DistanceAlgorithm.LEVENSHTEIN_FAST),
-            "expected": LevenshteinFast,
-        },
-    }
-    yield (
-        comparer_dict[request.param]["actual"],
-        comparer_dict[request.param]["expected"],
-    )
+    yield _get_edit_distance_entry(request.param)
 
 
 @pytest.fixture
