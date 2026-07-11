@@ -9,7 +9,7 @@ from symspellpy.helpers import (
 
 
 @pytest.fixture
-def get_acronyms():
+def get_acronyms() -> list[tuple[str, dict[str, bool]]]:
     return [
         ("ABCDE", {"default": True, "digits": True}),
         ("AB12E", {"default": True, "digits": True}),
@@ -23,7 +23,7 @@ def get_acronyms():
 
 
 @pytest.fixture
-def get_similar_texts():
+def get_similar_texts() -> list[tuple[str, str, str]]:
     return [
         (
             "Haaw is the weeather in New York?",
@@ -41,12 +41,12 @@ def get_similar_texts():
 
 class TestHelpers:
     def test_to_similarity(self):
-        length = 20.0
+        length = 20
 
-        assert pytest.approx(0.7) == to_similarity(6.0, length)
-        assert -1 == to_similarity(-1.0, length)
+        assert pytest.approx(0.7) == to_similarity(6, length)  # pyright: ignore[reportUnknownMemberType]
+        assert -1 == to_similarity(-1, length)
 
-    def test_is_acronym(self, get_acronyms):
+    def test_is_acronym(self, get_acronyms: list[tuple[str, dict[str, bool]]]):
         for word, expected in get_acronyms:
             assert expected["default"] == is_acronym(word)
             assert expected["digits"] == is_acronym(word, True)
@@ -80,6 +80,6 @@ class TestHelpers:
             case_transfer_similar("", "abcd")
         assert "'cased_text' cannot be empty" == str(excinfo.value)
 
-    def test_case_transfer_similar(self, get_similar_texts):
+    def test_case_transfer_similar(self, get_similar_texts: list[tuple[str, str, str]]):
         for cased_text, uncased_text, expected in get_similar_texts:
             assert expected == case_transfer_similar(cased_text, uncased_text)

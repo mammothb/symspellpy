@@ -1,6 +1,0 @@
-editdistpy>=0.1.3
-
-# For testing
-importlib-resources>=6.3.2
-pytest==8.3.4
-pytest-cov==6.0.0

@@ -1,10 +1,17 @@
+import re
+from collections.abc import Sequence
+from pathlib import Path
+from typing import Any
+
 import pytest
 
 from symspellpy import SymSpell
 
 
 @pytest.fixture
-def symspell_edit_distance_load(dictionary_path, request):
+def symspell_edit_distance_load(
+    dictionary_path: Path, request: pytest.FixtureRequest
+) -> tuple[SymSpell, int]:
     sym_spell = SymSpell(request.param)
     sym_spell.load_dictionary(dictionary_path, 0, 1)
     return sym_spell, request.param
@@ -12,10 +19,14 @@ def symspell_edit_distance_load(dictionary_path, request):
 
 class TestSymSpellPyWordSegmentation:
     @pytest.mark.parametrize("symspell_default_load", ["unigram"], indirect=True)
-    def test_word_segmentation_ignore_token(self, symspell_default_load):
+    def test_word_segmentation_ignore_token(
+        self, symspell_default_load: tuple[SymSpell, str]
+    ):
         sym_spell, _ = symspell_default_load
         typo = "24th december"
-        result = sym_spell.word_segmentation(typo, ignore_token=r"\d{2}\w*\b")
+        result = sym_spell.word_segmentation(
+            typo, ignore_token=re.compile(r"\d{2}\w*\b")
+        )
         assert typo == result.corrected_string
 
     @pytest.mark.parametrize(
@@ -29,10 +40,10 @@ class TestSymSpellPyWordSegmentation:
     )
     def test_word_segmentation(
         self,
-        symspell_edit_distance_load,
-        get_fortests_data,
-        with_arguments,
-        capitalize,
+        symspell_edit_distance_load: tuple[SymSpell, int],
+        get_fortests_data: Sequence[dict[str, Any]],
+        with_arguments: bool,
+        capitalize: bool,
     ):
         sym_spell, edit_distance = symspell_edit_distance_load
         for entry in get_fortests_data:
@@ -49,7 +60,9 @@ class TestSymSpellPyWordSegmentation:
             assert correction == result.corrected_string
 
     @pytest.mark.parametrize("symspell_edit_distance_load", [0], indirect=True)
-    def test_word_segmentation_apostrophe(self, symspell_edit_distance_load):
+    def test_word_segmentation_apostrophe(
+        self, symspell_edit_distance_load: tuple[SymSpell, int]
+    ):
         sym_spell, _ = symspell_edit_distance_load
 
         typo = "There'resomewords"
@@ -58,7 +71,9 @@ class TestSymSpellPyWordSegmentation:
         assert correction == result[1]
 
     @pytest.mark.parametrize("symspell_edit_distance_load", [0], indirect=True)
-    def test_word_segmentation_ligature(self, symspell_edit_distance_load):
+    def test_word_segmentation_ligature(
+        self, symspell_edit_distance_load: tuple[SymSpell, int]
+    ):
         sym_spell, _ = symspell_edit_distance_load
 
         typo = "Therearesomescientiﬁcwords"

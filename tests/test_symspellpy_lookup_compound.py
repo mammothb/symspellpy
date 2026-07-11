@@ -1,4 +1,9 @@
+from collections.abc import Sequence
+from typing import Any
+
 import pytest
+
+from symspellpy import SymSpell
 
 
 class TestSymSpellPyLookupCompound:
@@ -10,7 +15,11 @@ class TestSymSpellPyLookupCompound:
         ],
         indirect=True,
     )
-    def test_lookup_compound(self, symspell_default_load, get_fortests_data):
+    def test_lookup_compound(
+        self,
+        symspell_default_load: tuple[SymSpell, str],
+        get_fortests_data: Sequence[dict[str, Any]],
+    ):
         sym_spell, dictionary = symspell_default_load
         for entry in get_fortests_data:
             results = sym_spell.lookup_compound(entry["typo"], 2)
@@ -22,7 +31,7 @@ class TestSymSpellPyLookupCompound:
     @pytest.mark.parametrize(
         "symspell_default_entry", [[("steam", 1), ("machine", 1)]], indirect=True
     )
-    def test_lookup_compound_only_combi(self, symspell_default_entry):
+    def test_lookup_compound_only_combi(self, symspell_default_entry: SymSpell):
         typo = "ste am machie"
         correction = "steam machine"
         results = symspell_default_entry.lookup_compound(typo, 2)
@@ -32,7 +41,7 @@ class TestSymSpellPyLookupCompound:
     @pytest.mark.parametrize(
         "symspell_default_entry", [[("steam", 1), ("machine", 1)]], indirect=True
     )
-    def test_lookup_compound_no_suggestion(self, symspell_default_entry):
+    def test_lookup_compound_no_suggestion(self, symspell_default_entry: SymSpell):
         typo = "qwer erty ytui a"
         results = symspell_default_entry.lookup_compound(typo, 2)
         assert 1 == len(results)
@@ -47,7 +56,9 @@ class TestSymSpellPyLookupCompound:
         indirect=True,
     )
     def test_lookup_compound_replaced_words(
-        self, symspell_default_load, get_fortests_data
+        self,
+        symspell_default_load: tuple[SymSpell, str],
+        get_fortests_data: Sequence[dict[str, Any]],
     ):
         sym_spell, dictionary = symspell_default_load
         num_replaced_words = 0
@@ -68,7 +79,9 @@ class TestSymSpellPyLookupCompound:
         indirect=True,
     )
     def test_lookup_compound_ignore_non_words(
-        self, symspell_default_load, get_fortests_data
+        self,
+        symspell_default_load: tuple[SymSpell, str],
+        get_fortests_data: Sequence[dict[str, Any]],
     ):
         sym_spell, dictionary = symspell_default_load
         for entry in get_fortests_data:
@@ -80,7 +93,7 @@ class TestSymSpellPyLookupCompound:
         "symspell_default_load", ["bigram", "unigram"], indirect=True
     )
     def test_lookup_compound_ignore_non_words_ignore_digits(
-        self, symspell_default_load
+        self, symspell_default_load: tuple[SymSpell, str]
     ):
         sym_spell, _ = symspell_default_load
 
@@ -107,7 +120,9 @@ class TestSymSpellPyLookupCompound:
         indirect=True,
     )
     def test_lookup_compound_transfer_casing(
-        self, symspell_default_load, get_fortests_data
+        self,
+        symspell_default_load: tuple[SymSpell, str],
+        get_fortests_data: Sequence[dict[str, Any]],
     ):
         sym_spell, dictionary = symspell_default_load
         for entry in get_fortests_data:
@@ -123,7 +138,9 @@ class TestSymSpellPyLookupCompound:
         indirect=True,
     )
     def test_lookup_compound_transfer_casing_ignore_nonwords(
-        self, symspell_default_load, get_fortests_data
+        self,
+        symspell_default_load: tuple[SymSpell, str],
+        get_fortests_data: Sequence[dict[str, Any]],
     ):
         sym_spell, dictionary = symspell_default_load
         for entry in get_fortests_data:

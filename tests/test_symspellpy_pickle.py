@@ -4,6 +4,8 @@ from unittest import TestCase
 
 import pytest
 
+from pathlib import Path
+
 from symspellpy import SymSpell
 
 
@@ -13,7 +15,12 @@ class TestSymSpellPyPickle:
         [("unigram", True), ("bigram", True), ("unigram", False), ("bigram", False)],
         indirect=["symspell_default_load"],
     )
-    def test_pickle(self, pickle_path, symspell_default_load, is_compressed):
+    def test_pickle(
+        self,
+        pickle_path: Path,
+        symspell_default_load: tuple[SymSpell, str],
+        is_compressed: bool,
+    ):
         sym_spell, _ = symspell_default_load
         sym_spell.save_pickle(pickle_path, is_compressed)
 
@@ -26,7 +33,10 @@ class TestSymSpellPyPickle:
         )
         assert sym_spell._prefix_length != sym_spell_2._prefix_length
 
-        with TestCase.assertLogs("symspellpy.symspellpy.logger", level="WARNING") as cm:
+        with TestCase.assertLogs(
+            "symspellpy.symspellpy.logger",  # pyright: ignore[reportArgumentType]
+            level="WARNING",
+        ) as cm:
             sym_spell_2.load_pickle(pickle_path, is_compressed)
         assert (
             "Loading data which was created using different ('count_threshold', "
@@ -52,7 +62,10 @@ class TestSymSpellPyPickle:
         indirect=["symspell_default_load"],
     )
     def test_pickle_same_settings(
-        self, pickle_path, symspell_default_load, is_compressed
+        self,
+        pickle_path: Path,
+        symspell_default_load: tuple[SymSpell, str],
+        is_compressed: bool,
     ):
         sym_spell, _ = symspell_default_load
         sym_spell.save_pickle(pickle_path, is_compressed)
@@ -76,7 +89,7 @@ class TestSymSpellPyPickle:
     @pytest.mark.parametrize(
         "symspell_default_load", ["unigram", "bigram"], indirect=True
     )
-    def test_pickle_bytes(self, symspell_default_load):
+    def test_pickle_bytes(self, symspell_default_load: tuple[SymSpell, str]):
         sym_spell, _ = symspell_default_load
         sym_spell_2 = SymSpell(123, 456, 789)
 
@@ -87,9 +100,13 @@ class TestSymSpellPyPickle:
         )
         assert sym_spell._prefix_length != sym_spell_2._prefix_length
 
-        with TestCase.assertLogs("symspellpy.symspellpy.logger", level="WARNING") as cm:
+        with TestCase.assertLogs(
+            "symspellpy.symspellpy.logger",  # pyright: ignore[reportArgumentType]
+            level="WARNING",
+        ) as cm:
             sym_spell_2.load_pickle(
-                sym_spell.save_pickle(to_bytes=True), from_bytes=True
+                sym_spell.save_pickle(to_bytes=True),  # pyright: ignore[reportArgumentType]
+                from_bytes=True,
             )
         assert (
             "Loading data which was created using different ('count_threshold', "
@@ -108,8 +125,15 @@ class TestSymSpellPyPickle:
         )
         assert sym_spell._prefix_length == sym_spell_2._prefix_length
 
-    def test_pickle_invalid(self, pickle_path, symspell_default):
-        pickle_data = {"deletes": {}, "words": {}, "max_length": 0, "data_version": -1}
+    def test_pickle_invalid(
+        self, pickle_path: Path, symspell_default: SymSpell
+    ):
+        pickle_data: dict[str, object] = {
+            "deletes": {},
+            "words": {},
+            "max_length": 0,
+            "data_version": -1,
+        }
         with open(pickle_path, "wb") as f:
             pickle.dump(pickle_data, f)
         assert not symspell_default.load_pickle(pickle_path, False)

@@ -1,5 +1,7 @@
 import sys
+from collections.abc import Callable, Generator
 from itertools import combinations, permutations
+from typing import TypedDict
 
 import pytest
 
@@ -18,7 +20,7 @@ LONG_STRING = "long_string"
 VERY_LONG_STRING = "very_long_string"
 
 
-def expected_levenshtein(string_1, string_2, max_distance):
+def expected_levenshtein(string_1: str, string_2: str, max_distance: int) -> int:
     max_distance = int(min(2**31 - 1, max_distance))
     len_1 = len(string_1)
     len_2 = len(string_2)
@@ -38,7 +40,7 @@ def expected_levenshtein(string_1, string_2, max_distance):
     return distance if distance <= max_distance else -1
 
 
-def expected_damerau_osa(string_1, string_2, max_distance):
+def expected_damerau_osa(string_1: str, string_2: str, max_distance: int) -> int:
     max_distance = int(min(2**31 - 1, max_distance))
     len_1 = len(string_1)
     len_2 = len(string_2)
@@ -63,15 +65,24 @@ def expected_damerau_osa(string_1, string_2, max_distance):
 
 
 class CustomDistanceComparer(AbstractDistanceComparer):
-    def distance(self, string_1: str, string_2: str, max_distance: int) -> int:
+    def distance(
+        self, string_1: str | None, string_2: str | None, max_distance: int
+    ) -> int:
         return -2
+
+
+class _ComparerEntry(TypedDict):
+    actual: AbstractDistanceComparer
+    expected: Callable[[str, str, int], int]
 
 
 @pytest.fixture(
     params=["damerau_osa", "levenshtein", "damerau_osa_fast", "levenshtein_fast"]
 )
-def get_comparer(request):
-    comparer_dict = {
+def get_comparer(
+    request: pytest.FixtureRequest,
+) -> Generator[tuple[AbstractDistanceComparer, Callable[[str, str, int], int]]]:
+    comparer_dict: dict[str, _ComparerEntry] = {
         "damerau_osa": {"actual": DamerauOsa(), "expected": expected_damerau_osa},
         "levenshtein": {"actual": Levenshtein(), "expected": expected_levenshtein},
         "damerau_osa_fast": {
@@ -89,11 +100,18 @@ def get_comparer(request):
     )
 
 
+class _EditDistanceEntry(TypedDict):
+    actual: EditDistance
+    expected: type[AbstractDistanceComparer]
+
+
 @pytest.fixture(
     params=["damerau_osa", "levenshtein", "damerau_osa_fast", "levenshtein_fast"]
 )
-def get_edit_distance(request):
-    comparer_dict = {
+def get_edit_distance(
+    request: pytest.FixtureRequest,
+) -> Generator[tuple[EditDistance, type[AbstractDistanceComparer]]]:
+    comparer_dict: dict[str, _EditDistanceEntry] = {
         "damerau_osa": {
             "actual": EditDistance(DistanceAlgorithm.DAMERAU_OSA),
             "expected": DamerauOsa,
@@ -118,7 +136,7 @@ def get_edit_distance(request):
 
 
 @pytest.fixture
-def get_short_and_long_strings():
+def get_short_and_long_strings() -> list[tuple[str | None, str | None, dict[str, int]]]:
     return [
         (SHORT_STRING, None, {"null": len(SHORT_STRING), "zero": -1, "neg": -1}),
         (LONG_STRING, None, {"null": -1, "zero": -1, "neg": -1}),
@@ -130,7 +148,7 @@ def get_short_and_long_strings():
 
 
 @pytest.fixture(params=[0, 1, 3, sys.maxsize])
-def get_strings(request):
+def get_strings(request: pytest.FixtureRequest) -> Generator[tuple[list[str], int]]:
     alphabet = "abcd"
     strings = [""]
     for i in range(1, len(alphabet) + 1):
@@ -142,7 +160,7 @@ def get_strings(request):
 class TestEditDistance:
     def test_unknown_distance_algorithm(self):
         with pytest.raises(ValueError) as excinfo:
-            _ = EditDistance(2)
+            _ = EditDistance(2)  # pyright:ignore[reportArgumentType]
         assert "unknown distance algorithm" == str(excinfo.value)
 
     def test_missing_custom_comparer(self):
@@ -152,7 +170,7 @@ class TestEditDistance:
 
     def test_abstract_distance_comparer(self):
         with pytest.raises(TypeError) as excinfo:
-            comparer = AbstractDistanceComparer()
+            comparer = AbstractDistanceComparer()  # pyright:ignore[reportAbstractUsage]
             _ = comparer.distance("string_1", "string_2", 10)
         assert str(excinfo.value).startswith(
             "Can't instantiate abstract class AbstractDistanceComparer"
@@ -161,13 +179,19 @@ class TestEditDistance:
     def test_warn_when_builtin_comparer_override_custom_comparer(self):
         with pytest.warns(UserWarning, match="A built-in comparer will be used.$"):
             comparer = CustomDistanceComparer()
-            edit_distance = EditDistance(DistanceAlgorithm.LEVENSHTEIN, comparer)
+            EditDistance(DistanceAlgorithm.LEVENSHTEIN, comparer)
 
-    def test_internal_distance_comparer(self, get_edit_distance):
+    def test_internal_distance_comparer(
+        self, get_edit_distance: tuple[EditDistance, type[AbstractDistanceComparer]]
+    ):
         edit_distance, expected = get_edit_distance
         assert isinstance(edit_distance._distance_comparer, expected)
 
-    def test_comparer_match_ref(self, get_comparer, get_strings):
+    def test_comparer_match_ref(
+        self,
+        get_comparer: tuple[AbstractDistanceComparer, Callable[[str, str, int], int]],
+        get_strings: tuple[list[str], int],
+    ):
         comparer, expected = get_comparer
         strings, max_distance = get_strings
 
@@ -177,16 +201,20 @@ class TestEditDistance:
                     s1, s2, max_distance
                 )
 
-    def test_editdistance_use_custom_comparer(self, get_strings):
+    def test_editdistance_use_custom_comparer(self, get_strings: tuple[list[str], int]):
         strings, max_distance = get_strings
         comparer = CustomDistanceComparer()
-        edit_distance = EditDistance(DistanceAlgorithm.USER_PROVIDED, comparer)
+        EditDistance(DistanceAlgorithm.USER_PROVIDED, comparer)
 
         for s1 in strings:
             for s2 in strings:
                 assert -2 == comparer.distance(s1, s2, max_distance)
 
-    def test_comparer_null_distance(self, get_comparer, get_short_and_long_strings):
+    def test_comparer_null_distance(
+        self,
+        get_comparer: tuple[AbstractDistanceComparer, Callable[[str, str, int], int]],
+        get_short_and_long_strings: list[tuple[str | None, str | None, dict[str, int]]],
+    ):
         comparer, _ = get_comparer
 
         for s1, s2, expected in get_short_and_long_strings:
@@ -194,7 +222,9 @@ class TestEditDistance:
             assert expected["null"] == distance
 
     def test_comparer_negative_max_distance(
-        self, get_comparer, get_short_and_long_strings
+        self,
+        get_comparer: tuple[AbstractDistanceComparer, Callable[[str, str, int], int]],
+        get_short_and_long_strings: list[tuple[str | None, str | None, dict[str, int]]],
     ):
         comparer, _ = get_comparer
 
@@ -206,7 +236,10 @@ class TestEditDistance:
             distance = comparer.distance(s1, s2, 0)
             assert expected["neg"] == distance
 
-    def test_comparer_very_long_string(self, get_comparer):
+    def test_comparer_very_long_string(
+        self,
+        get_comparer: tuple[AbstractDistanceComparer, Callable[[str, str, int], int]],
+    ):
         comparer, _ = get_comparer
         distance = comparer.distance(SHORT_STRING, VERY_LONG_STRING, 5)
 
