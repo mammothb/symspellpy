@@ -1,6 +1,11 @@
 CHANGELOG <br>
 ==============
 
+## 6.10.0
+
+- Change default distance algorithm to pure-Python `DAMERAU_OSA`; install `symspellpy[editdistpy]` for the fast variants `DAMERAU_OSA_FAST`/`LEVENSHTEIN_FAST` [#202](https://github.com/mammothb/symspellpy/pull/202)
+- Bump supported Python version to 3.10 - 3.14 [#200](https://github.com/mammothb/symspellpy/pull/200)
+
 ## 6.9.0 (2025-03-09)
 
 - Specify that frequency count must be 64-bit int [#180](https://github.com/mammothb/symspellpy/pull/180)
