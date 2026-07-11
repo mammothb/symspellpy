@@ -249,7 +249,7 @@ wheels = [
 
 [[package]]
 name = "symspellpy"
-version = "6.10.0rc1"
+version = "6.10.0"
 source = { editable = "." }
 
 [package.optional-dependencies]
