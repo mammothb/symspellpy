@@ -338,6 +338,35 @@ class TestSymSpellPy:
         assert 1 == len(result)
         assert "steem" == result[0].term
 
+    def test_delete_final_dictionary_entry(self, symspell_default: SymSpell):
+        for count in (3, 7, 1):
+            assert symspell_default.create_dictionary_entry("cat", count)
+            result = symspell_default.lookup("cta", Verbosity.ALL, 1)
+            assert [("cat", 1, count)] == [
+                (item.term, item.distance, item.count) for item in result
+            ]
+
+            assert symspell_default.delete_dictionary_entry("cat")
+            assert 0 == symspell_default.word_count
+            assert 0 == symspell_default._max_length
+            assert not any(symspell_default.deletes.values())
+            assert [] == symspell_default.lookup("cta", Verbosity.ALL, 1)
+            assert not symspell_default.delete_dictionary_entry("cat")
+
+    def test_delete_all_dictionary_entries_and_reload(
+        self, symspell_default: SymSpell
+    ):
+        for _ in range(2):
+            assert symspell_default.load_dictionary(
+                StringIO("cat 3\ndog 4\ncat 2\n"), 0, 1
+            )
+            assert {"cat": 5, "dog": 4} == symspell_default.words
+            assert symspell_default.delete_dictionary_entry("cat")
+            assert {"dog": 4} == symspell_default.words
+            assert symspell_default.delete_dictionary_entry("dog")
+            assert {} == symspell_default.words
+            assert not any(symspell_default.deletes.values())
+
     @pytest.mark.parametrize(
         "symspell_default_entry",
         [[("stea", 1), ("steama", 2), ("steem", 3)]],
