@@ -904,6 +904,8 @@ class SymSpell(PickleMixin):
         """
         # normalize ligatures: scientiﬁc -> scientific
         phrase = unicodedata.normalize("NFKC", phrase).replace("\u002d", "")
+        if not phrase:
+            return Composition()
 
         if max_edit_distance is None:
             max_edit_distance = self._max_dictionary_edit_distance
