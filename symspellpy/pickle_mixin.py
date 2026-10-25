@@ -21,6 +21,7 @@
 import gzip
 import logging
 import pickle
+import sys
 from operator import itemgetter
 from pathlib import Path
 from typing import IO, cast
@@ -47,6 +48,7 @@ class PickleMixin:
     _bigrams: dict[str, int]
     _deletes: dict[str, list[str]]
     _words: dict[str, int]
+    bigram_count_min: int = sys.maxsize
 
     _count_threshold: int
     _max_dictionary_edit_distance: int
@@ -152,6 +154,9 @@ class PickleMixin:
         # dictionary entries related variables
         self._below_threshold_words = pickle_data["below_threshold_words"]
         self._bigrams = pickle_data["bigrams"]
+        self.bigram_count_min = pickle_data.get(
+            "bigram_count_min", min(self._bigrams.values(), default=sys.maxsize)
+        )
         self._deletes = pickle_data["deletes"]
         self._words = pickle_data["words"]
         self._max_length = pickle_data["max_length"]
@@ -183,6 +188,7 @@ class PickleMixin:
             # Dictionary entries related variables
             "below_threshold_words": self._below_threshold_words,
             "bigrams": self._bigrams,
+            "bigram_count_min": self.bigram_count_min,
             "deletes": self._deletes,
             "words": self._words,
             "max_length": self._max_length,
