@@ -338,20 +338,22 @@ class TestSymSpellPy:
         assert 1 == len(result)
         assert "steem" == result[0].term
 
-    def test_delete_final_dictionary_entry(self, symspell_default: SymSpell):
-        for count in (3, 7, 1):
-            assert symspell_default.create_dictionary_entry("cat", count)
-            result = symspell_default.lookup("cta", Verbosity.ALL, 1)
-            assert [("cat", 1, count)] == [
-                (item.term, item.distance, item.count) for item in result
-            ]
+    @pytest.mark.parametrize("count", [3, 7, 1])
+    def test_delete_final_dictionary_entry(
+        self, symspell_default: SymSpell, count: int
+    ):
+        assert symspell_default.create_dictionary_entry("cat", count)
+        result = symspell_default.lookup("cta", Verbosity.ALL, 1)
+        assert [("cat", 1, count)] == [
+            (item.term, item.distance, item.count) for item in result
+        ]
 
-            assert symspell_default.delete_dictionary_entry("cat")
-            assert 0 == symspell_default.word_count
-            assert 0 == symspell_default._max_length
-            assert not any(symspell_default.deletes.values())
-            assert [] == symspell_default.lookup("cta", Verbosity.ALL, 1)
-            assert not symspell_default.delete_dictionary_entry("cat")
+        assert symspell_default.delete_dictionary_entry("cat")
+        assert 0 == symspell_default.word_count
+        assert 0 == symspell_default._max_length
+        assert not any(symspell_default.deletes.values())
+        assert [] == symspell_default.lookup("cta", Verbosity.ALL, 1)
+        assert not symspell_default.delete_dictionary_entry("cat")
 
     def test_delete_all_dictionary_entries_and_reload(
         self, symspell_default: SymSpell
