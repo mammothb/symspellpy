@@ -273,7 +273,7 @@ class SymSpell(PickleMixin):
         del self._words[key]
         # look for the next longest word if we just deleted the longest word
         if len(key) == self._max_length:
-            self._max_length = len(max(self._words.keys(), key=len))
+            self._max_length = len(max(self._words.keys(), key=len, default=""))
 
         # create deletes
         edits = self._edits_prefix(key)
