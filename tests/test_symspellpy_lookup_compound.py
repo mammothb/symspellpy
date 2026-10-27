@@ -112,6 +112,19 @@ class TestSymSpellPyLookupCompound:
         assert 0 == results[0].count
 
     @pytest.mark.parametrize(
+        "symspell_default_load", ["bigram", "unigram"], indirect=True
+    )
+    def test_lookup_compound_ignore_non_words_dotted_capital_i(
+        self, symspell_default_load: tuple[SymSpell, str]
+    ):
+        sym_spell, _ = symspell_default_load
+
+        # "İ".lower() is "i" + U+0307, which splits the lowercased word in two
+        results = sym_spell.lookup_compound("the NASA İstanbul office", 2, True)
+        assert 1 == len(results)
+        assert "the NASA istanbul office" == results[0].term
+
+    @pytest.mark.parametrize(
         "symspell_default_load, get_fortests_data",
         [
             ("bigram", "lookup_compound_transfer_casing_data.json"),
