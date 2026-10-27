@@ -1,6 +1,12 @@
 CHANGELOG <br>
 ==============
 
+## 6.10.1
+
+- Avoid raising `ValueError` when deleting final dictionary entry [#209](https://github.com/mammothb/symspellpy/pull/209)
+- Return an empty composition for empty normalized text [#210](https://github.com/mammothb/symspellpy/pull/210)
+- Preserve bigram frequency limits (`bigram_count_min`) when reloading dictionaries [#211](https://github.com/mammothb/symspellpy/pull/211)
+
 ## 6.10.0
 
 - Change default distance algorithm to pure-Python `DAMERAU_OSA`; install `symspellpy[editdistpy]` for the fast variants `DAMERAU_OSA_FAST`/`LEVENSHTEIN_FAST` [#202](https://github.com/mammothb/symspellpy/pull/202)

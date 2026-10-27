@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "symspellpy"
-version = "6.10.1-rc5"
+version = "6.10.1"
 dependencies = []
 requires-python = ">=3.10"
 authors = [
