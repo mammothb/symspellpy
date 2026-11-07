@@ -683,6 +683,8 @@ class SymSpell(PickleMixin):
             terms_2 = helpers.parse_words(
                 phrase, preserve_case=True, split_by_space=split_by_space
             )
+            # Lowercase per term so both lists stay aligned
+            terms_1 = [term.lower() for term in terms_2]
         suggestions = []
         suggestion_parts: list[SuggestItem] = []
 
