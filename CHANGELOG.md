@@ -1,6 +1,10 @@
 CHANGELOG <br>
 ==============
 
+## 6.10.2
+
+- Keep the term lists aligned in lookup_compound with ignore_non_words [#215](https://github.com/mammothb/symspellpy/pull/215)
+
 ## 6.10.1
 
 - Avoid raising `ValueError` when deleting final dictionary entry [#209](https://github.com/mammothb/symspellpy/pull/209)
