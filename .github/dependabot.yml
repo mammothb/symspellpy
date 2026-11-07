@@ -10,3 +10,8 @@ updates:
     schedule:
       interval: "weekly"
       day: "friday"
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "friday"
