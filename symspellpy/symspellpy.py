@@ -26,7 +26,7 @@ import sys
 import unicodedata
 import warnings
 from collections import defaultdict
-from itertools import cycle
+from itertools import cycle, filterfalse
 from pathlib import Path
 from re import Pattern
 from typing import IO
@@ -432,25 +432,50 @@ class SymSpell(PickleMixin):
         if max_edit_distance == 0:
             return early_exit()
 
+        words = self._words
+        deletes = self._deletes
+        prefix_length = self._prefix_length
+        compare = self.distance_comparer.compare
+        is_all = verbosity == Verbosity.ALL
+        is_closest = verbosity == Verbosity.CLOSEST
+        is_top = verbosity == Verbosity.TOP
+        # candidates of this length used up all edits within the prefix
+        full_prefix_edit_len = prefix_length - max_edit_distance
+        short_phrase = phrase_len < prefix_length
+
+        def length_window(distance: int, candidate_len: int) -> tuple[int, int]:
+            """Suggestion lengths allowed for a delete at the given distance."""
+            min_len = phrase_len - distance
+            if min_len < candidate_len:
+                min_len = candidate_len
+            max_len = phrase_len + distance
+            if short_phrase:
+                # a longer suggestion prefix has to be within `distance` of
+                # the candidate
+                prefix_max_len = candidate_len + distance
+                if prefix_max_len < phrase_len:
+                    prefix_max_len = phrase_len
+                if prefix_max_len < prefix_length:
+                    max_len = prefix_max_len
+            return min_len, max_len
+
         considered_deletes: set[str] = set()
         considered_suggestions: set[str] = set()
         # we considered the phrase already in the 'phrase in self._words' above
         considered_suggestions.add(phrase)
 
         max_edit_distance_2 = max_edit_distance
-        candidate_pointer = 0
         candidates: list[str] = []
 
         # add original prefix
         phrase_prefix_len = phrase_len
-        if phrase_prefix_len > self._prefix_length:
-            phrase_prefix_len = self._prefix_length
+        if phrase_prefix_len > prefix_length:
+            phrase_prefix_len = prefix_length
             candidates.append(phrase[:phrase_prefix_len])
         else:
             candidates.append(phrase)
-        while candidate_pointer < len(candidates):
-            candidate = candidates[candidate_pointer]
-            candidate_pointer += 1
+        # the list grows while iterating, new deletes are visited in order
+        for candidate in candidates:
             candidate_len = len(candidate)
             len_diff = phrase_prefix_len - candidate_len
 
@@ -462,7 +487,7 @@ class SymSpell(PickleMixin):
                 # further if Verbosity.TOP or CLOSEST (candidates are
                 # ordered by delete distance, so none are closer than
                 # current)
-                if verbosity == Verbosity.ALL:  # pragma: no cover
+                if is_all:  # pragma: no cover
                     # `max_edit_distance_2`` only updated when
                     # verbosity != ALL. New candidates are generated from
                     # deletes so it keeps getting shorter. This should never
@@ -470,30 +495,31 @@ class SymSpell(PickleMixin):
                     continue
                 break  # pragma: no cover, "peephole" optimization, http://bugs.python.org/issue2506
 
-            if candidate in self._deletes:
-                dict_suggestions = self._deletes[candidate]
-                for suggestion in dict_suggestions:
-                    if suggestion == phrase:
-                        continue
+            dict_suggestions = deletes.get(candidate)
+            if dict_suggestions is not None:
+                at_full_prefix_edit = candidate_len == full_prefix_edit_len
+                # suggestion lengths allowed by the current best distance
+                min_len, max_len = length_window(max_edit_distance_2, candidate_len)
+                # every branch below skips considered suggestions (the phrase
+                # included), so reject them before any other test
+                for suggestion in filterfalse(
+                    considered_suggestions.__contains__, dict_suggestions
+                ):
                     suggestion_len = len(suggestion)
                     # phrase and suggestion lengths diff > allowed/current best
                     # distance
                     if (
-                        abs(suggestion_len - phrase_len) > max_edit_distance_2
-                        # suggestion must be for a different delete string, in
-                        # same bin only because of hash collision
-                        or suggestion_len < candidate_len
+                        # phrase and suggestion lengths diff > allowed/current
+                        # best distance, or suggestion is for a different
+                        # delete string, in same bin only because of hash
+                        # collision
+                        suggestion_len < min_len
+                        or suggestion_len > max_len
                         # if suggestion len = delete len, then it either equals
                         # delete or is in same bin only because of hash collision
                         or (suggestion_len == candidate_len and suggestion != candidate)
                     ):
                         continue  # pragma: no cover, "peephole" optimization, http://bugs.python.org/issue2506
-                    suggestion_prefix_len = min(suggestion_len, self._prefix_length)
-                    if (
-                        suggestion_prefix_len > phrase_prefix_len
-                        and suggestion_prefix_len - candidate_len > max_edit_distance_2
-                    ):
-                        continue
                     # True Damerau-Levenshtein Edit Distance: adjust distance,
                     # if both distances>0. We allow simultaneous edits (deletes)
                     # of max_edit_distance on on both the dictionary and the
@@ -508,17 +534,12 @@ class SymSpell(PickleMixin):
                     # Two deletes on each side of a pair makes them all equal,
                     # but the first two pairs have edit distance=1, the others
                     # edit distance=2.
-                    distance = 0
-                    min_distance = 0
                     if candidate_len == 0:
                         # suggestions which have no common chars with phrase
                         # (phrase_len<=max_edit_distance &&
                         # suggestion_len<=max_edit_distance)
                         distance = max(phrase_len, suggestion_len)
-                        if (
-                            distance > max_edit_distance_2
-                            or suggestion in considered_suggestions
-                        ):
+                        if distance > max_edit_distance_2:
                             continue
                     elif suggestion_len == 1:
                         # This should always be phrase_len - 1? Since
@@ -534,10 +555,7 @@ class SymSpell(PickleMixin):
                         # Given the max_dictionary_edit_distance and
                         # prefix_length restrictions, `distance`` should never
                         # be >max_edit_distance_2
-                        if (
-                            distance > max_edit_distance_2
-                            or suggestion in considered_suggestions
-                        ):  # pragma: no cover
+                        if distance > max_edit_distance_2:  # pragma: no cover
                             continue
                     # number of edits in prefix ==maxeditdistance AND no
                     # identical suffix, then editdistance>max_edit_distance and
@@ -545,23 +563,16 @@ class SymSpell(PickleMixin):
                     # (phraseLen >= prefixLength) &&
                     # (suggestionLen >= prefixLength)
                     else:
-                        # handles the shortcircuit of min_distance assignment
-                        # when first boolean expression evaluates to False
-                        if self._prefix_length - max_edit_distance == candidate_len:
+                        if at_full_prefix_edit:
                             min_distance = (
-                                min(phrase_len, suggestion_len) - self._prefix_length
-                            )
-                        else:
-                            min_distance = 0
-                        # pylint: disable=too-many-boolean-expressions
-                        if (
-                            self._prefix_length - max_edit_distance == candidate_len
-                            and (
+                                phrase_len if phrase_len < suggestion_len else suggestion_len
+                            ) - prefix_length
+                            # pylint: disable=too-many-boolean-expressions
+                            if (
                                 min_distance > 1
                                 and phrase[phrase_len + 1 - min_distance :]
                                 != suggestion[suggestion_len + 1 - min_distance :]
-                            )
-                            or (
+                            ) or (
                                 min_distance > 0
                                 and phrase[phrase_len - min_distance]
                                 != suggestion[suggestion_len - min_distance]
@@ -571,49 +582,64 @@ class SymSpell(PickleMixin):
                                     or phrase[phrase_len - min_distance]
                                     != suggestion[suggestion_len - min_distance - 1]
                                 )
-                            )
-                        ):
-                            continue
-                        # delete_in_suggestion_prefix is somewhat expensive, and
-                        # only pays off when verbosity is TOP or CLOSEST
-                        if suggestion in considered_suggestions:
-                            continue
+                            ):
+                                continue
                         considered_suggestions.add(suggestion)
-                        distance = self.distance_comparer.compare(
-                            phrase, suggestion, max_edit_distance_2
-                        )
+                        # Verbosity.TOP only replaces the top suggestion at the
+                        # same distance with a more frequent one, so a less
+                        # frequent suggestion has to be strictly closer
+                        max_distance = max_edit_distance_2
+                        if (
+                            is_top
+                            and suggestions
+                            and words[suggestion] <= suggestions[0].count
+                        ):
+                            max_distance -= 1
+                            # only the phrase itself is at distance 0, and the
+                            # length difference is a lower bound on distance
+                            if (
+                                max_distance <= 0
+                                or suggestion_len - phrase_len > max_distance
+                                or phrase_len - suggestion_len > max_distance
+                            ):
+                                continue
+                        distance = compare(phrase, suggestion, max_distance)
                         if distance < 0:
                             continue
                     # do not process higher distances than those already found,
                     # if verbosity<ALL (note: max_edit_distance_2 will always
                     # equal max_edit_distance when Verbosity.ALL)
                     if distance <= max_edit_distance_2:  # pragma: no branch
-                        suggestion_count = self._words[suggestion]
-                        item = SuggestItem(suggestion, distance, suggestion_count)
+                        suggestion_count = words[suggestion]
+                        replace_top = False
                         if suggestions:
-                            if verbosity == Verbosity.CLOSEST:
+                            if is_closest:
                                 # we will calculate DamLev distance only to the
                                 # smallest found distance so far
                                 if distance < max_edit_distance_2:
                                     suggestions = []
-                            elif verbosity == Verbosity.TOP:
-                                if (  # pragma: no branch, "peephole" optimization, http://bugs.python.org/issue2506
-                                    distance < max_edit_distance_2
-                                    or suggestion_count > suggestions[0].count
+                            elif is_top:
+                                if (  # pragma: no cover, "peephole" optimization, http://bugs.python.org/issue2506
+                                    distance >= max_edit_distance_2
+                                    and suggestion_count <= suggestions[0].count
                                 ):
-                                    max_edit_distance_2 = distance
-                                    suggestions[0] = item
-                                continue
-                        if verbosity != Verbosity.ALL:
+                                    continue
+                                replace_top = True
+                        if not is_all:
                             max_edit_distance_2 = distance
-                        suggestions.append(item)
+                            min_len, max_len = length_window(distance, candidate_len)
+                        item = SuggestItem(suggestion, distance, suggestion_count)
+                        if replace_top:
+                            suggestions[0] = item
+                        else:
+                            suggestions.append(item)
             # add edits: derive edits (deletes) from candidate (phrase) and add
             # them to candidates list. this is a recursive process until the
             # maximum edit distance has been reached
-            if len_diff < max_edit_distance and candidate_len <= self._prefix_length:
+            if len_diff < max_edit_distance and candidate_len <= prefix_length:
                 # do not create edits with edit distance smaller than
                 # suggestions already found
-                if verbosity != Verbosity.ALL and len_diff >= max_edit_distance_2:
+                if not is_all and len_diff >= max_edit_distance_2:
                     continue
                 for i in range(candidate_len):
                     delete = candidate[:i] + candidate[i + 1 :]
