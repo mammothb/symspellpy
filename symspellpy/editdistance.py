@@ -322,45 +322,41 @@ class DamerauOsa(AbstractDistanceComparer):
         """Internal implementation of the core Damerau-Levenshtein, optimal
         string alignment algorithm.
 
-        **From**: https://github.com/softwx/SoftWx.Match
+        Uses the bit-parallel algorithm of Hyyro (2003), Myers (1999) extended
+        with a transposition term. The distance is symmetric, so the longer
+        ``string_2`` becomes the bit vector and the loop runs over the shorter
+        ``string_1``. Bit ``k`` of each vector refers to row ``k`` of the
+        current column: ``vp``/``vn`` mark vertical deltas of +1/-1, ``d0``
+        marks zero diagonal deltas and ``pm`` marks the rows whose character
+        of ``string_2`` matches the current character of ``string_1``. The
+        distance is the top cell of the last column (``len_1``) plus the
+        vertical deltas left in ``vp`` and ``vn``.
         """
-        char_1_costs = [j + 1 for j in range(len_2)]
-        char_1 = " "
-        current_cost = 0
-        for i in range(len_1):
-            prev_char_1 = char_1
-            char_1 = string_1[start + i]
-            char_2 = " "
-            left_char_cost = above_char_cost = i
-            next_trans_cost = 0
-            for j in range(len_2):
-                this_trans_cost = next_trans_cost
-                next_trans_cost = prev_char_1_costs[j]
-                # cost of diagonal (substitution)
-                prev_char_1_costs[j] = current_cost = left_char_cost
-                # left now equals current cost (which will be diagonal
-                # at next iteration)
-                left_char_cost = char_1_costs[j]
-                prev_char_2 = char_2
-                char_2 = string_2[start + j]
-                if char_1 != char_2:
-                    # substitution if neither of two conditions below
-                    if above_char_cost < current_cost:
-                        current_cost = above_char_cost
-                    if left_char_cost < current_cost:
-                        current_cost = left_char_cost
-                    current_cost += 1
-                    if (
-                        i != 0
-                        and j != 0
-                        and char_1 == prev_char_2
-                        and prev_char_1 == char_2
-                        and this_trans_cost + 1 < current_cost
-                    ):
-                        # transposition
-                        current_cost = this_trans_cost + 1
-                char_1_costs[j] = above_char_cost = current_cost
-        return current_cost
+        peq: dict[str, int] = {}
+        bit = 1
+        for char_2 in string_2[start : start + len_2]:
+            peq[char_2] = peq.get(char_2, 0) | bit
+            bit <<= 1
+        mask = bit - 1
+        get_peq = peq.get
+        vp = mask
+        vn = d0 = prev_pm = 0
+        for char_1 in string_1[start : start + len_1]:
+            pm = get_peq(char_1, 0)
+            # transposition: a match in this column one row below a match in
+            # the previous column, where that diagonal step was not free; xor
+            # with mask instead of ~ keeps every vector non-negative
+            d0 = (
+                (((pm & (d0 ^ mask)) << 1) & prev_pm)
+                | (((pm & vp) + vp) ^ vp)
+                | pm
+                | vn
+            )
+            hp = ((vn | ((d0 | vp) ^ mask)) << 1) | 1
+            vn = hp & d0 & mask
+            vp = (((d0 & vp) << 1) | ((hp | d0) ^ mask)) & mask
+            prev_pm = pm
+        return len_1 + vp.bit_count() - vn.bit_count()
 
     @staticmethod
     def _distance_max(
